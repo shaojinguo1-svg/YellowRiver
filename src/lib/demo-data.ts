@@ -98,3 +98,206 @@ export const DEMO_PROPERTIES: PropertyCardProps[] = [
     },
   },
 ];
+
+export interface DemoPropertyDetail extends PropertyCardProps {
+  description: string;
+  addressLine1: string;
+  securityDeposit: number;
+  availableFrom: string;
+  petPolicy: string;
+  leaseTermType: string;
+  floor: number;
+  totalFloors: number;
+  yearBuilt: number;
+  parkingSpaces: number;
+  amenities: string[];
+  images: { url: string; alt: string }[];
+}
+
+export const DEMO_PROPERTY_DETAILS: Record<string, DemoPropertyDetail> = {
+  "modern-2br-downtown-loft": {
+    ...DEMO_PROPERTIES[0],
+    description:
+      "A stunning modern loft in the heart of downtown Austin. This beautifully renovated two-bedroom unit features soaring 14-foot ceilings, exposed brick walls, and floor-to-ceiling windows that flood the space with natural light. The open-concept living area seamlessly connects the gourmet kitchen with quartz countertops and stainless steel appliances to a spacious living room perfect for entertaining. Both bedrooms offer generous closet space, and the primary suite includes an en-suite bathroom with a walk-in rain shower. Building amenities include a fitness center, rooftop pool, and 24-hour concierge service.",
+    addressLine1: "123 Congress Ave",
+    securityDeposit: 2500,
+    availableFrom: "2026-04-01",
+    petPolicy: "Cats and small dogs allowed with $500 pet deposit",
+    leaseTermType: "12 Months",
+    floor: 5,
+    totalFloors: 12,
+    yearBuilt: 2020,
+    parkingSpaces: 1,
+    amenities: [
+      "In-Unit Washer/Dryer",
+      "Central AC",
+      "Dishwasher",
+      "Hardwood Floors",
+      "Gym Access",
+      "Pool",
+      "Rooftop Deck",
+      "Concierge",
+    ],
+    images: [
+      { url: "https://placehold.co/1200x800/f59e0b/ffffff?text=Living+Room", alt: "Living Room" },
+      { url: "https://placehold.co/1200x800/d97706/ffffff?text=Kitchen", alt: "Kitchen" },
+      { url: "https://placehold.co/1200x800/b45309/ffffff?text=Bedroom", alt: "Bedroom" },
+      { url: "https://placehold.co/1200x800/92400e/ffffff?text=Bathroom", alt: "Bathroom" },
+    ],
+  },
+  "cozy-1br-capitol-hill": {
+    ...DEMO_PROPERTIES[1],
+    description:
+      "Discover this charming one-bedroom retreat nestled in Denver's vibrant Capitol Hill neighborhood. This cozy yet thoughtfully designed unit offers an efficient layout with a separate bedroom, updated kitchen with granite counters, and a sun-drenched living area. Enjoy the walkable neighborhood filled with eclectic shops, cafes, and restaurants just steps from your door. The unit includes in-unit laundry and a private balcony overlooking a tree-lined street. Perfect for young professionals seeking an urban lifestyle in one of Denver's most sought-after locations.",
+    addressLine1: "456 E Colfax Ave",
+    securityDeposit: 1200,
+    availableFrom: "2026-03-15",
+    petPolicy: "Cats only, no dogs permitted",
+    leaseTermType: "12 Months",
+    floor: 3,
+    totalFloors: 4,
+    yearBuilt: 1965,
+    parkingSpaces: 0,
+    amenities: [
+      "In-Unit Washer/Dryer",
+      "Central AC",
+      "Dishwasher",
+      "Hardwood Floors",
+      "Balcony",
+      "Bike Storage",
+    ],
+    images: [
+      { url: "https://placehold.co/1200x800/d97706/ffffff?text=Living+Area", alt: "Living Area" },
+      { url: "https://placehold.co/1200x800/b45309/ffffff?text=Kitchen", alt: "Kitchen" },
+      { url: "https://placehold.co/1200x800/92400e/ffffff?text=Bedroom", alt: "Bedroom" },
+      { url: "https://placehold.co/1200x800/78350f/ffffff?text=Balcony+View", alt: "Balcony View" },
+    ],
+  },
+  "spacious-3br-pearl-district": {
+    ...DEMO_PROPERTIES[2],
+    description:
+      "Experience luxury urban living in this expansive three-bedroom condo located in Portland's prestigious Pearl District. This corner unit boasts panoramic city views, a chef's kitchen with premium Viking appliances and a large island, and an open living space ideal for both relaxing and hosting. The primary bedroom features a walk-in closet and spa-like ensuite bathroom with soaking tub. Two additional bedrooms provide ample space for family, guests, or a home office. The building offers secure underground parking, a private courtyard, and direct access to the Pearl District's galleries, restaurants, and waterfront parks.",
+    addressLine1: "789 NW Glisan St",
+    securityDeposit: 3200,
+    availableFrom: "2026-05-01",
+    petPolicy: "Pets welcome with $750 pet deposit, 2 pet maximum",
+    leaseTermType: "12 Months",
+    floor: 8,
+    totalFloors: 10,
+    yearBuilt: 2018,
+    parkingSpaces: 2,
+    amenities: [
+      "In-Unit Washer/Dryer",
+      "Central AC",
+      "Dishwasher",
+      "Hardwood Floors",
+      "Gym Access",
+      "Concierge",
+      "Courtyard",
+      "Storage Unit",
+      "EV Charging",
+      "Package Lockers",
+    ],
+    images: [
+      { url: "https://placehold.co/1200x800/b45309/ffffff?text=Open+Living+Room", alt: "Open Living Room" },
+      { url: "https://placehold.co/1200x800/92400e/ffffff?text=Gourmet+Kitchen", alt: "Gourmet Kitchen" },
+      { url: "https://placehold.co/1200x800/78350f/ffffff?text=Primary+Bedroom", alt: "Primary Bedroom" },
+      { url: "https://placehold.co/1200x800/f59e0b/ffffff?text=City+View", alt: "City View" },
+      { url: "https://placehold.co/1200x800/d97706/ffffff?text=Ensuite+Bath", alt: "Ensuite Bathroom" },
+    ],
+  },
+  "charming-2br-fremont-cottage": {
+    ...DEMO_PROPERTIES[3],
+    description:
+      "Fall in love with this beautifully restored two-bedroom cottage in Seattle's quirky Fremont neighborhood. Original craftsman details blend with modern updates, including a renovated kitchen with butcher block countertops and farmhouse sink. The cozy living room features a decorative fireplace and built-in bookshelves. A private backyard with a mature garden and patio is perfect for outdoor dining. Walking distance to the Fremont Sunday Market, craft breweries, and the Burke-Gilman Trail. This home offers the rare combination of character, location, and outdoor space in the heart of the city.",
+    addressLine1: "321 N 36th St",
+    securityDeposit: 2800,
+    availableFrom: "2026-04-15",
+    petPolicy: "Dogs and cats welcome, fenced yard, no breed restrictions",
+    leaseTermType: "12 Months",
+    floor: 1,
+    totalFloors: 2,
+    yearBuilt: 1928,
+    parkingSpaces: 1,
+    amenities: [
+      "Washer/Dryer Hookups",
+      "Dishwasher",
+      "Hardwood Floors",
+      "Fireplace",
+      "Private Yard",
+      "Patio",
+      "Garden",
+      "Garage",
+    ],
+    images: [
+      { url: "https://placehold.co/1200x800/92400e/ffffff?text=Cottage+Exterior", alt: "Cottage Exterior" },
+      { url: "https://placehold.co/1200x800/78350f/ffffff?text=Living+Room", alt: "Living Room" },
+      { url: "https://placehold.co/1200x800/f59e0b/ffffff?text=Kitchen", alt: "Kitchen" },
+      { url: "https://placehold.co/1200x800/d97706/ffffff?text=Backyard", alt: "Backyard" },
+    ],
+  },
+  "luxury-2br-midtown-highrise": {
+    ...DEMO_PROPERTIES[4],
+    description:
+      "Elevate your lifestyle in this luxurious two-bedroom highrise apartment in Sacramento's dynamic Midtown district. Floor-to-ceiling windows frame stunning views of the city skyline and the Sierra Nevada foothills. The designer kitchen features waterfall quartz countertops, custom cabinetry, and top-of-the-line Bosch appliances. Both bedrooms are generously sized with large closets, and the primary suite includes dual vanities and a glass-enclosed shower. Residents enjoy resort-style amenities including an infinity pool, sky lounge, state-of-the-art fitness center, and a dog park. Located steps from Midtown's best dining and nightlife.",
+    addressLine1: "1000 K St",
+    securityDeposit: 3500,
+    availableFrom: "2026-06-01",
+    petPolicy: "Small dogs and cats allowed with $600 pet deposit, 35 lb weight limit",
+    leaseTermType: "12 Months",
+    floor: 15,
+    totalFloors: 22,
+    yearBuilt: 2023,
+    parkingSpaces: 2,
+    amenities: [
+      "In-Unit Washer/Dryer",
+      "Central AC",
+      "Dishwasher",
+      "Hardwood Floors",
+      "Gym Access",
+      "Pool",
+      "Sky Lounge",
+      "Dog Park",
+      "EV Charging",
+      "Package Lockers",
+      "Concierge",
+      "Valet Parking",
+    ],
+    images: [
+      { url: "https://placehold.co/1200x800/78350f/ffffff?text=Skyline+View", alt: "Skyline View" },
+      { url: "https://placehold.co/1200x800/f59e0b/ffffff?text=Designer+Kitchen", alt: "Designer Kitchen" },
+      { url: "https://placehold.co/1200x800/d97706/ffffff?text=Primary+Suite", alt: "Primary Suite" },
+      { url: "https://placehold.co/1200x800/b45309/ffffff?text=Pool+Deck", alt: "Pool Deck" },
+      { url: "https://placehold.co/1200x800/92400e/ffffff?text=Sky+Lounge", alt: "Sky Lounge" },
+    ],
+  },
+  "sunny-1br-south-congress": {
+    ...DEMO_PROPERTIES[5],
+    description:
+      "Soak up the sunshine in this bright and airy one-bedroom apartment just minutes from Austin's iconic South Congress Avenue. Large east-facing windows bring in gorgeous morning light, and the open floor plan makes this unit feel spacious beyond its square footage. The updated kitchen features white shaker cabinets, subway tile backsplash, and stainless steel appliances. Enjoy the vibrant SoCo scene with its eclectic boutiques, live music venues, and renowned food trucks right around the corner. The community offers a sparkling pool, outdoor grilling area, and bike parking for easy access to the trail network.",
+    addressLine1: "550 S Congress Ave",
+    securityDeposit: 1450,
+    availableFrom: "2026-03-20",
+    petPolicy: "Cats and dogs allowed with $400 pet deposit, 2 pet maximum",
+    leaseTermType: "6 Months",
+    floor: 2,
+    totalFloors: 3,
+    yearBuilt: 2015,
+    parkingSpaces: 1,
+    amenities: [
+      "In-Unit Washer/Dryer",
+      "Central AC",
+      "Dishwasher",
+      "Pool",
+      "Grilling Area",
+      "Bike Storage",
+      "Package Lockers",
+    ],
+    images: [
+      { url: "https://placehold.co/1200x800/fbbf24/ffffff?text=Sunny+Living+Room", alt: "Sunny Living Room" },
+      { url: "https://placehold.co/1200x800/f59e0b/ffffff?text=Updated+Kitchen", alt: "Updated Kitchen" },
+      { url: "https://placehold.co/1200x800/d97706/ffffff?text=Bedroom", alt: "Bedroom" },
+      { url: "https://placehold.co/1200x800/b45309/ffffff?text=Pool+Area", alt: "Pool Area" },
+    ],
+  },
+};
