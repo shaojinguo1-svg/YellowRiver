@@ -1,0 +1,316 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── ENUMS ───────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  TENANT
+}
+
+enum PropertyStatus {
+  DRAFT
+  ACTIVE
+  RENTED
+  INACTIVE
+  ARCHIVED
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  CONDO
+  TOWNHOUSE
+  STUDIO
+}
+
+enum ListingType {
+  RENT
+  SALE
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum LeaseTermType {
+  MONTH_TO_MONTH
+  SIX_MONTHS
+  ONE_YEAR
+  TWO_YEARS
+}
+
+enum InquiryStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+// ─── MODELS ──────────────────────────────────────────────
+
+model User {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  supabaseId String   @unique @map("supabase_id")
+  email      String   @unique
+  firstName  String?  @map("first_name")
+  lastName   String?  @map("last_name")
+  phone      String?
+  avatarUrl  String?  @map("avatar_url")
+  role       UserRole @default(TENANT)
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  properties         Property[]
+  rentalApplications RentalApplication[]
+  contactInquiries   ContactInquiry[]
+
+  @@map("users")
+}
+
+model Property {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug            String         @unique
+  title           String
+  description     String         @db.Text
+  propertyType    PropertyType   @map("property_type")
+  listingType     ListingType    @default(RENT) @map("listing_type")
+  status          PropertyStatus @default(DRAFT)
+
+  // Pricing
+  price           Decimal        @db.Decimal(10, 2)
+  securityDeposit Decimal?       @map("security_deposit") @db.Decimal(10, 2)
+  applicationFee  Decimal?       @map("application_fee") @db.Decimal(10, 2)
+
+  // Location
+  addressLine1 String  @map("address_line_1")
+  addressLine2 String? @map("address_line_2")
+  city         String
+  state        String
+  zipCode      String  @map("zip_code")
+  latitude     Decimal? @db.Decimal(10, 7)
+  longitude    Decimal? @db.Decimal(10, 7)
+
+  // Details
+  bedrooms    Int
+  bathrooms   Decimal  @db.Decimal(3, 1)
+  squareFeet  Int?     @map("square_feet")
+  yearBuilt   Int?     @map("year_built")
+  floor       Int?
+  totalFloors Int?     @map("total_floors")
+
+  // Lease terms
+  leaseTermType LeaseTermType? @map("lease_term_type")
+  availableFrom DateTime       @map("available_from")
+  petPolicy     String?        @map("pet_policy")
+  parkingSpaces Int            @default(0) @map("parking_spaces")
+
+  // SEO & Display
+  metaTitle       String?  @map("meta_title")
+  metaDescription String?  @map("meta_description")
+  featured        Boolean  @default(false)
+  viewCount       Int      @default(0) @map("view_count")
+
+  // Foreign keys
+  createdById String  @map("created_by_id") @db.Uuid
+  categoryId  String? @map("category_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  createdBy    User              @relation(fields: [createdById], references: [id])
+  category     Category?         @relation(fields: [categoryId], references: [id])
+  images       PropertyImage[]
+  amenities    PropertyAmenity[]
+  applications RentalApplication[]
+
+  @@index([city, state])
+  @@index([status])
+  @@index([propertyType])
+  @@index([price])
+  @@index([bedrooms])
+  @@index([featured])
+  @@map("properties")
+}
+
+model PropertyImage {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId  String   @map("property_id") @db.Uuid
+  url         String
+  alt         String?
+  caption     String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  isPrimary   Boolean  @default(false) @map("is_primary")
+  storagePath String   @map("storage_path")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@map("property_images")
+}
+
+model Amenity {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @unique
+  icon      String?
+  category  String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  properties PropertyAmenity[]
+
+  @@map("amenities")
+}
+
+model PropertyAmenity {
+  propertyId String @map("property_id") @db.Uuid
+  amenityId  String @map("amenity_id") @db.Uuid
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  amenity  Amenity  @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+
+  @@id([propertyId, amenityId])
+  @@map("property_amenities")
+}
+
+model Category {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  properties Property[]
+
+  @@map("categories")
+}
+
+model RentalApplication {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationNumber String            @unique @map("application_number")
+  status            ApplicationStatus @default(SUBMITTED)
+
+  // Applicant info
+  applicantId String?   @map("applicant_id") @db.Uuid
+  firstName   String    @map("first_name")
+  lastName    String    @map("last_name")
+  email       String
+  phone       String
+  dateOfBirth DateTime? @map("date_of_birth")
+
+  // Current address
+  currentAddress String   @map("current_address")
+  currentCity    String   @map("current_city")
+  currentState   String   @map("current_state")
+  currentZip     String   @map("current_zip")
+  monthlyRent    Decimal? @map("monthly_rent") @db.Decimal(10, 2)
+  moveInDate     DateTime @map("move_in_date")
+
+  // Employment
+  employer         String?
+  jobTitle         String?  @map("job_title")
+  monthlyIncome    Decimal? @map("monthly_income") @db.Decimal(10, 2)
+  employmentLength String?  @map("employment_length")
+
+  // References
+  landlordName   String? @map("landlord_name")
+  landlordPhone  String? @map("landlord_phone")
+  emergencyName  String? @map("emergency_name")
+  emergencyPhone String? @map("emergency_phone")
+
+  // Additional
+  numberOfOccupants Int     @default(1) @map("number_of_occupants")
+  hasPets           Boolean @default(false) @map("has_pets")
+  petDescription    String? @map("pet_description")
+  additionalNotes   String? @map("additional_notes") @db.Text
+
+  // Consent
+  consentBackground Boolean @default(false) @map("consent_background")
+  consentTerms      Boolean @default(false) @map("consent_terms")
+
+  // Admin
+  adminNotes String?   @map("admin_notes") @db.Text
+  reviewedAt DateTime? @map("reviewed_at")
+  reviewedBy String?   @map("reviewed_by")
+
+  // Foreign keys
+  propertyId String @map("property_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  applicant User?                 @relation(fields: [applicantId], references: [id])
+  property  Property              @relation(fields: [propertyId], references: [id])
+  documents ApplicationDocument[]
+
+  @@index([status])
+  @@index([propertyId])
+  @@index([email])
+  @@map("rental_applications")
+}
+
+model ApplicationDocument {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId String   @map("application_id") @db.Uuid
+  fileName      String   @map("file_name")
+  fileType      String   @map("file_type")
+  fileSize      Int      @map("file_size")
+  mimeType      String   @map("mime_type")
+  storagePath   String   @map("storage_path")
+  url           String
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  application RentalApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@map("application_documents")
+}
+
+model ContactInquiry {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  email      String
+  phone      String?
+  subject    String
+  message    String        @db.Text
+  status     InquiryStatus @default(NEW)
+  propertyId String?       @map("property_id") @db.Uuid
+  userId     String?       @map("user_id") @db.Uuid
+  adminReply String?       @map("admin_reply") @db.Text
+  repliedAt  DateTime?     @map("replied_at")
+  createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt @map("updated_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([status])
+  @@map("contact_inquiries")
+}
+
+model SiteSettings {
+  id          String   @id @default("singleton")
+  siteName    String   @default("YellowRiver") @map("site_name")
+  tagline     String?
+  phone       String?
+  email       String?
+  address     String?
+  logoUrl     String?  @map("logo_url")
+  heroImages  Json?    @map("hero_images")
+  socialLinks Json?    @map("social_links")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}
