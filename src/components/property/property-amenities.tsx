@@ -12,9 +12,9 @@ export function PropertyAmenities({ amenities }: PropertyAmenitiesProps) {
       {amenities.map((amenity) => (
         <div
           key={amenity}
-          className="flex items-center gap-2 text-sm text-foreground"
+          className="flex items-center gap-2 text-sm text-warm-700"
         >
-          <CircleCheck className="size-4 shrink-0 text-amber-500" />
+          <CircleCheck className="size-4 shrink-0 text-gold" />
           <span>{amenity}</span>
         </div>
       ))}

@@ -165,28 +165,58 @@ export default function HomePage() {
         {/* ----------------------------------------------------------------- */}
         {/* Hero Section                                                      */}
         {/* ----------------------------------------------------------------- */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 py-24 sm:py-32 lg:py-40">
-          {/* Decorative background pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute -top-24 -right-24 size-96 rounded-full bg-white/20" />
-            <div className="absolute -bottom-32 -left-32 size-[30rem] rounded-full bg-white/10" />
-            <div className="absolute top-1/2 left-1/2 size-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10" />
-          </div>
+        <section className="relative overflow-hidden bg-charcoal py-32 sm:py-40 lg:py-48">
+          {/* Mesh gradient overlay */}
+          <div className="absolute inset-0 bg-mesh-dark" />
+
+          {/* Noise texture */}
+          <div className="bg-noise absolute inset-0" />
 
           <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-            <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="animate-fade-in-up font-display text-5xl font-bold leading-[1.1] tracking-tight text-white sm:text-6xl lg:text-7xl">
               Find Your Perfect
               <br />
               Rental Home
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-amber-100 sm:text-xl">
-              Browse apartments, houses, and condos in your neighborhood.
-              Quality rentals made simple and transparent.
+
+            {/* Gold separator */}
+            <div className="animate-fade-in-up delay-100 mx-auto mt-8">
+              <div className="mx-auto h-0.5 w-16 bg-gold" />
+            </div>
+
+            <p className="animate-fade-in-up delay-200 mx-auto mt-6 max-w-xl text-lg text-warm-300 sm:text-xl">
+              Discover our collection of premium apartments and rental homes,
+              professionally managed for your comfort.
             </p>
 
             {/* Search bar */}
-            <div className="mt-10">
+            <div className="animate-fade-in-up delay-400 mt-12">
               <HeroSearch />
+            </div>
+          </div>
+        </section>
+
+        {/* ----------------------------------------------------------------- */}
+        {/* Stats Section (floating card, pulled up)                          */}
+        {/* ----------------------------------------------------------------- */}
+        <section className="relative -mt-16 z-10">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+            <div className="animate-fade-in-up delay-300 rounded-2xl bg-white p-8 shadow-xl sm:p-12">
+              <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
+                {STATS.map((stat) => (
+                  <div key={stat.label} className="text-center">
+                    <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-gold/10">
+                      <stat.icon className="size-7 text-gold" />
+                    </div>
+                    <p className="mt-4 font-display text-3xl font-bold text-warm-900 sm:text-4xl">
+                      {stat.value}
+                    </p>
+                    <p className="mt-1 text-sm text-warm-500">
+                      {stat.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -194,13 +224,17 @@ export default function HomePage() {
         {/* ----------------------------------------------------------------- */}
         {/* Featured Listings Section                                         */}
         {/* ----------------------------------------------------------------- */}
-        <section className="bg-white py-20 lg:py-28">
+        <section className="bg-ivory bg-mesh-light py-24 sm:py-32">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              <p className="text-xs font-medium uppercase tracking-[0.2em] text-gold">
+                Curated Selections
+              </p>
+              <h2 className="mt-3 font-display text-3xl font-bold text-warm-900 sm:text-4xl">
                 Featured Properties
               </h2>
-              <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+              <div className="mx-auto mt-4 h-0.5 w-16 bg-gold mb-6" />
+              <p className="mx-auto max-w-2xl text-lg text-warm-500">
                 Explore our handpicked selection of premium rental properties
               </p>
             </div>
@@ -213,7 +247,7 @@ export default function HomePage() {
               <Button
                 asChild
                 size="lg"
-                className="bg-amber-500 text-white hover:bg-amber-600"
+                className="bg-gold text-white hover:bg-gold-dark"
               >
                 <Link href="/listings">
                   View All Listings
@@ -225,56 +259,39 @@ export default function HomePage() {
         </section>
 
         {/* ----------------------------------------------------------------- */}
-        {/* Stats Section                                                     */}
-        {/* ----------------------------------------------------------------- */}
-        <section className="border-y bg-amber-50/50 py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
-              {STATS.map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-amber-100">
-                    <stat.icon className="size-7 text-amber-600" />
-                  </div>
-                  <p className="mt-4 text-3xl font-bold text-foreground">
-                    {stat.value}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ----------------------------------------------------------------- */}
         {/* How It Works Section                                              */}
         {/* ----------------------------------------------------------------- */}
-        <section className="bg-white py-20 lg:py-28">
+        <section className="bg-white py-24 sm:py-32">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              <p className="text-xs font-medium uppercase tracking-[0.2em] text-gold">
                 How It Works
-              </h2>
-              <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-                Renting your next home is as easy as 1-2-3
               </p>
+              <h2 className="mt-3 font-display text-3xl font-bold text-warm-900 sm:text-4xl">
+                Renting Made Simple
+              </h2>
+              <div className="mx-auto mt-4 h-0.5 w-16 bg-gold" />
             </div>
 
-            <div className="mt-16 grid grid-cols-1 gap-12 md:grid-cols-3">
+            <div className="mt-20 grid grid-cols-1 gap-16 md:grid-cols-3">
               {STEPS.map((step, index) => (
                 <div key={step.title} className="relative text-center">
-                  {/* Step number */}
-                  <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-amber-100">
-                    <step.icon className="size-8 text-amber-600" />
+                  {/* Large watermark step number */}
+                  <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2">
+                    <span className="font-display text-[5rem] font-bold leading-none text-gold/[0.07]">
+                      {index + 1}
+                    </span>
                   </div>
-                  <span className="absolute -top-2 left-1/2 ml-8 flex size-7 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
-                    {index + 1}
-                  </span>
-                  <h3 className="mt-6 text-lg font-semibold text-foreground">
+
+                  {/* Icon */}
+                  <div className="relative mx-auto flex size-16 items-center justify-center rounded-2xl bg-gold/10">
+                    <step.icon className="size-8 text-gold" />
+                  </div>
+
+                  <h3 className="mt-6 font-display text-lg font-semibold text-warm-900">
                     {step.title}
                   </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  <p className="mt-3 text-sm leading-relaxed text-warm-500">
                     {step.description}
                   </p>
                 </div>
@@ -286,12 +303,15 @@ export default function HomePage() {
         {/* ----------------------------------------------------------------- */}
         {/* CTA Section                                                       */}
         {/* ----------------------------------------------------------------- */}
-        <section className="bg-gradient-to-r from-amber-500 to-amber-600 py-20">
-          <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+        <section className="relative bg-charcoal py-24 sm:py-32">
+          {/* Noise texture */}
+          <div className="bg-noise absolute inset-0" />
+
+          <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+            <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">
               Ready to Find Your New Home?
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-amber-100">
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-warm-300">
               Start browsing our listings today or get in touch with our team.
               We are here to help you every step of the way.
             </p>
@@ -299,7 +319,7 @@ export default function HomePage() {
               <Button
                 asChild
                 size="lg"
-                className="bg-white text-amber-600 hover:bg-amber-50"
+                className="bg-gold text-white hover:bg-gold-dark"
               >
                 <Link href="/listings">
                   <Search className="mr-2 size-4" />
@@ -310,7 +330,7 @@ export default function HomePage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-white text-white hover:bg-white/10"
+                className="border-gold/30 text-gold hover:bg-gold/10"
               >
                 <Link href="/contact">
                   <Phone className="mr-2 size-4" />

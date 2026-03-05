@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About Us | YellowRiver",
   description:
-    "Learn about YellowRiver — our mission to simplify apartment rentals and connect quality properties with quality tenants.",
+    "Learn about YellowRiver — a premier property management company offering premium apartment rentals across top neighborhoods.",
 };
 
 const CORE_VALUES = [
@@ -40,17 +40,20 @@ export default function AboutPage() {
   return (
     <div>
       {/* Hero Banner */}
-      <section className="bg-slate-900 text-white">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
-          <div className="max-w-3xl">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-              About <span className="text-amber-500">YellowRiver</span>
-            </h1>
-            <p className="mt-6 text-lg leading-relaxed text-slate-300">
-              We are a real estate company dedicated to making the rental
-              experience simple, transparent, and enjoyable for everyone.
-            </p>
-          </div>
+      <section className="bg-charcoal relative py-20 sm:py-28">
+        <div className="bg-mesh-dark absolute inset-0" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 text-center">
+          <p className="text-xs uppercase tracking-[0.2em] text-gold font-medium mb-4">
+            Our Story
+          </p>
+          <h1 className="font-display text-4xl sm:text-5xl font-bold text-white tracking-tight">
+            About YellowRiver
+          </h1>
+          <div className="mx-auto mt-4 w-16 h-0.5 bg-gold" />
+          <p className="mt-6 text-lg text-warm-300 max-w-2xl mx-auto">
+            A premier property management company offering thoughtfully
+            maintained rental homes in the best neighborhoods.
+          </p>
         </div>
       </section>
 
@@ -58,29 +61,29 @@ export default function AboutPage() {
       <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-warm-900">
               Our Story
             </h2>
-            <div className="mt-6 space-y-4 text-base leading-relaxed text-muted-foreground">
+            <div className="mx-auto mt-4 w-12 h-0.5 bg-gold" />
+            <div className="mt-8 space-y-5 text-base leading-[1.8] text-warm-500">
               <p>
-                YellowRiver was founded with a clear purpose: to simplify
-                apartment rentals and bridge the gap between quality properties
-                and quality tenants. We saw an industry weighed down by
-                complicated processes, hidden fees, and poor communication, and
-                we set out to change that.
+                YellowRiver was founded with a clear purpose: to offer
+                premium rental living with exceptional property management.
+                We own and maintain every property in our portfolio, ensuring
+                the highest standards of comfort and quality for our residents.
               </p>
               <p>
-                From our first listing to the hundreds of properties we manage
-                today, our commitment has remained the same. We treat every
-                property as if it were our own, and every tenant as a valued
-                partner. By combining local market expertise with modern
-                technology, we have streamlined the entire rental journey — from
-                browsing listings to signing a lease.
+                From our first apartment to the growing collection of homes we
+                manage today, our commitment has remained the same — every
+                property is thoughtfully maintained, and every resident is
+                treated like family. By combining hands-on management with
+                modern technology, we have created a seamless rental experience
+                from browsing our listings to move-in day.
               </p>
               <p>
-                Whether you are searching for your next home or looking for
-                reliable tenants, YellowRiver is here to make the process
-                straightforward and stress-free.
+                Whether you are looking for a cozy studio or a spacious
+                family home, YellowRiver has a property that fits your
+                lifestyle and budget.
               </p>
             </div>
           </div>
@@ -88,40 +91,39 @@ export default function AboutPage() {
       </section>
 
       {/* Mission & Vision */}
-      <section className="bg-slate-50 py-16 sm:py-24">
+      <section className="bg-ivory py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
             {/* Mission */}
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-1.5 text-sm font-medium text-amber-700">
+              <div className="inline-flex items-center gap-2 rounded-full bg-gold/10 px-4 py-1.5 text-sm font-medium text-gold-dark">
                 Our Mission
               </div>
-              <h2 className="mt-4 text-2xl font-bold tracking-tight text-foreground">
-                Simplifying Rentals for Everyone
+              <h2 className="font-display mt-4 text-2xl font-bold tracking-tight text-warm-900">
+                Premium Living, Professionally Managed
               </h2>
-              <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-                Our mission is to create a rental marketplace that puts people
-                first. We strive to connect quality properties with quality
-                tenants through a platform built on transparency, efficiency, and
-                mutual respect. Every decision we make is guided by the goal of
-                making renting as easy and rewarding as possible.
+              <p className="mt-4 text-base leading-relaxed text-warm-500">
+                Our mission is to provide exceptional rental homes that our
+                residents are proud to call home. We own, maintain, and manage
+                every property in our portfolio with care, ensuring top-quality
+                living spaces and responsive service. Every decision we make is
+                guided by the comfort and satisfaction of our residents.
               </p>
             </div>
 
             {/* Vision */}
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-1.5 text-sm font-medium text-amber-700">
+              <div className="inline-flex items-center gap-2 rounded-full bg-gold/10 px-4 py-1.5 text-sm font-medium text-gold-dark">
                 Our Vision
               </div>
-              <h2 className="mt-4 text-2xl font-bold tracking-tight text-foreground">
+              <h2 className="font-display mt-4 text-2xl font-bold tracking-tight text-warm-900">
                 The Future of Rental Living
               </h2>
-              <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-                We envision a world where finding the perfect rental home is as
-                simple as a few clicks. By investing in technology, cultivating
-                strong relationships, and maintaining the highest standards of
-                service, we aim to be the most trusted name in residential
-                rentals across the country.
+              <p className="mt-4 text-base leading-relaxed text-warm-500">
+                We envision YellowRiver as the gold standard in residential
+                rentals — where every property reflects our commitment to
+                quality, every interaction is guided by care, and every
+                resident enjoys a living experience they truly love.
               </p>
             </div>
           </div>
@@ -132,10 +134,11 @@ export default function AboutPage() {
       <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-warm-900">
               Our Core Values
             </h2>
-            <p className="mt-4 text-base text-muted-foreground">
+            <div className="mx-auto mt-4 w-12 h-0.5 bg-gold" />
+            <p className="mt-4 text-base text-warm-500">
               The principles that guide everything we do.
             </p>
           </div>
@@ -144,15 +147,15 @@ export default function AboutPage() {
             {CORE_VALUES.map((value) => (
               <div
                 key={value.title}
-                className="flex flex-col items-center rounded-xl border bg-card p-6 text-center shadow-sm transition-shadow hover:shadow-md"
+                className="card-luxury flex flex-col items-center rounded-xl border border-warm-200 bg-white p-6 text-center"
               >
-                <div className="flex size-14 items-center justify-center rounded-full bg-amber-50">
-                  <value.icon className="size-7 text-amber-500" />
+                <div className="flex size-14 items-center justify-center rounded-full bg-gold/10">
+                  <value.icon className="size-7 text-gold" />
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-foreground">
+                <h3 className="font-display mt-4 text-lg font-semibold text-warm-900">
                   {value.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-2 text-sm leading-relaxed text-warm-500">
                   {value.description}
                 </p>
               </div>
@@ -162,19 +165,19 @@ export default function AboutPage() {
       </section>
 
       {/* Team Section */}
-      <section className="bg-slate-50 py-16 sm:py-24">
+      <section className="bg-ivory py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-warm-900">
               Our Team
             </h2>
-            <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-              Our dedicated team of real estate professionals brings decades of
-              combined experience in property management, tenant relations, and
-              local market analysis. Every member of the YellowRiver team shares
-              a passion for helping people find the right place to call home. We
-              are here to guide you through every step of the rental process with
-              expertise and care.
+            <div className="mx-auto mt-4 w-12 h-0.5 bg-gold" />
+            <p className="mt-6 text-base leading-relaxed text-warm-500">
+              Our dedicated team of property management professionals brings
+              decades of combined experience in maintaining quality homes and
+              building lasting relationships with residents. Every member of the
+              YellowRiver team shares a passion for creating exceptional living
+              experiences. We are here to ensure your home is always at its best.
             </p>
           </div>
         </div>
@@ -183,21 +186,24 @@ export default function AboutPage() {
       {/* CTA */}
       <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-2xl bg-slate-900 px-6 py-16 text-center sm:px-12">
-            <h2 className="text-3xl font-bold tracking-tight text-white">
-              Ready to Find Your Next Home?
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base text-slate-300">
-              Browse our curated collection of rental properties and find the
-              perfect place that fits your lifestyle and budget.
-            </p>
-            <Button
-              asChild
-              size="lg"
-              className="mt-8 bg-amber-500 text-white hover:bg-amber-600"
-            >
-              <Link href="/listings">Browse Our Listings</Link>
-            </Button>
+          <div className="relative overflow-hidden rounded-2xl bg-charcoal px-6 py-16 text-center sm:px-12">
+            <div className="bg-noise absolute inset-0" />
+            <div className="relative">
+              <h2 className="font-display text-3xl font-bold tracking-tight text-white">
+                Ready to Find Your Next Home?
+              </h2>
+              <p className="mx-auto mt-4 max-w-xl text-base text-warm-300">
+                Browse our curated collection of rental properties and find the
+                perfect place that fits your lifestyle and budget.
+              </p>
+              <Button
+                asChild
+                size="lg"
+                className="mt-8 bg-gold text-white hover:bg-gold-dark"
+              >
+                <Link href="/listings">Browse Our Listings</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>

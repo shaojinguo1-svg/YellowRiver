@@ -1,8 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BedDouble, Bath, Maximize, MapPin } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 export interface PropertyCardProps {
   id: string;
@@ -44,19 +42,19 @@ export function PropertyCard({
 }: PropertyCardProps) {
   return (
     <Link href={`/listings/${slug}`} className="group block">
-      <Card className="gap-0 overflow-hidden p-0 transition-shadow duration-300 hover:shadow-lg">
+      <div className="card-luxury overflow-hidden rounded-xl border border-warm-200 bg-white">
         {/* Image */}
-        <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-ivory">
           {primaryImage ? (
             <Image
               src={primaryImage.url}
               alt={primaryImage.alt}
               fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (
-            <div className="flex h-full items-center justify-center bg-amber-50 text-amber-300">
+            <div className="flex h-full items-center justify-center bg-ivory-warm text-warm-300">
               <svg
                 className="size-16"
                 fill="none"
@@ -73,57 +71,57 @@ export function PropertyCard({
             </div>
           )}
           {/* Property type badge */}
-          <Badge className="absolute top-3 left-3 bg-amber-500 text-white hover:bg-amber-600">
+          <span className="absolute top-3 left-3 rounded-md bg-charcoal/90 px-2.5 py-1 text-xs font-medium tracking-wide uppercase text-white">
             {propertyType}
-          </Badge>
+          </span>
         </div>
 
         {/* Content */}
-        <CardContent className="space-y-3 p-4">
+        <div className="space-y-3 p-4">
           {/* Price */}
           <div className="flex items-baseline justify-between">
-            <p className="text-xl font-bold text-amber-600">
+            <p className="font-display text-xl font-bold text-gold-dark">
               {formatPrice(price)}
-              <span className="text-sm font-normal text-muted-foreground">
+              <span className="font-sans text-sm font-normal text-warm-500">
                 /mo
               </span>
             </p>
           </div>
 
           {/* Title */}
-          <h3 className="line-clamp-1 text-base font-semibold text-foreground group-hover:text-amber-600 transition-colors">
+          <h3 className="font-display line-clamp-1 text-base font-semibold text-warm-900 transition-colors group-hover:text-gold">
             {title}
           </h3>
 
           {/* Location */}
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <MapPin className="size-3.5 shrink-0" />
+          <div className="flex items-center gap-1 text-sm text-warm-500">
+            <MapPin className="size-3.5 shrink-0 text-gold/60" />
             <span className="line-clamp-1">
               {city}, {state}
             </span>
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-4 border-t pt-3 text-sm text-muted-foreground">
+          <div className="flex items-center gap-4 border-t border-warm-200 pt-3 text-sm text-warm-500">
             <div className="flex items-center gap-1.5">
-              <BedDouble className="size-4" />
+              <BedDouble className="size-4 text-gold/70" />
               <span>
                 {bedrooms} {bedrooms === 1 ? "Bed" : "Beds"}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Bath className="size-4" />
+              <Bath className="size-4 text-gold/70" />
               <span>
                 {bathrooms} {bathrooms === 1 ? "Bath" : "Baths"}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Maximize className="size-4" />
+              <Maximize className="size-4 text-gold/70" />
               <span>{squareFeet.toLocaleString()} sqft</span>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </Link>
   );
 }

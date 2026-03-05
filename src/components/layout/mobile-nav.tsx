@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Building2 } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -21,17 +20,19 @@ interface MobileNavProps {
 export function MobileNav({ open, onOpenChange }: MobileNavProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-72">
+      <SheetContent side="left" className="w-72 bg-ivory">
         <SheetHeader>
           <SheetTitle>
             <Link
               href="/"
-              className="flex items-center gap-2"
+              className="flex items-center gap-0.5"
               onClick={() => onOpenChange(false)}
             >
-              <Building2 className="size-6 text-amber-500" />
-              <span className="text-xl font-bold tracking-tight">
-                Yellow<span className="text-amber-500">River</span>
+              <span className="font-display text-xl tracking-wide text-warm-900">
+                Yellow
+              </span>
+              <span className="font-display text-xl tracking-wide text-gold">
+                River
               </span>
             </Link>
           </SheetTitle>
@@ -39,24 +40,24 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
             Navigation menu
           </SheetDescription>
         </SheetHeader>
-        <Separator />
+        <Separator className="bg-warm-200" />
         <nav className="flex flex-col gap-1 px-4">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => onOpenChange(false)}
-              className="rounded-md px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-amber-50 hover:text-amber-600"
+              className="rounded-sm px-3 py-2 font-sans text-sm tracking-wide text-warm-700 transition-colors hover:bg-gold/5 hover:text-gold"
             >
               {link.label}
             </Link>
           ))}
         </nav>
-        <Separator />
+        <Separator className="bg-warm-200" />
         <div className="px-4">
           <Button
             asChild
-            className="w-full bg-amber-500 text-white hover:bg-amber-600"
+            className="w-full rounded-sm bg-gold text-white hover:bg-gold-dark"
           >
             <Link href="/login" onClick={() => onOpenChange(false)}>
               Sign In

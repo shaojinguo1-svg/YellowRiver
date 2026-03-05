@@ -65,7 +65,7 @@ function LoginForm() {
   return (
     <Card>
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+        <CardTitle className="font-display text-2xl">Welcome Back</CardTitle>
         <CardDescription>
           Sign in to your account to continue
         </CardDescription>
@@ -94,7 +94,7 @@ function LoginForm() {
               <Label htmlFor="password">Password</Label>
               <Link
                 href="/forgot-password"
-                className="text-sm text-amber-600 hover:text-amber-700"
+                className="text-sm text-gold hover:text-gold-dark"
               >
                 Forgot password?
               </Link>
@@ -118,7 +118,7 @@ function LoginForm() {
             type="submit"
             size="lg"
             disabled={isLoading}
-            className="w-full bg-amber-500 text-white hover:bg-amber-600"
+            className="w-full bg-gold text-white hover:bg-gold-dark"
           >
             {isLoading ? (
               <>
@@ -136,7 +136,7 @@ function LoginForm() {
           Don&apos;t have an account?{" "}
           <Link
             href="/register"
-            className="font-medium text-amber-600 hover:text-amber-700"
+            className="font-medium text-gold hover:text-gold-dark"
           >
             Create one
           </Link>

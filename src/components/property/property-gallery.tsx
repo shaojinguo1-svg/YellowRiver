@@ -13,7 +13,7 @@ export function PropertyGallery({ images }: PropertyGalleryProps) {
 
   if (images.length === 0) {
     return (
-      <div className="flex aspect-[16/9] items-center justify-center rounded-lg bg-amber-50 text-amber-300">
+      <div className="flex aspect-[16/9] items-center justify-center rounded-xl bg-ivory-warm text-warm-300">
         <svg
           className="size-24"
           fill="none"
@@ -36,12 +36,12 @@ export function PropertyGallery({ images }: PropertyGalleryProps) {
   return (
     <div className="space-y-3">
       {/* Main Image */}
-      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg bg-muted">
+      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl shadow-md bg-ivory">
         <Image
           src={selectedImage.url}
           alt={selectedImage.alt}
           fill
-          className="object-cover transition-opacity duration-300"
+          className="object-cover transition-opacity duration-500"
           sizes="(max-width: 1024px) 100vw, 1200px"
           priority
         />
@@ -55,10 +55,10 @@ export function PropertyGallery({ images }: PropertyGalleryProps) {
               key={index}
               onClick={() => setSelectedIndex(index)}
               className={cn(
-                "relative aspect-[16/9] w-24 shrink-0 overflow-hidden rounded-md border-2 transition-all duration-200 sm:w-28 md:w-32",
+                "relative aspect-[16/9] w-24 shrink-0 overflow-hidden rounded-md border-2 transition-all duration-300 sm:w-28 md:w-32",
                 index === selectedIndex
-                  ? "border-amber-500 ring-1 ring-amber-500/50"
-                  : "border-transparent opacity-70 hover:opacity-100"
+                  ? "border-gold ring-1 ring-gold/50"
+                  : "border-transparent opacity-60 hover:opacity-100"
               )}
             >
               <Image

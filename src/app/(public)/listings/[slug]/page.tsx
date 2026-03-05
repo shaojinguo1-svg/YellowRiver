@@ -68,11 +68,11 @@ export default async function ListingDetailPage({
   return (
     <div>
       {/* Back Link */}
-      <div className="border-b">
+      <div className="border-b border-warm-200">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <Link
             href="/listings"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-amber-600"
+            className="inline-flex items-center gap-1.5 text-sm text-warm-500 transition-colors hover:text-gold"
           >
             <ArrowLeft className="size-4" />
             Back to Listings
@@ -93,38 +93,38 @@ export default async function ListingDetailPage({
             {/* Title & Location */}
             <div>
               <div className="mb-3 flex flex-wrap items-center gap-2">
-                <Badge className="bg-amber-500 text-white hover:bg-amber-600">
+                <Badge className="bg-charcoal text-white hover:bg-charcoal-light">
                   {property.propertyType}
                 </Badge>
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-warm-900">
                 {property.title}
               </h1>
-              <div className="mt-2 flex items-center gap-1.5 text-muted-foreground">
-                <MapPin className="size-4 shrink-0" />
+              <div className="mt-2 flex items-center gap-1.5 text-warm-500">
+                <MapPin className="size-4 shrink-0 text-gold" />
                 <span>
                   {property.addressLine1}, {property.city}, {property.state}
                 </span>
               </div>
             </div>
 
-            <Separator />
+            <Separator className="bg-warm-200" />
 
             {/* Description */}
             <div>
-              <h2 className="mb-3 text-lg font-semibold text-foreground">
+              <h2 className="font-display text-lg font-semibold text-warm-900 mb-3">
                 About This Property
               </h2>
-              <p className="leading-relaxed text-muted-foreground">
+              <p className="leading-relaxed text-warm-500">
                 {property.description}
               </p>
             </div>
 
-            <Separator />
+            <Separator className="bg-warm-200" />
 
             {/* Property Details Grid */}
             <div>
-              <h2 className="mb-4 text-lg font-semibold text-foreground">
+              <h2 className="font-display text-lg font-semibold text-warm-900 mb-4">
                 Property Details
               </h2>
               <PropertyDetails
@@ -140,26 +140,26 @@ export default async function ListingDetailPage({
               />
             </div>
 
-            <Separator />
+            <Separator className="bg-warm-200" />
 
             {/* Amenities */}
             <div>
-              <h2 className="mb-4 text-lg font-semibold text-foreground">
+              <h2 className="font-display text-lg font-semibold text-warm-900 mb-4">
                 Amenities
               </h2>
               <PropertyAmenities amenities={property.amenities} />
             </div>
 
-            <Separator />
+            <Separator className="bg-warm-200" />
 
             {/* Pet Policy */}
             <div>
-              <h2 className="mb-3 text-lg font-semibold text-foreground">
+              <h2 className="font-display text-lg font-semibold text-warm-900 mb-3">
                 Pet Policy
               </h2>
-              <div className="flex items-start gap-3 rounded-lg border bg-card p-4">
-                <PawPrint className="mt-0.5 size-5 shrink-0 text-amber-500" />
-                <p className="text-sm leading-relaxed text-muted-foreground">
+              <div className="flex items-start gap-3 rounded-lg border border-warm-200 bg-ivory p-4">
+                <PawPrint className="mt-0.5 size-5 shrink-0 text-gold" />
+                <p className="text-sm leading-relaxed text-warm-500">
                   {property.petPolicy}
                 </p>
               </div>
@@ -169,14 +169,14 @@ export default async function ListingDetailPage({
           {/* Right Column - Price Card */}
           <div className="lg:col-span-1">
             <div className="lg:sticky lg:top-24">
-              <Card className="gap-0 overflow-hidden p-0">
+              <Card className="gap-0 overflow-hidden p-0 border-warm-200">
                 {/* Price Header */}
-                <CardHeader className="bg-slate-900 px-6 py-5 text-white">
+                <CardHeader className="bg-charcoal px-6 py-5 text-white">
                   <CardTitle className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-amber-400">
+                    <span className="font-display text-3xl font-bold text-gold-light">
                       {formatPrice(property.price)}
                     </span>
-                    <span className="text-sm font-normal text-slate-300">
+                    <span className="text-sm font-normal text-warm-300">
                       /month
                     </span>
                   </CardTitle>
@@ -186,56 +186,56 @@ export default async function ListingDetailPage({
                   {/* Pricing Details */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">
+                      <span className="text-warm-500">
                         Security Deposit
                       </span>
-                      <span className="font-medium text-foreground">
+                      <span className="font-medium text-warm-900">
                         {formatPrice(property.securityDeposit)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">
+                      <span className="text-warm-500">
                         Available From
                       </span>
-                      <span className="font-medium text-foreground">
+                      <span className="font-medium text-warm-900">
                         {formatDate(property.availableFrom)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Lease Term</span>
-                      <span className="font-medium text-foreground">
+                      <span className="text-warm-500">Lease Term</span>
+                      <span className="font-medium text-warm-900">
                         {property.leaseTermType}
                       </span>
                     </div>
                   </div>
 
-                  <Separator />
+                  <Separator className="bg-warm-200" />
 
                   {/* Action Buttons */}
                   <div className="space-y-3">
                     <Button
                       asChild
-                      className="w-full bg-amber-500 text-white hover:bg-amber-600"
+                      className="w-full bg-gold text-white hover:bg-gold-dark"
                       size="lg"
                     >
                       <Link href={`/listings/${slug}/apply`}>Apply Now</Link>
                     </Button>
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="w-full border-warm-200 text-warm-700 hover:bg-ivory-warm"
                       size="lg"
                     >
                       Schedule Tour
                     </Button>
                   </div>
 
-                  <Separator />
+                  <Separator className="bg-warm-200" />
 
                   {/* Contact Link */}
                   <div className="text-center">
                     <Link
                       href="/contact"
-                      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-amber-600"
+                      className="inline-flex items-center gap-1.5 text-sm text-warm-500 transition-colors hover:text-gold"
                     >
                       <Mail className="size-4" />
                       Contact Us

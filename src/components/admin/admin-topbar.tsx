@@ -156,7 +156,7 @@ export function AdminTopbar({ user }: AdminTopbarProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="gap-2 px-2">
               <Avatar size="sm">
-                <AvatarFallback className="bg-amber-500/20 text-xs font-semibold text-amber-600">
+                <AvatarFallback className="bg-gold/20 text-xs font-semibold text-gold">
                   {user.firstName?.[0]}
                   {user.lastName?.[0]}
                 </AvatarFallback>
@@ -193,20 +193,23 @@ export function AdminTopbar({ user }: AdminTopbarProps) {
 
       {/* Mobile Sidebar Sheet */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="left" className="w-72 bg-slate-900 p-0 text-white">
+        <SheetContent side="left" className="w-72 bg-charcoal p-0 text-white">
           <SheetHeader className="px-6 pt-6 pb-2">
             <SheetTitle className="flex items-center gap-2.5 text-white">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-amber-500">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-gold">
                 <Building2 className="size-4 text-white" />
               </div>
-              <span className="text-lg">YellowRiver</span>
+              <span className="font-display text-lg tracking-tight">
+                <span className="text-white">Yellow</span>
+                <span className="text-gold">River</span>
+              </span>
             </SheetTitle>
           </SheetHeader>
 
-          <Separator className="bg-slate-700/50" />
+          <Separator className="bg-charcoal-light" />
 
           <nav className="flex-1 space-y-1 px-3 py-4">
-            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-warm-500">
               Menu
             </p>
             {ADMIN_NAV_LINKS.map((link) => {
@@ -222,15 +225,15 @@ export function AdminTopbar({ user }: AdminTopbarProps) {
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-amber-500/10 text-amber-400"
-                      : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                      ? "bg-gold/10 text-gold"
+                      : "text-warm-300 hover:bg-charcoal-light hover:text-white"
                   )}
                 >
                   {Icon && (
                     <Icon
                       className={cn(
                         "size-5",
-                        isActive ? "text-amber-400" : "text-slate-400"
+                        isActive ? "text-gold" : "text-warm-500"
                       )}
                     />
                   )}
@@ -240,11 +243,11 @@ export function AdminTopbar({ user }: AdminTopbarProps) {
             })}
           </nav>
 
-          <Separator className="bg-slate-700/50" />
+          <Separator className="bg-charcoal-light" />
 
           <div className="p-4">
-            <div className="flex items-center gap-3 rounded-lg bg-slate-800/50 px-3 py-3">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-sm font-semibold text-amber-400">
+            <div className="flex items-center gap-3 rounded-lg bg-charcoal-light/50 px-3 py-3">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gold/20 text-sm font-semibold text-gold">
                 {user.firstName?.[0]}
                 {user.lastName?.[0]}
               </div>
@@ -252,9 +255,9 @@ export function AdminTopbar({ user }: AdminTopbarProps) {
                 <p className="truncate text-sm font-medium text-white">
                   {user.firstName} {user.lastName}
                 </p>
-                <p className="truncate text-xs text-slate-400">{user.email}</p>
+                <p className="truncate text-xs text-warm-500">{user.email}</p>
               </div>
-              <Badge className="shrink-0 bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border-0 text-[10px]">
+              <Badge className="shrink-0 bg-gold/20 text-gold hover:bg-gold/30 border-0 text-[10px]">
                 {user.role}
               </Badge>
             </div>
@@ -262,7 +265,7 @@ export function AdminTopbar({ user }: AdminTopbarProps) {
             <Button
               variant="ghost"
               onClick={handleLogout}
-              className="mt-2 w-full justify-start gap-2 text-slate-400 hover:bg-slate-800 hover:text-white"
+              className="mt-2 w-full justify-start gap-2 text-warm-500 hover:bg-charcoal-light hover:text-gold"
             >
               <LogOut className="size-4" />
               Sign out

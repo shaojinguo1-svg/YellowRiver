@@ -71,13 +71,17 @@ export default function FAQPage() {
   return (
     <div>
       {/* Hero */}
-      <section className="bg-slate-900 text-white">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            Frequently Asked{" "}
-            <span className="text-amber-500">Questions</span>
+      <section className="bg-charcoal relative py-20 sm:py-28">
+        <div className="bg-mesh-dark absolute inset-0" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 text-center">
+          <p className="text-xs uppercase tracking-[0.2em] text-gold font-medium mb-4">
+            Common Questions
+          </p>
+          <h1 className="font-display text-4xl sm:text-5xl font-bold text-white tracking-tight">
+            Frequently Asked Questions
           </h1>
-          <p className="mt-4 max-w-2xl text-lg text-slate-300">
+          <div className="mx-auto mt-4 w-16 h-0.5 bg-gold" />
+          <p className="mt-6 text-lg text-warm-300 max-w-2xl mx-auto">
             Everything you need to know about renting with YellowRiver. Can not
             find what you are looking for? Feel free to contact our team.
           </p>
@@ -89,11 +93,11 @@ export default function FAQPage() {
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <Accordion type="single" collapsible className="w-full">
             {FAQ_ITEMS.map((item, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="text-left text-base">
+              <AccordionItem key={index} value={`item-${index}`} className="border-warm-200">
+                <AccordionTrigger className="font-display text-left text-base font-semibold text-warm-900 hover:text-gold">
                   {item.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-base leading-relaxed text-muted-foreground">
+                <AccordionContent className="text-base leading-relaxed text-warm-500">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>
@@ -103,20 +107,21 @@ export default function FAQPage() {
       </section>
 
       {/* CTA */}
-      <section className="border-t py-16 sm:py-24">
+      <section className="bg-ivory-warm py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+            <h2 className="font-display text-2xl font-bold tracking-tight text-warm-900">
               Still Have Questions?
             </h2>
-            <p className="mt-4 text-base text-muted-foreground">
+            <div className="mx-auto mt-4 w-12 h-0.5 bg-gold" />
+            <p className="mt-4 text-base text-warm-500">
               Our team is happy to help with any questions you might have about
               our properties or the rental process.
             </p>
             <Button
               asChild
               size="lg"
-              className="mt-8 bg-amber-500 text-white hover:bg-amber-600"
+              className="mt-8 bg-gold text-white hover:bg-gold-dark"
             >
               <Link href="/contact">Contact Us</Link>
             </Button>

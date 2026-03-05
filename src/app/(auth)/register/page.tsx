@@ -71,7 +71,7 @@ export default function RegisterPage() {
     return (
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Check Your Email</CardTitle>
+          <CardTitle className="font-display text-2xl">Check Your Email</CardTitle>
           <CardDescription>
             We sent a confirmation link to your email address. Please check your
             inbox and click the link to activate your account.
@@ -80,7 +80,7 @@ export default function RegisterPage() {
         <CardFooter className="justify-center">
           <Link
             href="/login"
-            className="text-sm font-medium text-amber-600 hover:text-amber-700"
+            className="text-sm font-medium text-gold hover:text-gold-dark"
           >
             Back to Sign In
           </Link>
@@ -92,7 +92,7 @@ export default function RegisterPage() {
   return (
     <Card>
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
+        <CardTitle className="font-display text-2xl">Create Account</CardTitle>
         <CardDescription>
           Enter your details to create a new account
         </CardDescription>
@@ -187,7 +187,7 @@ export default function RegisterPage() {
             type="submit"
             size="lg"
             disabled={isLoading}
-            className="w-full bg-amber-500 text-white hover:bg-amber-600"
+            className="w-full bg-gold text-white hover:bg-gold-dark"
           >
             {isLoading ? (
               <>
@@ -205,7 +205,7 @@ export default function RegisterPage() {
           Already have an account?{" "}
           <Link
             href="/login"
-            className="font-medium text-amber-600 hover:text-amber-700"
+            className="font-medium text-gold hover:text-gold-dark"
           >
             Sign in
           </Link>

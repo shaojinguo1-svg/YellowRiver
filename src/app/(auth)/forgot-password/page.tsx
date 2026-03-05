@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
     return (
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Check Your Email</CardTitle>
+          <CardTitle className="font-display text-2xl">Check Your Email</CardTitle>
           <CardDescription>
             If an account exists with that email address, we sent a password
             reset link. Please check your inbox.
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
         <CardFooter className="justify-center">
           <Link
             href="/login"
-            className="inline-flex items-center gap-1 text-sm font-medium text-amber-600 hover:text-amber-700"
+            className="inline-flex items-center gap-1 text-sm font-medium text-gold hover:text-gold-dark"
           >
             <ArrowLeft className="size-4" />
             Back to Sign In
@@ -85,7 +85,7 @@ export default function ForgotPasswordPage() {
   return (
     <Card>
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
+        <CardTitle className="font-display text-2xl">Reset Password</CardTitle>
         <CardDescription>
           Enter your email address and we&apos;ll send you a link to reset your
           password.
@@ -114,7 +114,7 @@ export default function ForgotPasswordPage() {
             type="submit"
             size="lg"
             disabled={isLoading}
-            className="w-full bg-amber-500 text-white hover:bg-amber-600"
+            className="w-full bg-gold text-white hover:bg-gold-dark"
           >
             {isLoading ? (
               <>
@@ -130,7 +130,7 @@ export default function ForgotPasswordPage() {
       <CardFooter className="justify-center">
         <Link
           href="/login"
-          className="inline-flex items-center gap-1 text-sm font-medium text-amber-600 hover:text-amber-700"
+          className="inline-flex items-center gap-1 text-sm font-medium text-gold hover:text-gold-dark"
         >
           <ArrowLeft className="size-4" />
           Back to Sign In

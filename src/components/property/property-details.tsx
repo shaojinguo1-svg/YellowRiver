@@ -90,13 +90,13 @@ export function PropertyDetails({
         return (
           <div
             key={detail.label}
-            className="flex flex-col gap-1.5 rounded-lg border bg-card p-3"
+            className="flex flex-col gap-1.5 rounded-lg border border-warm-200 bg-ivory p-3"
           >
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Icon className="size-4 shrink-0 text-amber-500" />
-              <span className="text-xs font-medium">{detail.label}</span>
+            <div className="flex items-center gap-2">
+              <Icon className="size-4 shrink-0 text-gold" />
+              <span className="text-xs text-warm-500">{detail.label}</span>
             </div>
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-sm font-medium text-warm-900">
               {detail.value}
             </p>
           </div>

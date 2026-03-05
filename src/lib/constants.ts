@@ -1,6 +1,6 @@
 export const APP_NAME = "YellowRiver";
 export const APP_DESCRIPTION =
-  "Find your perfect rental home. Browse apartments, houses, and condos for rent.";
+  "Premium apartment rentals, professionally managed for your comfort.";
 
 export const PROPERTY_TYPES = [
   { value: "APARTMENT", label: "Apartment" },

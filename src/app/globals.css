@@ -8,7 +8,26 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
   --font-mono: var(--font-geist-mono);
+
+  /* Luxury palette */
+  --color-gold: #c9a96e;
+  --color-gold-light: #d4bc8e;
+  --color-gold-dark: #b08d4f;
+  --color-charcoal: #1a1a2e;
+  --color-charcoal-light: #252542;
+  --color-midnight: #16162a;
+  --color-ivory: #faf8f5;
+  --color-ivory-warm: #f5f0e8;
+  --color-warm-100: #f7f5f2;
+  --color-warm-200: #ebe7e0;
+  --color-warm-300: #d4cfc6;
+  --color-warm-500: #8a8477;
+  --color-warm-700: #5a554c;
+  --color-warm-900: #2d2a26;
+
+  /* shadcn tokens */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,71 +68,72 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Warm luxury light theme */
+  --background: oklch(0.98 0.005 80);
+  --foreground: oklch(0.22 0.01 60);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.22 0.01 60);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.22 0.01 60);
+  --primary: oklch(0.74 0.07 75);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0.008 75);
+  --secondary-foreground: oklch(0.42 0.015 60);
+  --muted: oklch(0.95 0.008 75);
+  --muted-foreground: oklch(0.6 0.02 65);
+  --accent: oklch(0.74 0.07 75 / 10%);
+  --accent-foreground: oklch(0.65 0.07 75);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
+  --border: oklch(0.92 0.008 70);
+  --input: oklch(0.92 0.008 70);
+  --ring: oklch(0.74 0.07 75);
+  --chart-1: oklch(0.74 0.07 75);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.985 0.005 75);
+  --sidebar-foreground: oklch(0.22 0.01 60);
+  --sidebar-primary: oklch(0.74 0.07 75);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.95 0.008 75);
+  --sidebar-accent-foreground: oklch(0.22 0.01 60);
+  --sidebar-border: oklch(0.92 0.008 70);
+  --sidebar-ring: oklch(0.74 0.07 75);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.18 0.02 280);
+  --foreground: oklch(0.95 0.005 75);
+  --card: oklch(0.22 0.02 280);
+  --card-foreground: oklch(0.95 0.005 75);
+  --popover: oklch(0.22 0.02 280);
+  --popover-foreground: oklch(0.95 0.005 75);
+  --primary: oklch(0.74 0.07 75);
+  --primary-foreground: oklch(0.18 0.02 280);
+  --secondary: oklch(0.25 0.015 280);
+  --secondary-foreground: oklch(0.95 0.005 75);
+  --muted: oklch(0.25 0.015 280);
+  --muted-foreground: oklch(0.65 0.01 75);
+  --accent: oklch(0.25 0.015 280);
+  --accent-foreground: oklch(0.95 0.005 75);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
+  --ring: oklch(0.74 0.07 75);
+  --chart-1: oklch(0.74 0.07 75);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar: oklch(0.18 0.02 280);
+  --sidebar-foreground: oklch(0.95 0.005 75);
+  --sidebar-primary: oklch(0.74 0.07 75);
+  --sidebar-primary-foreground: oklch(0.18 0.02 280);
+  --sidebar-accent: oklch(0.25 0.015 280);
+  --sidebar-accent-foreground: oklch(0.95 0.005 75);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.74 0.07 75);
 }
 
 @layer base {
@@ -130,7 +150,149 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Header scroll shadow utility */
+/* ─── Luxury Design Utilities ─── */
+
+/* Glassmorphism header */
+.header-glass {
+  backdrop-filter: blur(16px) saturate(180%);
+  background: rgba(250, 248, 245, 0.85);
+}
+
+/* Legacy header shadow (fallback) */
 .header-scrolled {
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Gold gradient text */
+.text-gradient-gold {
+  background: linear-gradient(135deg, #c9a96e 0%, #d4bc8e 50%, #c9a96e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Subtle noise texture overlay for dark sections */
+.bg-noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* Gradient mesh for light sections */
+.bg-mesh-light {
+  background-image: radial-gradient(at 20% 30%, rgba(201, 169, 110, 0.06) 0px, transparent 50%),
+    radial-gradient(at 80% 70%, rgba(201, 169, 110, 0.04) 0px, transparent 50%);
+}
+
+/* Gradient mesh for hero/dark sections */
+.bg-mesh-dark {
+  background-image: radial-gradient(at 30% 20%, rgba(201, 169, 110, 0.08) 0px, transparent 50%),
+    radial-gradient(at 70% 80%, rgba(37, 37, 66, 0.5) 0px, transparent 50%);
+}
+
+/* ─── Card Hover Effects ─── */
+.card-luxury {
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-luxury:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.1),
+    0 8px 20px -5px rgba(0, 0, 0, 0.05);
+}
+
+/* ─── Entrance Animations ─── */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.7s ease-out both;
+}
+.animate-fade-in-left {
+  animation: fade-in-left 0.7s ease-out both;
+}
+.animate-fade-in-right {
+  animation: fade-in-right 0.7s ease-out both;
+}
+.animate-fade-in {
+  animation: fade-in 0.7s ease-out both;
+}
+
+/* Stagger delays */
+.delay-100 {
+  animation-delay: 100ms;
+}
+.delay-200 {
+  animation-delay: 200ms;
+}
+.delay-300 {
+  animation-delay: 300ms;
+}
+.delay-400 {
+  animation-delay: 400ms;
+}
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+/* ─── Link underline animation ─── */
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background-color: #c9a96e;
+  transition: width 300ms ease;
+}
+.link-underline:hover::after {
+  width: 100%;
 }

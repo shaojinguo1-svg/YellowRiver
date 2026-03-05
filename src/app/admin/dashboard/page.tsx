@@ -21,7 +21,7 @@ export default function AdminDashboardPage() {
           value="0"
           description="Published properties"
           icon={Building2}
-          iconClassName="bg-blue-50 text-blue-600"
+          iconClassName="bg-gold/10 text-gold"
         />
         <StatsCard
           title="Applications This Month"
@@ -35,7 +35,7 @@ export default function AdminDashboardPage() {
           value="0"
           description="Awaiting review"
           icon={Clock}
-          iconClassName="bg-amber-50 text-amber-600"
+          iconClassName="bg-blue-50 text-blue-600"
         />
         <StatsCard
           title="New Inquiries"
@@ -51,7 +51,7 @@ export default function AdminDashboardPage() {
         {/* Recent Applications */}
         <Card>
           <CardHeader className="flex-row items-center justify-between">
-            <CardTitle className="text-base">Recent Applications</CardTitle>
+            <CardTitle className="font-display text-base">Recent Applications</CardTitle>
             <Button variant="ghost" size="sm" asChild>
               <Link href="/admin/applications" className="gap-1 text-xs">
                 View all
@@ -78,7 +78,7 @@ export default function AdminDashboardPage() {
         {/* Recent Inquiries */}
         <Card>
           <CardHeader className="flex-row items-center justify-between">
-            <CardTitle className="text-base">Recent Inquiries</CardTitle>
+            <CardTitle className="font-display text-base">Recent Inquiries</CardTitle>
             <Button variant="ghost" size="sm" asChild>
               <Link href="/admin/inquiries" className="gap-1 text-xs">
                 View all
@@ -105,11 +105,11 @@ export default function AdminDashboardPage() {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Quick Actions</CardTitle>
+          <CardTitle className="font-display text-base">Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
-            <Button asChild>
+            <Button asChild className="bg-gold text-white hover:bg-gold-dark">
               <Link href="/admin/listings/new">
                 <Plus className="size-4" />
                 Add New Listing
