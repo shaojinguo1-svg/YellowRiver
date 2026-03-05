@@ -7,8 +7,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Loader2, Upload, ImageIcon } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
+import { ImageUpload } from "@/components/admin/image-upload";
+import type { PropertyImageData } from "@/components/admin/image-upload";
 import { propertyCreateSchema } from "@/validations/property";
 import type { PropertyCreateInput, PropertyCreateFormInput } from "@/validations/property";
 import {
@@ -41,7 +43,10 @@ import {
 
 interface ListingFormProps {
   mode: "create" | "edit";
-  initialData?: Partial<PropertyCreateInput> & { id?: string };
+  initialData?: Partial<PropertyCreateInput> & {
+    id?: string;
+    images?: PropertyImageData[];
+  };
 }
 
 export function ListingForm({ mode, initialData }: ListingFormProps) {
@@ -632,21 +637,18 @@ export function ListingForm({ mode, initialData }: ListingFormProps) {
         <TabsContent value="images">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 px-6 py-16 text-center">
-                <div className="flex size-14 items-center justify-center rounded-full bg-muted">
-                  <ImageIcon className="size-7 text-muted-foreground" />
+              {mode === "edit" && initialData?.id ? (
+                <ImageUpload
+                  propertyId={initialData.id}
+                  initialImages={initialData.images ?? []}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 px-6 py-12 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Save the listing first, then you can upload images.
+                  </p>
                 </div>
-                <div className="mt-4 flex items-center gap-2 text-sm leading-6 text-muted-foreground">
-                  <Upload className="size-4" />
-                  <span>Drag and drop images here, or click to upload</span>
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  PNG, JPG, WEBP up to 5MB each
-                </p>
-                <p className="mt-4 rounded-md bg-muted px-3 py-1.5 text-xs text-muted-foreground">
-                  Image upload will be available after database connection
-                </p>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

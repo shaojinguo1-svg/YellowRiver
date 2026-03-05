@@ -57,6 +57,14 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
     featured: property.featured,
     categoryId: property.categoryId ?? "",
     amenityIds: property.amenities.map((pa) => pa.amenityId),
+    images: property.images.map((img) => ({
+      id: img.id,
+      url: img.url,
+      storagePath: img.storagePath,
+      alt: img.alt,
+      sortOrder: img.sortOrder,
+      isPrimary: img.isPrimary,
+    })),
   };
 
   return (
