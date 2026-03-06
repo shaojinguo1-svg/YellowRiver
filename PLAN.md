@@ -1,24 +1,19 @@
-# Plan: Fix Hydration Mismatch Error
+# Plan: Fix "Bucket not found" Error in Image Upload
 
 ## Goal
-Fix the React hydration error caused by server/client HTML mismatch.
+Fix the Supabase Storage error when uploading property images in admin panel.
 
-## Root Cause Analysis
-Likely culprits in this codebase:
-1. `Footer` — uses `new Date().getFullYear()` which could differ between server and client
-2. `Header` — uses `useState` for scroll state that differs on initial render
-3. `ApplicationForm` — reads `localStorage` on mount, restoring form data
-4. Any component using `useSearchParams()` without `<Suspense>` boundary
+## Root Cause
+The `image-upload.tsx` component uploads directly to Supabase Storage bucket `property-images`, but the bucket hasn't been created in the Supabase project yet.
 
 ## Changes
-- [ ] Check Footer for `Date.now()` / `new Date()` usage
-- [ ] Check Header for hydration-unsafe patterns
-- [ ] Check all client components for server/client mismatches
-- [ ] Fix identified issues
+- [ ] Check `image-upload.tsx` to confirm the bucket name used
+- [ ] Create a setup script or SQL migration to create the bucket
+- [ ] Document the required Supabase setup
 
 ## Testing
-- Run dev server, open browser console, confirm no hydration errors
-- Check all pages: /, /listings, /about, /contact, /faq
+- Upload an image in admin → should succeed without "Bucket not found" error
 
 ## Notes
-- Hydration errors are "recoverable" but hurt performance and cause visual flicker
+- This is a Supabase project configuration issue, not a code bug
+- The bucket needs to be created in the Supabase dashboard or via API
