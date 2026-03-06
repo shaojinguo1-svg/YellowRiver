@@ -138,7 +138,7 @@ export function Footer() {
 
         {/* Copyright */}
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <p className="text-sm text-warm-500">
+          <p className="text-sm text-warm-500" suppressHydrationWarning>
             &copy; {new Date().getFullYear()} {APP_NAME}. All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-sm text-warm-500">

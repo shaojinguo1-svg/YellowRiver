@@ -62,7 +62,11 @@ export const propertyCreateSchema = z.object({
     .number()
     .int("Year must be a whole number")
     .min(1800, "Year built must be after 1800")
-    .max(new Date().getFullYear(), `Year built must be at most ${new Date().getFullYear()}`)
+    .max(2100, "Year built cannot be in the future")
+    .refine(
+      (val) => val <= new Date().getFullYear(),
+      { message: "Year built cannot be in the future" }
+    )
     .optional(),
   floor: z.number().int("Floor must be a whole number").optional(),
   totalFloors: z.number().int("Total floors must be a whole number").optional(),
