@@ -40,15 +40,22 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 
+interface AmenityOption {
+  id: string;
+  name: string;
+  category: string | null;
+}
+
 interface ListingFormProps {
   mode: "create" | "edit";
   initialData?: Partial<PropertyCreateInput> & {
     id?: string;
     images?: PropertyImageData[];
   };
+  availableAmenities?: AmenityOption[];
 }
 
-export function ListingForm({ mode, initialData }: ListingFormProps) {
+export function ListingForm({ mode, initialData, availableAmenities = [] }: ListingFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -626,6 +633,73 @@ export function ListingForm({ mode, initialData }: ListingFormProps) {
                   </p>
                 )}
               </div>
+
+              {/* Amenities */}
+              {availableAmenities.length > 0 && (
+                <div className="space-y-3">
+                  <Label>Amenities</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Select all amenities that apply to this property
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                    {availableAmenities.map((amenity) => {
+                      const currentIds = watch("amenityIds") ?? [];
+                      const isChecked = currentIds.includes(amenity.id);
+                      return (
+                        <label
+                          key={amenity.id}
+                          className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                            isChecked
+                              ? "border-primary bg-primary/5 text-foreground"
+                              : "border-muted hover:border-primary/30 text-muted-foreground"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              const updated = e.target.checked
+                                ? [...currentIds, amenity.id]
+                                : currentIds.filter((id: string) => id !== amenity.id);
+                              setValue("amenityIds", updated, {
+                                shouldDirty: true,
+                              });
+                            }}
+                            className="sr-only"
+                          />
+                          <div
+                            className={`flex size-4 shrink-0 items-center justify-center rounded border ${
+                              isChecked
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-muted-foreground/30"
+                            }`}
+                          >
+                            {isChecked && (
+                              <svg
+                                className="size-3"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={3}
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
+                          </div>
+                          <span className="truncate">{amenity.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {(watch("amenityIds") ?? []).length} selected
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

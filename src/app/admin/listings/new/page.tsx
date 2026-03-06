@@ -1,6 +1,12 @@
 import { ListingForm } from "@/components/admin/listing-form";
+import { prisma } from "@/lib/prisma";
 
-export default function NewListingPage() {
+export default async function NewListingPage() {
+  const amenities = await prisma.amenity.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, category: true },
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -10,7 +16,7 @@ export default function NewListingPage() {
         </p>
       </div>
 
-      <ListingForm mode="create" />
+      <ListingForm mode="create" availableAmenities={amenities} />
     </div>
   );
 }

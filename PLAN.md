@@ -1,21 +1,23 @@
-# Plan: Fix Supabase Storage RLS Policy for Image Upload
+# Plan: Add Amenities Selection to Admin Listing Form
 
 ## Goal
-Fix "new row violates row-level security policy" when uploading images to the property-images bucket.
+Add amenity multi-select UI to the admin listing form so admins can assign amenities to properties.
 
 ## Root Cause
-Supabase Storage has Row Level Security (RLS) enabled by default. The `property-images` bucket needs policies that allow:
-- Authenticated users (admins) to upload/delete files
-- Public read access for serving images
+- DB has 24 amenities seeded ✅
+- Prisma schema has Amenity + PropertyAmenity models ✅
+- Listing form has `amenityIds` in defaultValues but NO UI to select them ❌
+- API route doesn't handle `amenityIds` on create/update ❌
 
 ## Changes
-- [ ] Add RLS policies to the `property-images` bucket via Supabase API
-  - Public SELECT (read) for everyone
-  - INSERT/UPDATE/DELETE for authenticated users
+- [ ] `src/components/admin/listing-form.tsx` — Add amenity checkbox grid in Details tab
+  - Fetch available amenities via API or pass as prop
+  - Render checkboxes, update `amenityIds` field
+- [ ] `src/app/admin/listings/new/page.tsx` — Fetch amenities, pass to form
+- [ ] `src/app/admin/listings/[id]/edit/page.tsx` — Fetch amenities + property's current amenities, pass to form
+- [ ] `src/app/api/properties/route.ts` (POST) — Handle `amenityIds` to create PropertyAmenity records
+- [ ] `src/app/api/properties/[id]/route.ts` (PATCH) — Handle `amenityIds` to sync PropertyAmenity records
 
 ## Testing
-- Upload an image in admin panel → should succeed
-
-## Notes
-- Using service role key to set policies (bypasses RLS)
-- The client-side upload uses the anon key, so policies must allow authenticated uploads
+- Create listing with amenities → verify they appear on the public detail page
+- Edit listing, change amenities → verify update works

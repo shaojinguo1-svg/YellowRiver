@@ -67,6 +67,11 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
     })),
   };
 
+  const amenities = await prisma.amenity.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, category: true },
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -76,7 +81,7 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
         </p>
       </div>
 
-      <ListingForm mode="edit" initialData={initialData} />
+      <ListingForm mode="edit" initialData={initialData} availableAmenities={amenities} />
     </div>
   );
 }
