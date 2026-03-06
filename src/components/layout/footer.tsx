@@ -22,10 +22,10 @@ const CONTACT_INFO = [
 ];
 
 const SOCIAL_LINKS = [
-  { icon: Facebook, href: "#", label: "Facebook" },
-  { icon: Twitter, href: "#", label: "Twitter" },
-  { icon: Instagram, href: "#", label: "Instagram" },
-  { icon: Linkedin, href: "#", label: "LinkedIn" },
+  { icon: Facebook, href: "https://facebook.com", label: "Facebook" },
+  { icon: Twitter, href: "https://x.com", label: "Twitter" },
+  { icon: Instagram, href: "https://instagram.com", label: "Instagram" },
+  { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
 ];
 
 export function Footer() {
@@ -56,6 +56,8 @@ export function Footer() {
                 <a
                   key={social.label}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={social.label}
                   className="flex size-9 items-center justify-center rounded-full bg-charcoal-light text-warm-300 transition-colors hover:bg-gold hover:text-white"
                 >

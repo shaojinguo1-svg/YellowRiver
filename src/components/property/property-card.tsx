@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BedDouble, Bath, Maximize, MapPin, ArrowRight } from "lucide-react";
+import { BedDouble, Bath, Maximize, MapPin, ArrowRight, CalendarDays } from "lucide-react";
 
 export interface PropertyCardProps {
   id: string;
@@ -13,6 +13,7 @@ export interface PropertyCardProps {
   city: string;
   state: string;
   propertyType: string;
+  availableFrom?: string;
   primaryImage?: {
     url: string;
     alt: string;
@@ -28,6 +29,14 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
+function formatAvailableDate(dateStr?: string): string | null {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  const now = new Date();
+  if (date <= now) return "Available Now";
+  return `Available ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+}
+
 export function PropertyCard({
   slug,
   title,
@@ -38,8 +47,10 @@ export function PropertyCard({
   city,
   state,
   propertyType,
+  availableFrom,
   primaryImage,
 }: PropertyCardProps) {
+  const availableText = formatAvailableDate(availableFrom);
   return (
     <Link href={`/listings/${slug}`} className="group block">
       <div className="card-luxury overflow-hidden rounded-xl border border-warm-200 bg-white">
@@ -103,12 +114,20 @@ export function PropertyCard({
             {title}
           </h3>
 
-          {/* Location */}
-          <div className="flex items-center gap-1.5 text-sm text-warm-500">
-            <MapPin className="size-3.5 shrink-0 text-gold/60" />
-            <span className="line-clamp-1">
-              {city}, {state}
-            </span>
+          {/* Location + Available */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 text-sm text-warm-500 min-w-0">
+              <MapPin className="size-3.5 shrink-0 text-gold/60" />
+              <span className="line-clamp-1">
+                {city}, {state}
+              </span>
+            </div>
+            {availableText && (
+              <span className="shrink-0 flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                <CalendarDays className="size-3" />
+                {availableText}
+              </span>
+            )}
           </div>
 
           {/* Stats */}

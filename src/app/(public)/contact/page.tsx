@@ -278,13 +278,32 @@ function ContactPageContent() {
                 </CardContent>
               </Card>
 
-              {/* Map Placeholder */}
-              <div className="mt-6 overflow-hidden rounded-xl border border-warm-200 bg-ivory">
-                <div className="flex h-48 items-center justify-center text-sm text-warm-500">
-                  <MapPin className="mr-2 size-4 text-gold" />
-                  Map coming soon
+              {/* Location Card */}
+              <Card className="mt-6 border-warm-200 overflow-hidden">
+                <div className="bg-charcoal px-6 py-4">
+                  <div className="flex items-center gap-2 text-white">
+                    <MapPin className="size-5 text-gold" />
+                    <span className="font-display text-sm font-semibold">Our Office</span>
+                  </div>
                 </div>
-              </div>
+                <CardContent className="p-6">
+                  <p className="text-sm font-medium text-warm-900">
+                    123 River Street, Suite 100
+                  </p>
+                  <p className="text-sm text-warm-500">Sacramento, CA 95814</p>
+                  <div className="mt-4 flex gap-2">
+                    <a
+                      href="https://maps.google.com/?q=123+River+Street+Sacramento+CA+95814"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-gold/10 px-3 py-1.5 text-xs font-medium text-gold-dark transition-colors hover:bg-gold/20"
+                    >
+                      <MapPin className="size-3" />
+                      Get Directions
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>

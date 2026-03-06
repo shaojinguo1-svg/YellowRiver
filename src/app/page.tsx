@@ -154,6 +154,7 @@ export default async function HomePage() {
       city: p.city,
       state: p.state,
       propertyType: p.propertyType,
+      availableFrom: p.availableFrom.toISOString(),
       primaryImage: p.images[0]
         ? { url: p.images[0].url, alt: p.images[0].alt || p.title }
         : undefined,
@@ -440,20 +441,17 @@ export default async function HomePage() {
         {/* ----------------------------------------------------------------- */}
         {/* CTA Section                                                       */}
         {/* ----------------------------------------------------------------- */}
-        <section className="relative bg-charcoal py-24 sm:py-32">
-          {/* Animated gradient orbs */}
-          <div className="absolute top-0 left-1/4 size-64 rounded-full bg-gold/[0.05] blur-3xl animate-pulse-slow" />
-          <div className="absolute bottom-0 right-1/4 size-64 rounded-full bg-gold/[0.03] blur-3xl animate-pulse-slow delay-1000" />
-
-          {/* Noise texture */}
-          <div className="bg-noise absolute inset-0" />
+        <section className="relative overflow-hidden bg-gradient-to-br from-gold via-gold-dark to-amber-800 py-24 sm:py-32">
+          {/* Subtle pattern */}
+          <div className="bg-noise absolute inset-0 opacity-30" />
 
           <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
             <AnimateOnScroll>
               <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">
                 Ready to Find Your New Home?
               </h2>
-              <p className="mx-auto mt-4 max-w-2xl text-lg text-warm-300">
+              <div className="mx-auto mt-4 h-0.5 w-16 bg-white/30" />
+              <p className="mx-auto mt-4 max-w-2xl text-lg text-white/80">
                 Start browsing our listings today or get in touch with our team.
                 We are here to help you every step of the way.
               </p>
@@ -461,7 +459,7 @@ export default async function HomePage() {
                 <Button
                   asChild
                   size="lg"
-                  className="bg-gold text-white hover:bg-gold-dark"
+                  className="bg-white text-gold-dark hover:bg-ivory font-semibold shadow-lg"
                 >
                   <Link href="/listings">
                     <Search className="mr-2 size-4" />
@@ -472,7 +470,7 @@ export default async function HomePage() {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="border-gold/30 text-gold hover:bg-gold/10"
+                  className="border-white/40 text-white hover:bg-white/10"
                 >
                   <Link href="/contact">
                     <Phone className="mr-2 size-4" />

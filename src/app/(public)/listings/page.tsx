@@ -18,6 +18,7 @@ export default async function ListingsPage({
   const locationFilter = params.location || "";
   const bedroomFilter = params.bedrooms || "";
   const typeFilter = params.type || "";
+  const sortBy = params.sort || "newest";
 
   const where: Record<string, unknown> = { status: "ACTIVE" };
 
@@ -38,12 +39,18 @@ export default async function ListingsPage({
     where.propertyType = typeFilter;
   }
 
+  // Sort order
+  let orderBy: Record<string, string> = { createdAt: "desc" };
+  if (sortBy === "price-asc") orderBy = { price: "asc" };
+  else if (sortBy === "price-desc") orderBy = { price: "desc" };
+  else if (sortBy === "oldest") orderBy = { createdAt: "asc" };
+
   const properties = await prisma.property.findMany({
     where,
     include: {
       images: { where: { isPrimary: true }, take: 1 },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy,
   });
 
   const propertyCards = properties.map((p) => ({
@@ -57,12 +64,13 @@ export default async function ListingsPage({
     city: p.city,
     state: p.state,
     propertyType: p.propertyType,
+    availableFrom: p.availableFrom.toISOString(),
     primaryImage: p.images[0]
       ? { url: p.images[0].url, alt: p.images[0].alt || p.title }
       : undefined,
   }));
 
-  const hasFilters = locationFilter || bedroomFilter || typeFilter;
+  const hasFilters = locationFilter || bedroomFilter || typeFilter || sortBy !== "newest";
 
   return (
     <div>
@@ -121,6 +129,16 @@ export default async function ListingsPage({
                 <option value="STUDIO">Studio</option>
               </select>
             </div>
+            <select
+              name="sort"
+              defaultValue={sortBy}
+              className="w-full rounded-lg border border-warm-200 bg-ivory px-4 py-2.5 text-sm text-warm-900 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50 sm:w-auto"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="price-asc">Price: Low → High</option>
+              <option value="price-desc">Price: High → Low</option>
+            </select>
             <div className="flex items-center gap-3">
               <button
                 type="submit"

@@ -241,7 +241,7 @@ export default async function ListingDetailPage({
                   </CardTitle>
                 </CardHeader>
 
-                <CardContent className="space-y-5 p-6">
+                <CardContent className="space-y-6 p-6">
                   {/* Pricing Details */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
