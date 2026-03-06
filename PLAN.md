@@ -1,19 +1,21 @@
-# Plan: Fix "Bucket not found" Error in Image Upload
+# Plan: Fix Supabase Storage RLS Policy for Image Upload
 
 ## Goal
-Fix the Supabase Storage error when uploading property images in admin panel.
+Fix "new row violates row-level security policy" when uploading images to the property-images bucket.
 
 ## Root Cause
-The `image-upload.tsx` component uploads directly to Supabase Storage bucket `property-images`, but the bucket hasn't been created in the Supabase project yet.
+Supabase Storage has Row Level Security (RLS) enabled by default. The `property-images` bucket needs policies that allow:
+- Authenticated users (admins) to upload/delete files
+- Public read access for serving images
 
 ## Changes
-- [ ] Check `image-upload.tsx` to confirm the bucket name used
-- [ ] Create a setup script or SQL migration to create the bucket
-- [ ] Document the required Supabase setup
+- [ ] Add RLS policies to the `property-images` bucket via Supabase API
+  - Public SELECT (read) for everyone
+  - INSERT/UPDATE/DELETE for authenticated users
 
 ## Testing
-- Upload an image in admin → should succeed without "Bucket not found" error
+- Upload an image in admin panel → should succeed
 
 ## Notes
-- This is a Supabase project configuration issue, not a code bug
-- The bucket needs to be created in the Supabase dashboard or via API
+- Using service role key to set policies (bypasses RLS)
+- The client-side upload uses the anon key, so policies must allow authenticated uploads
