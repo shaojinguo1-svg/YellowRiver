@@ -1,5 +1,6 @@
 import { PropertyGrid } from "@/components/property/property-grid";
 import { prisma } from "@/lib/prisma";
+import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -8,9 +9,37 @@ export const metadata: Metadata = {
     "Browse current rental properties available through YellowRiver. Find apartments, houses, condos, and more.",
 };
 
-export default async function ListingsPage() {
+export default async function ListingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) {
+  const params = await searchParams;
+  const locationFilter = params.location || "";
+  const bedroomFilter = params.bedrooms || "";
+  const typeFilter = params.type || "";
+
+  const where: Record<string, unknown> = { status: "ACTIVE" };
+
+  if (locationFilter) {
+    where.OR = [
+      { city: { contains: locationFilter, mode: "insensitive" } },
+      { state: { contains: locationFilter, mode: "insensitive" } },
+      { zipCode: { contains: locationFilter } },
+    ];
+  }
+
+  if (bedroomFilter && !isNaN(Number(bedroomFilter))) {
+    const beds = Number(bedroomFilter);
+    where.bedrooms = beds >= 4 ? { gte: 4 } : beds;
+  }
+
+  if (typeFilter) {
+    where.propertyType = typeFilter;
+  }
+
   const properties = await prisma.property.findMany({
-    where: { status: "ACTIVE" },
+    where,
     include: {
       images: { where: { isPrimary: true }, take: 1 },
     },
@@ -33,11 +62,14 @@ export default async function ListingsPage() {
       : undefined,
   }));
 
+  const hasFilters = locationFilter || bedroomFilter || typeFilter;
+
   return (
     <div>
       {/* Hero */}
       <section className="bg-charcoal relative py-20 sm:py-28">
         <div className="bg-mesh-dark absolute inset-0" />
+        <div className="bg-noise absolute inset-0" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 text-center">
           <p className="text-xs uppercase tracking-[0.2em] text-gold font-medium mb-4">
             Browse Properties
@@ -53,6 +85,58 @@ export default async function ListingsPage() {
         </div>
       </section>
 
+      {/* Filter Bar */}
+      <section className="border-b border-warm-200 bg-white sticky top-16 z-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <form method="GET" className="flex flex-wrap items-center gap-3 py-4">
+            <input
+              type="text"
+              name="location"
+              placeholder="City or ZIP"
+              defaultValue={locationFilter}
+              className="rounded-lg border border-warm-200 bg-ivory px-4 py-2 text-sm text-warm-900 placeholder:text-warm-500 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50 w-48"
+            />
+            <select
+              name="bedrooms"
+              defaultValue={bedroomFilter}
+              className="rounded-lg border border-warm-200 bg-ivory px-4 py-2 text-sm text-warm-900 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50"
+            >
+              <option value="">Bedrooms</option>
+              <option value="1">1 Bedroom</option>
+              <option value="2">2 Bedrooms</option>
+              <option value="3">3 Bedrooms</option>
+              <option value="4">4+ Bedrooms</option>
+            </select>
+            <select
+              name="type"
+              defaultValue={typeFilter}
+              className="rounded-lg border border-warm-200 bg-ivory px-4 py-2 text-sm text-warm-900 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50"
+            >
+              <option value="">All Types</option>
+              <option value="APARTMENT">Apartment</option>
+              <option value="HOUSE">House</option>
+              <option value="CONDO">Condo</option>
+              <option value="TOWNHOUSE">Townhouse</option>
+              <option value="STUDIO">Studio</option>
+            </select>
+            <button
+              type="submit"
+              className="rounded-lg bg-gold px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-gold-dark"
+            >
+              Filter
+            </button>
+            {hasFilters && (
+              <a
+                href="/listings"
+                className="text-sm text-warm-500 hover:text-gold transition-colors"
+              >
+                Clear filters
+              </a>
+            )}
+          </form>
+        </div>
+      </section>
+
       {/* Listings Grid */}
       <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -62,11 +146,16 @@ export default async function ListingsPage() {
               <span className="font-medium text-warm-900">
                 {propertyCards.length}
               </span>{" "}
-              properties
+              {propertyCards.length === 1 ? "property" : "properties"}
+              {hasFilters && (
+                <span className="text-warm-500"> matching your filters</span>
+              )}
             </p>
           </div>
 
-          <PropertyGrid properties={propertyCards} />
+          <AnimateOnScroll>
+            <PropertyGrid properties={propertyCards} />
+          </AnimateOnScroll>
         </div>
       </section>
     </div>

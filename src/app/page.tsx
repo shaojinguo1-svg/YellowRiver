@@ -13,11 +13,15 @@ import {
   Headphones,
   DollarSign,
   Zap,
+  Quote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { HeroSearch } from "@/components/property/hero-search";
+import { PropertyCard } from "@/components/property/property-card";
+import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
+import { prisma } from "@/lib/prisma";
 
 // ---------------------------------------------------------------------------
 // Stats data
@@ -84,9 +88,80 @@ const STEPS = [
 ];
 
 // ---------------------------------------------------------------------------
+// Testimonials
+// ---------------------------------------------------------------------------
+const TESTIMONIALS = [
+  {
+    name: "Sarah M.",
+    role: "Tenant since 2024",
+    quote:
+      "YellowRiver made the entire rental process incredibly smooth. From browsing listings to move-in day, every step was handled professionally. I love my new apartment!",
+    rating: 5,
+  },
+  {
+    name: "James L.",
+    role: "Tenant since 2023",
+    quote:
+      "The maintenance team is outstanding. Any issue I've had was resolved within 24 hours. It's clear they genuinely care about their tenants' comfort.",
+    rating: 5,
+  },
+  {
+    name: "Emily R.",
+    role: "Tenant since 2024",
+    quote:
+      "The online application was so easy, and I was approved within two days. The apartment is exactly as advertised — beautiful and well-maintained.",
+    rating: 5,
+  },
+];
+
+// ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
-export default function HomePage() {
+export default async function HomePage() {
+  // Fetch featured properties from the database
+  let featuredProperties: {
+    id: string;
+    slug: string;
+    title: string;
+    price: number;
+    bedrooms: number;
+    bathrooms: number;
+    squareFeet: number;
+    city: string;
+    state: string;
+    propertyType: string;
+    primaryImage?: { url: string; alt: string };
+  }[] = [];
+
+  try {
+    const properties = await prisma.property.findMany({
+      where: { status: "ACTIVE" },
+      include: {
+        images: { where: { isPrimary: true }, take: 1 },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+    });
+
+    featuredProperties = properties.map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      title: p.title,
+      price: Number(p.price),
+      bedrooms: p.bedrooms,
+      bathrooms: Number(p.bathrooms),
+      squareFeet: p.squareFeet ?? 0,
+      city: p.city,
+      state: p.state,
+      propertyType: p.propertyType,
+      primaryImage: p.images[0]
+        ? { url: p.images[0].url, alt: p.images[0].alt || p.title }
+        : undefined,
+    }));
+  } catch {
+    // DB may not be available — show page without featured properties
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -99,14 +174,22 @@ export default function HomePage() {
           {/* Mesh gradient overlay */}
           <div className="absolute inset-0 bg-mesh-dark" />
 
+          {/* Animated gradient orbs */}
+          <div className="absolute -top-40 -left-40 size-80 rounded-full bg-gold/[0.06] blur-3xl animate-pulse-slow" />
+          <div className="absolute -bottom-40 -right-40 size-96 rounded-full bg-gold/[0.04] blur-3xl animate-pulse-slow delay-1000" />
+
           {/* Noise texture */}
           <div className="bg-noise absolute inset-0" />
 
           <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-            <h1 className="animate-fade-in-up font-display text-5xl font-bold leading-[1.1] tracking-tight text-white sm:text-6xl lg:text-7xl">
+            <p className="animate-fade-in text-xs font-medium uppercase tracking-[0.3em] text-gold">
+              Premium Rental Living
+            </p>
+
+            <h1 className="animate-fade-in-up mt-6 font-display text-5xl font-bold leading-[1.1] tracking-tight text-white sm:text-6xl lg:text-7xl">
               Find Your Perfect
               <br />
-              Rental Home
+              <span className="text-gradient-gold">Rental Home</span>
             </h1>
 
             {/* Gold separator */}
@@ -131,7 +214,7 @@ export default function HomePage() {
         {/* ----------------------------------------------------------------- */}
         <section className="relative -mt-16 z-10">
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-            <div className="animate-fade-in-up delay-300 rounded-2xl bg-white p-8 shadow-xl sm:p-12">
+            <div className="animate-fade-in-up delay-300 rounded-2xl bg-white p-8 shadow-xl ring-1 ring-warm-200/50 sm:p-12">
               <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
                 {STATS.map((stat) => (
                   <div key={stat.label} className="text-center">
@@ -152,54 +235,153 @@ export default function HomePage() {
         </section>
 
         {/* ----------------------------------------------------------------- */}
+        {/* Featured Properties Section                                       */}
+        {/* ----------------------------------------------------------------- */}
+        {featuredProperties.length > 0 && (
+          <section className="py-24 sm:py-32">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <AnimateOnScroll>
+                <div className="text-center">
+                  <p className="text-xs font-medium uppercase tracking-[0.2em] text-gold">
+                    Featured Properties
+                  </p>
+                  <h2 className="mt-3 font-display text-3xl font-bold text-warm-900 sm:text-4xl">
+                    Recently Listed Homes
+                  </h2>
+                  <div className="mx-auto mt-4 h-0.5 w-16 bg-gold" />
+                  <p className="mx-auto mt-4 max-w-2xl text-lg text-warm-500">
+                    Explore our newest additions — hand-picked properties ready
+                    for move-in.
+                  </p>
+                </div>
+              </AnimateOnScroll>
+
+              <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {featuredProperties.map((property, i) => (
+                  <AnimateOnScroll key={property.id} delay={i * 150}>
+                    <PropertyCard {...property} />
+                  </AnimateOnScroll>
+                ))}
+              </div>
+
+              <AnimateOnScroll>
+                <div className="mt-12 text-center">
+                  <Button
+                    asChild
+                    size="lg"
+                    variant="outline"
+                    className="border-gold/30 text-gold-dark hover:bg-gold/5"
+                  >
+                    <Link href="/listings">
+                      View All Listings
+                      <ArrowRight className="ml-2 size-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </AnimateOnScroll>
+            </div>
+          </section>
+        )}
+
+        {/* ----------------------------------------------------------------- */}
         {/* Why Choose Us Section                                             */}
         {/* ----------------------------------------------------------------- */}
         <section className="bg-ivory bg-mesh-light py-24 sm:py-32">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <p className="text-xs font-medium uppercase tracking-[0.2em] text-gold">
-                Why Choose Us
-              </p>
-              <h2 className="mt-3 font-display text-3xl font-bold text-warm-900 sm:text-4xl">
-                Professional Property Management
-              </h2>
-              <div className="mx-auto mt-4 h-0.5 w-16 bg-gold mb-6" />
-              <p className="mx-auto max-w-2xl text-lg text-warm-500">
-                We take pride in providing exceptional rental experiences with
-                properties you can truly call home.
-              </p>
-            </div>
+            <AnimateOnScroll>
+              <div className="text-center">
+                <p className="text-xs font-medium uppercase tracking-[0.2em] text-gold">
+                  Why Choose Us
+                </p>
+                <h2 className="mt-3 font-display text-3xl font-bold text-warm-900 sm:text-4xl">
+                  Professional Property Management
+                </h2>
+                <div className="mx-auto mt-4 h-0.5 w-16 bg-gold mb-6" />
+                <p className="mx-auto max-w-2xl text-lg text-warm-500">
+                  We take pride in providing exceptional rental experiences with
+                  properties you can truly call home.
+                </p>
+              </div>
+            </AnimateOnScroll>
 
             <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {ADVANTAGES.map((adv) => (
-                <div
-                  key={adv.title}
-                  className="rounded-xl border border-warm-200 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-                >
-                  <div className="flex size-12 items-center justify-center rounded-full bg-gold/10">
-                    <adv.icon className="size-6 text-gold" />
+              {ADVANTAGES.map((adv, i) => (
+                <AnimateOnScroll key={adv.title} delay={i * 100}>
+                  <div className="group rounded-xl border border-warm-200 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-gold/20">
+                    <div className="flex size-12 items-center justify-center rounded-full bg-gold/10 transition-colors duration-300 group-hover:bg-gold/20">
+                      <adv.icon className="size-6 text-gold" />
+                    </div>
+                    <h3 className="mt-4 font-display text-lg font-semibold text-warm-900">
+                      {adv.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-warm-500">
+                      {adv.description}
+                    </p>
                   </div>
-                  <h3 className="mt-4 font-display text-lg font-semibold text-warm-900">
-                    {adv.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-warm-500">
-                    {adv.description}
-                  </p>
-                </div>
+                </AnimateOnScroll>
               ))}
             </div>
+          </div>
+        </section>
 
-            <div className="mt-12 text-center">
-              <Button
-                asChild
-                size="lg"
-                className="bg-gold text-white hover:bg-gold-dark"
-              >
-                <Link href="/listings">
-                  View All Listings
-                  <ArrowRight className="ml-2 size-4" />
-                </Link>
-              </Button>
+        {/* ----------------------------------------------------------------- */}
+        {/* Testimonials Section                                              */}
+        {/* ----------------------------------------------------------------- */}
+        <section className="py-24 sm:py-32">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <AnimateOnScroll>
+              <div className="text-center">
+                <p className="text-xs font-medium uppercase tracking-[0.2em] text-gold">
+                  Testimonials
+                </p>
+                <h2 className="mt-3 font-display text-3xl font-bold text-warm-900 sm:text-4xl">
+                  What Our Tenants Say
+                </h2>
+                <div className="mx-auto mt-4 h-0.5 w-16 bg-gold" />
+              </div>
+            </AnimateOnScroll>
+
+            <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
+              {TESTIMONIALS.map((testimonial, i) => (
+                <AnimateOnScroll key={testimonial.name} delay={i * 150}>
+                  <div className="relative rounded-xl border border-warm-200 bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                    {/* Quote icon */}
+                    <Quote className="absolute top-6 right-6 size-8 text-gold/10" />
+
+                    {/* Stars */}
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: testimonial.rating }).map(
+                        (_, j) => (
+                          <Star
+                            key={j}
+                            className="size-4 fill-gold text-gold"
+                          />
+                        )
+                      )}
+                    </div>
+
+                    {/* Quote */}
+                    <p className="mt-4 text-sm leading-relaxed text-warm-500 italic">
+                      &ldquo;{testimonial.quote}&rdquo;
+                    </p>
+
+                    {/* Author */}
+                    <div className="mt-6 flex items-center gap-3">
+                      <div className="flex size-10 items-center justify-center rounded-full bg-gold/10 font-display text-sm font-bold text-gold">
+                        {testimonial.name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-warm-900">
+                          {testimonial.name}
+                        </p>
+                        <p className="text-xs text-warm-500">
+                          {testimonial.role}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </AnimateOnScroll>
+              ))}
             </div>
           </div>
         </section>
@@ -207,40 +389,49 @@ export default function HomePage() {
         {/* ----------------------------------------------------------------- */}
         {/* How It Works Section                                              */}
         {/* ----------------------------------------------------------------- */}
-        <section className="bg-white py-24 sm:py-32">
+        <section className="bg-ivory bg-mesh-light py-24 sm:py-32">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <p className="text-xs font-medium uppercase tracking-[0.2em] text-gold">
-                How It Works
-              </p>
-              <h2 className="mt-3 font-display text-3xl font-bold text-warm-900 sm:text-4xl">
-                Renting Made Simple
-              </h2>
-              <div className="mx-auto mt-4 h-0.5 w-16 bg-gold" />
-            </div>
+            <AnimateOnScroll>
+              <div className="text-center">
+                <p className="text-xs font-medium uppercase tracking-[0.2em] text-gold">
+                  How It Works
+                </p>
+                <h2 className="mt-3 font-display text-3xl font-bold text-warm-900 sm:text-4xl">
+                  Renting Made Simple
+                </h2>
+                <div className="mx-auto mt-4 h-0.5 w-16 bg-gold" />
+              </div>
+            </AnimateOnScroll>
 
             <div className="mt-20 grid grid-cols-1 gap-16 md:grid-cols-3">
               {STEPS.map((step, index) => (
-                <div key={step.title} className="relative text-center">
-                  {/* Large watermark step number */}
-                  <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2">
-                    <span className="font-display text-[5rem] font-bold leading-none text-gold/[0.07]">
-                      {index + 1}
-                    </span>
-                  </div>
+                <AnimateOnScroll key={step.title} delay={index * 150}>
+                  <div className="relative text-center">
+                    {/* Large watermark step number */}
+                    <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2">
+                      <span className="font-display text-[5rem] font-bold leading-none text-gold/[0.07]">
+                        {index + 1}
+                      </span>
+                    </div>
 
-                  {/* Icon */}
-                  <div className="relative mx-auto flex size-16 items-center justify-center rounded-2xl bg-gold/10">
-                    <step.icon className="size-8 text-gold" />
-                  </div>
+                    {/* Connector line */}
+                    {index < STEPS.length - 1 && (
+                      <div className="absolute top-8 left-[calc(50%+3rem)] hidden h-px w-[calc(100%-6rem)] bg-gradient-to-r from-gold/20 to-gold/5 md:block" />
+                    )}
 
-                  <h3 className="mt-6 font-display text-lg font-semibold text-warm-900">
-                    {step.title}
-                  </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-warm-500">
-                    {step.description}
-                  </p>
-                </div>
+                    {/* Icon */}
+                    <div className="relative mx-auto flex size-16 items-center justify-center rounded-2xl bg-gold/10">
+                      <step.icon className="size-8 text-gold" />
+                    </div>
+
+                    <h3 className="mt-6 font-display text-lg font-semibold text-warm-900">
+                      {step.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-relaxed text-warm-500">
+                      {step.description}
+                    </p>
+                  </div>
+                </AnimateOnScroll>
               ))}
             </div>
           </div>
@@ -250,40 +441,46 @@ export default function HomePage() {
         {/* CTA Section                                                       */}
         {/* ----------------------------------------------------------------- */}
         <section className="relative bg-charcoal py-24 sm:py-32">
+          {/* Animated gradient orbs */}
+          <div className="absolute top-0 left-1/4 size-64 rounded-full bg-gold/[0.05] blur-3xl animate-pulse-slow" />
+          <div className="absolute bottom-0 right-1/4 size-64 rounded-full bg-gold/[0.03] blur-3xl animate-pulse-slow delay-1000" />
+
           {/* Noise texture */}
           <div className="bg-noise absolute inset-0" />
 
           <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-            <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">
-              Ready to Find Your New Home?
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-warm-300">
-              Start browsing our listings today or get in touch with our team.
-              We are here to help you every step of the way.
-            </p>
-            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button
-                asChild
-                size="lg"
-                className="bg-gold text-white hover:bg-gold-dark"
-              >
-                <Link href="/listings">
-                  <Search className="mr-2 size-4" />
-                  Browse Listings
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="border-gold/30 text-gold hover:bg-gold/10"
-              >
-                <Link href="/contact">
-                  <Phone className="mr-2 size-4" />
-                  Contact Us
-                </Link>
-              </Button>
-            </div>
+            <AnimateOnScroll>
+              <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">
+                Ready to Find Your New Home?
+              </h2>
+              <p className="mx-auto mt-4 max-w-2xl text-lg text-warm-300">
+                Start browsing our listings today or get in touch with our team.
+                We are here to help you every step of the way.
+              </p>
+              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-gold text-white hover:bg-gold-dark"
+                >
+                  <Link href="/listings">
+                    <Search className="mr-2 size-4" />
+                    Browse Listings
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="border-gold/30 text-gold hover:bg-gold/10"
+                >
+                  <Link href="/contact">
+                    <Phone className="mr-2 size-4" />
+                    Contact Us
+                  </Link>
+                </Button>
+              </div>
+            </AnimateOnScroll>
           </div>
         </section>
       </main>
