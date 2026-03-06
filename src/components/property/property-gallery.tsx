@@ -86,63 +86,108 @@ export function PropertyGallery({ images }: PropertyGalleryProps) {
           </div>
         ) : (
           /* 3+ images — bento grid: big left, stacked right */
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-2 md:grid-rows-2">
-            {/* Main large image */}
-            <button
-              onClick={() => openLightbox(0)}
-              className="relative aspect-[4/3] overflow-hidden cursor-pointer group md:row-span-2"
-            >
-              <Image
-                src={images[0].url}
-                alt={images[0].alt}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, 600px"
-                priority
-              />
-              <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10" />
-            </button>
+          <>
+            {/* Desktop: bento grid */}
+            <div className="hidden gap-2 md:grid md:grid-cols-2 md:grid-rows-2">
+              {/* Main large image */}
+              <button
+                onClick={() => openLightbox(0)}
+                className="relative aspect-[4/3] overflow-hidden cursor-pointer group md:row-span-2"
+              >
+                <Image
+                  src={images[0].url}
+                  alt={images[0].alt}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  sizes="600px"
+                  priority
+                />
+                <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10" />
+              </button>
 
-            {/* Top right */}
-            <button
-              onClick={() => openLightbox(1)}
-              className="relative hidden aspect-[4/3] overflow-hidden cursor-pointer group md:block"
-            >
-              <Image
-                src={images[1].url}
-                alt={images[1].alt}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                sizes="600px"
-              />
-              <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10" />
-            </button>
+              {/* Top right */}
+              <button
+                onClick={() => openLightbox(1)}
+                className="relative aspect-[4/3] overflow-hidden cursor-pointer group"
+              >
+                <Image
+                  src={images[1].url}
+                  alt={images[1].alt}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  sizes="600px"
+                />
+                <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10" />
+              </button>
 
-            {/* Bottom right — with "show all" overlay if more images */}
-            <button
-              onClick={() => openLightbox(2)}
-              className="relative hidden aspect-[4/3] overflow-hidden cursor-pointer group md:block"
-            >
-              <Image
-                src={images[2].url}
-                alt={images[2].alt}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                sizes="600px"
-              />
-              <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10" />
-              {images.length > 3 && (
-                <div className="absolute inset-0 flex items-center justify-center bg-charcoal/50 transition-colors group-hover:bg-charcoal/60">
-                  <div className="flex items-center gap-2 text-white">
-                    <Images className="size-5" />
-                    <span className="text-sm font-medium">
-                      +{images.length - 3} more
-                    </span>
+              {/* Bottom right — with "show all" overlay if more images */}
+              <button
+                onClick={() => openLightbox(2)}
+                className="relative aspect-[4/3] overflow-hidden cursor-pointer group"
+              >
+                <Image
+                  src={images[2].url}
+                  alt={images[2].alt}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  sizes="600px"
+                />
+                <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10" />
+                {images.length > 3 && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-charcoal/50 transition-colors group-hover:bg-charcoal/60">
+                    <div className="flex items-center gap-2 text-white">
+                      <Images className="size-5" />
+                      <span className="text-sm font-medium">
+                        +{images.length - 3} more
+                      </span>
+                    </div>
                   </div>
+                )}
+              </button>
+            </div>
+
+            {/* Mobile: main image + horizontal scroll thumbnails */}
+            <div className="md:hidden">
+              <button
+                onClick={() => openLightbox(0)}
+                className="relative aspect-[16/9] w-full overflow-hidden cursor-pointer group"
+              >
+                <Image
+                  src={images[0].url}
+                  alt={images[0].alt}
+                  fill
+                  className="object-cover"
+                  sizes="100vw"
+                  priority
+                />
+                {images.length > 1 && (
+                  <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-charcoal/70 px-3 py-1.5 text-xs text-white backdrop-blur-sm">
+                    <Images className="size-3.5" />
+                    {images.length} photos
+                  </div>
+                )}
+              </button>
+              {images.length > 1 && (
+                <div className="mt-2 flex gap-1.5 overflow-x-auto pb-2 -mx-1 px-1">
+                  {images.map((img, i) => (
+                    <button
+                      key={i}
+                      onClick={() => openLightbox(i)}
+                      className="relative aspect-square w-16 shrink-0 overflow-hidden rounded-lg"
+                    >
+                      <Image
+                        src={img.url}
+                        alt={img.alt}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                      />
+                    </button>
+                  ))}
                 </div>
               )}
-            </button>
-          </div>
+            </div>
+          </>
         )}
       </div>
 
@@ -175,7 +220,7 @@ export function PropertyGallery({ images }: PropertyGalleryProps) {
 
           {/* Image */}
           <div
-            className="relative h-[80vh] w-[90vw] max-w-5xl"
+            className="relative h-[60vh] w-[95vw] max-w-5xl sm:h-[80vh] sm:w-[90vw]"
             onClick={(e) => e.stopPropagation()}
           >
             <Image

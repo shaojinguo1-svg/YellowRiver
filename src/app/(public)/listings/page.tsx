@@ -88,51 +88,55 @@ export default async function ListingsPage({
       {/* Filter Bar */}
       <section className="border-b border-warm-200 bg-white sticky top-16 z-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <form method="GET" className="flex flex-wrap items-center gap-3 py-4">
+          <form method="GET" className="flex flex-col gap-3 py-4 sm:flex-row sm:flex-wrap sm:items-center">
             <input
               type="text"
               name="location"
               placeholder="City or ZIP"
               defaultValue={locationFilter}
-              className="rounded-lg border border-warm-200 bg-ivory px-4 py-2 text-sm text-warm-900 placeholder:text-warm-500 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50 w-48"
+              className="w-full rounded-lg border border-warm-200 bg-ivory px-4 py-2.5 text-sm text-warm-900 placeholder:text-warm-500 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50 sm:w-48"
             />
-            <select
-              name="bedrooms"
-              defaultValue={bedroomFilter}
-              className="rounded-lg border border-warm-200 bg-ivory px-4 py-2 text-sm text-warm-900 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50"
-            >
-              <option value="">Bedrooms</option>
-              <option value="1">1 Bedroom</option>
-              <option value="2">2 Bedrooms</option>
-              <option value="3">3 Bedrooms</option>
-              <option value="4">4+ Bedrooms</option>
-            </select>
-            <select
-              name="type"
-              defaultValue={typeFilter}
-              className="rounded-lg border border-warm-200 bg-ivory px-4 py-2 text-sm text-warm-900 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50"
-            >
-              <option value="">All Types</option>
-              <option value="APARTMENT">Apartment</option>
-              <option value="HOUSE">House</option>
-              <option value="CONDO">Condo</option>
-              <option value="TOWNHOUSE">Townhouse</option>
-              <option value="STUDIO">Studio</option>
-            </select>
-            <button
-              type="submit"
-              className="rounded-lg bg-gold px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-gold-dark"
-            >
-              Filter
-            </button>
-            {hasFilters && (
-              <a
-                href="/listings"
-                className="text-sm text-warm-500 hover:text-gold transition-colors"
+            <div className="grid grid-cols-2 gap-3 sm:flex sm:gap-3">
+              <select
+                name="bedrooms"
+                defaultValue={bedroomFilter}
+                className="w-full rounded-lg border border-warm-200 bg-ivory px-4 py-2.5 text-sm text-warm-900 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50 sm:w-auto"
               >
-                Clear filters
-              </a>
-            )}
+                <option value="">Bedrooms</option>
+                <option value="1">1 Bed</option>
+                <option value="2">2 Beds</option>
+                <option value="3">3 Beds</option>
+                <option value="4">4+ Beds</option>
+              </select>
+              <select
+                name="type"
+                defaultValue={typeFilter}
+                className="w-full rounded-lg border border-warm-200 bg-ivory px-4 py-2.5 text-sm text-warm-900 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/50 sm:w-auto"
+              >
+                <option value="">All Types</option>
+                <option value="APARTMENT">Apartment</option>
+                <option value="HOUSE">House</option>
+                <option value="CONDO">Condo</option>
+                <option value="TOWNHOUSE">Townhouse</option>
+                <option value="STUDIO">Studio</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="submit"
+                className="flex-1 rounded-lg bg-gold px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gold-dark sm:flex-none"
+              >
+                Filter
+              </button>
+              {hasFilters && (
+                <a
+                  href="/listings"
+                  className="text-sm text-warm-500 hover:text-gold transition-colors"
+                >
+                  Clear
+                </a>
+              )}
+            </div>
           </form>
         </div>
       </section>

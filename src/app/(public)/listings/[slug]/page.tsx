@@ -113,6 +113,38 @@ export default async function ListingDetailPage({
           <PropertyGallery images={images} />
         </section>
 
+        {/* Mobile Price Bar */}
+        <div className="mb-6 flex items-center justify-between rounded-xl border border-warm-200 bg-white p-4 lg:hidden">
+          <div>
+            <p className="font-display text-2xl font-bold text-gold-dark">
+              {formatPrice(price)}
+              <span className="text-sm font-normal text-warm-500">/mo</span>
+            </p>
+            <p className="text-xs text-warm-500 mt-0.5">
+              {securityDeposit > 0 && `${formatPrice(securityDeposit)} deposit`}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              asChild
+              size="sm"
+              className="bg-gold text-white hover:bg-gold-dark"
+            >
+              <Link href={`/listings/${slug}/apply`}>Apply Now</Link>
+            </Button>
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="border-warm-200"
+            >
+              <Link href={`/contact?subject=${encodeURIComponent(`Tour: ${property.title}`)}`}>
+                Tour
+              </Link>
+            </Button>
+          </div>
+        </div>
+
         {/* Two-Column Layout */}
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Left Column - Details */}

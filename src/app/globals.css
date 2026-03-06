@@ -282,6 +282,11 @@ html {
   animation-delay: 1000ms;
 }
 
+/* Mobile touch optimization */
+button, a, input, select, textarea {
+  touch-action: manipulation;
+}
+
 /* Slow pulse for ambient orbs */
 @keyframes pulse-slow {
   0%, 100% {

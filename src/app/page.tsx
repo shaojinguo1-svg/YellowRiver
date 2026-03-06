@@ -170,7 +170,7 @@ export default async function HomePage() {
         {/* ----------------------------------------------------------------- */}
         {/* Hero Section                                                      */}
         {/* ----------------------------------------------------------------- */}
-        <section className="relative overflow-hidden bg-charcoal py-32 sm:py-40 lg:py-48">
+        <section className="relative overflow-hidden bg-charcoal py-20 sm:py-32 lg:py-48">
           {/* Mesh gradient overlay */}
           <div className="absolute inset-0 bg-mesh-dark" />
 
@@ -186,7 +186,7 @@ export default async function HomePage() {
               Premium Rental Living
             </p>
 
-            <h1 className="animate-fade-in-up mt-6 font-display text-5xl font-bold leading-[1.1] tracking-tight text-white sm:text-6xl lg:text-7xl">
+            <h1 className="animate-fade-in-up mt-6 font-display text-3xl font-bold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-7xl">
               Find Your Perfect
               <br />
               <span className="text-gradient-gold">Rental Home</span>
@@ -214,17 +214,17 @@ export default async function HomePage() {
         {/* ----------------------------------------------------------------- */}
         <section className="relative -mt-16 z-10">
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-            <div className="animate-fade-in-up delay-300 rounded-2xl bg-white p-8 shadow-xl ring-1 ring-warm-200/50 sm:p-12">
-              <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
+            <div className="animate-fade-in-up delay-300 rounded-2xl bg-white p-6 shadow-xl ring-1 ring-warm-200/50 sm:p-8 lg:p-12">
+              <div className="grid grid-cols-2 gap-6 lg:grid-cols-4 lg:gap-8">
                 {STATS.map((stat) => (
                   <div key={stat.label} className="text-center">
-                    <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-gold/10">
-                      <stat.icon className="size-7 text-gold" />
+                    <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gold/10 sm:size-14">
+                      <stat.icon className="size-5 text-gold sm:size-7" />
                     </div>
-                    <p className="mt-4 font-display text-3xl font-bold text-warm-900 sm:text-4xl">
+                    <p className="mt-3 font-display text-2xl font-bold text-warm-900 sm:mt-4 sm:text-4xl">
                       {stat.value}
                     </p>
-                    <p className="mt-1 text-sm text-warm-500">
+                    <p className="mt-0.5 text-xs text-warm-500 sm:mt-1 sm:text-sm">
                       {stat.label}
                     </p>
                   </div>
