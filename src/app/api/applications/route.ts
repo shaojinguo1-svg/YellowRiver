@@ -1,35 +1,88 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 import { applicationSchema } from "@/validations/application";
+import {
+  sendApplicationConfirmation,
+  sendAdminNewApplicationNotification,
+} from "@/lib/email";
 
 function generateApplicationNumber(): string {
   const year = new Date().getFullYear();
-  const timestamp = Date.now().toString().slice(-5);
-  return `YR-${year}-${timestamp}`;
+  const random = crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
+  return `YR-${year}-${random}`;
 }
 
 // GET /api/applications - List applications (admin only)
 export async function GET(request: NextRequest) {
   try {
+    await requireAdmin();
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const propertyId = searchParams.get("propertyId");
+    const page = Math.max(1, Number(searchParams.get("page")) || 1);
+    const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit")) || 20));
+    const skip = (page - 1) * limit;
 
-    // TODO: Add authentication check for admin access
-    // TODO: Query database when connected
+    const where: Record<string, unknown> = {};
+    if (status && status !== "all") {
+      where.status = status;
+    }
+    if (propertyId && propertyId !== "all") {
+      where.propertyId = propertyId;
+    }
 
-    // For now, return mock empty response
+    const [applications, total] = await Promise.all([
+      prisma.rentalApplication.findMany({
+        where,
+        include: {
+          property: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+              city: true,
+              state: true,
+            },
+          },
+          applicant: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.rentalApplication.count({ where }),
+    ]);
+
     return NextResponse.json({
-      applications: [],
-      total: 0,
-      filters: {
-        status: status || "all",
-        propertyId: propertyId || "all",
+      applications,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     });
   } catch (error) {
-    console.error("Error fetching applications:", error);
+    console.error("GET /api/applications error:", error);
+
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "Failed to fetch applications" },
+      { message: "Failed to fetch applications" },
       { status: 500 }
     );
   }
@@ -51,30 +104,94 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         {
-          error: "Validation failed",
+          message: "Validation failed",
           details: fieldErrors,
         },
         { status: 400 }
       );
     }
 
+    const data = parsed.data;
     const applicationNumber = generateApplicationNumber();
 
-    // TODO: Save to database when connected
-    // For now, return mock success response
+    // Verify property exists
+    const property = await prisma.property.findUnique({
+      where: { id: body.propertyId },
+      select: { id: true, title: true },
+    });
+
+    if (!property) {
+      return NextResponse.json(
+        { message: "Property not found" },
+        { status: 404 }
+      );
+    }
+
+    const application = await prisma.rentalApplication.create({
+      data: {
+        applicationNumber,
+        propertyId: body.propertyId,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        dateOfBirth: data.dateOfBirth
+          ? new Date(data.dateOfBirth)
+          : null,
+        currentAddress: data.currentAddress,
+        currentCity: data.currentCity,
+        currentState: data.currentState,
+        currentZip: data.currentZip,
+        monthlyRent: data.monthlyRent || null,
+        moveInDate: new Date(data.moveInDate),
+        employer: data.employer || null,
+        jobTitle: data.jobTitle || null,
+        monthlyIncome: data.monthlyIncome || null,
+        employmentLength: data.employmentLength || null,
+        landlordName: data.landlordName || null,
+        landlordPhone: data.landlordPhone || null,
+        emergencyName: data.emergencyName,
+        emergencyPhone: data.emergencyPhone,
+        numberOfOccupants: parseInt(data.numberOfOccupants, 10),
+        hasPets: data.hasPets,
+        petDescription: data.petDescription || null,
+        additionalNotes: data.additionalNotes || null,
+        consentBackground: data.consentBackground,
+        consentTerms: data.consentTerms,
+      },
+    });
+
+    // Send email notifications (fire-and-forget, don't block the response)
+    const propertyTitle = property.title;
+    const applicantName = `${data.firstName} ${data.lastName}`;
+
+    Promise.allSettled([
+      sendApplicationConfirmation({
+        to: data.email,
+        applicantName,
+        applicationNumber,
+        propertyTitle,
+      }),
+      sendAdminNewApplicationNotification({
+        applicationNumber,
+        applicantName,
+        propertyTitle,
+      }),
+    ]).catch((err) => console.error("Email notification error:", err));
+
     return NextResponse.json(
       {
-        applicationNumber,
-        status: "SUBMITTED",
+        applicationNumber: application.applicationNumber,
+        status: application.status,
         message: "Application submitted successfully",
-        submittedAt: new Date().toISOString(),
+        submittedAt: application.createdAt.toISOString(),
       },
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error submitting application:", error);
+    console.error("POST /api/applications error:", error);
     return NextResponse.json(
-      { error: "Failed to submit application" },
+      { message: "Failed to submit application" },
       { status: 500 }
     );
   }

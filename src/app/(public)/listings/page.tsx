@@ -1,5 +1,5 @@
 import { PropertyGrid } from "@/components/property/property-grid";
-import { DEMO_PROPERTIES } from "@/lib/demo-data";
+import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -8,7 +8,31 @@ export const metadata: Metadata = {
     "Browse current rental properties available through YellowRiver. Find apartments, houses, condos, and more.",
 };
 
-export default function ListingsPage() {
+export default async function ListingsPage() {
+  const properties = await prisma.property.findMany({
+    where: { status: "ACTIVE" },
+    include: {
+      images: { where: { isPrimary: true }, take: 1 },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const propertyCards = properties.map((p) => ({
+    id: p.id,
+    slug: p.slug,
+    title: p.title,
+    price: Number(p.price),
+    bedrooms: p.bedrooms,
+    bathrooms: Number(p.bathrooms),
+    squareFeet: p.squareFeet ?? 0,
+    city: p.city,
+    state: p.state,
+    propertyType: p.propertyType,
+    primaryImage: p.images[0]
+      ? { url: p.images[0].url, alt: p.images[0].alt || p.title }
+      : undefined,
+  }));
+
   return (
     <div>
       {/* Hero */}
@@ -36,13 +60,13 @@ export default function ListingsPage() {
             <p className="text-sm text-warm-500">
               Showing{" "}
               <span className="font-medium text-warm-900">
-                {DEMO_PROPERTIES.length}
+                {propertyCards.length}
               </span>{" "}
               properties
             </p>
           </div>
 
-          <PropertyGrid properties={DEMO_PROPERTIES} />
+          <PropertyGrid properties={propertyCards} />
         </div>
       </section>
     </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { ApplicationStatus } from "@/generated/prisma/client";
+import { sendApplicationStatusUpdate } from "@/lib/email";
 
 const VALID_STATUSES: ApplicationStatus[] = [
   "SUBMITTED",
@@ -26,7 +27,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const admin = await requireAdmin();
+    await requireAdmin();
     const { id } = await params;
 
     const application = await prisma.rentalApplication.findUnique({
@@ -161,6 +162,18 @@ export async function PATCH(
         },
       },
     });
+
+    // Send status update email if status changed
+    if (status && status !== existing.status) {
+      sendApplicationStatusUpdate({
+        to: updated.email,
+        applicantName: `${updated.firstName} ${updated.lastName}`,
+        applicationNumber: updated.applicationNumber,
+        newStatus: status,
+        propertyTitle: updated.property?.title || "Your property",
+        adminNotes: adminNotes,
+      }).catch((err) => console.error("Status update email error:", err));
+    }
 
     return NextResponse.json(updated);
   } catch (error) {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, PawPrint, Mail } from "lucide-react";
-import { DEMO_PROPERTY_DETAILS } from "@/lib/demo-data";
+import { prisma } from "@/lib/prisma";
 import { PropertyGallery } from "@/components/property/property-gallery";
 import { PropertyDetails } from "@/components/property/property-details";
 import { PropertyAmenities } from "@/components/property/property-amenities";
@@ -35,13 +35,23 @@ function formatDate(dateStr: string): string {
 
 type Params = Promise<{ slug: string }>;
 
+async function getProperty(slug: string) {
+  return prisma.property.findUnique({
+    where: { slug },
+    include: {
+      images: { orderBy: { sortOrder: "asc" } },
+      amenities: { include: { amenity: true } },
+    },
+  });
+}
+
 export async function generateMetadata({
   params,
 }: {
   params: Params;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const property = DEMO_PROPERTY_DETAILS[slug];
+  const property = await getProperty(slug);
 
   if (!property) {
     return { title: "Property Not Found | YellowRiver" };
@@ -49,7 +59,7 @@ export async function generateMetadata({
 
   return {
     title: `${property.title} | YellowRiver`,
-    description: property.description.slice(0, 160),
+    description: property.description?.slice(0, 160) || "",
   };
 }
 
@@ -59,11 +69,28 @@ export default async function ListingDetailPage({
   params: Params;
 }) {
   const { slug } = await params;
-  const property = DEMO_PROPERTY_DETAILS[slug];
+  const property = await getProperty(slug);
 
   if (!property) {
     notFound();
   }
+
+  const price = Number(property.price);
+  const securityDeposit = Number(property.securityDeposit || 0);
+  const bathrooms = Number(property.bathrooms);
+  const images = property.images.map((img) => ({
+    url: img.url,
+    alt: img.alt || property.title,
+  }));
+  const amenities = property.amenities.map((pa) => pa.amenity.name);
+  const LEASE_LABELS: Record<string, string> = {
+    MONTH_TO_MONTH: "Month to Month",
+    SIX_MONTHS: "6 Months",
+    ONE_YEAR: "12 Months",
+    TWO_YEARS: "24 Months",
+  };
+  const leaseTermType = LEASE_LABELS[property.leaseTermType || ""] || property.leaseTermType || "Month to Month";
+  const availableFrom = property.availableFrom.toISOString().split("T")[0];
 
   return (
     <div>
@@ -83,7 +110,7 @@ export default async function ListingDetailPage({
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Image Gallery */}
         <section className="mb-8">
-          <PropertyGallery images={property.images} />
+          <PropertyGallery images={images} />
         </section>
 
         {/* Two-Column Layout */}
@@ -129,14 +156,14 @@ export default async function ListingDetailPage({
               </h2>
               <PropertyDetails
                 bedrooms={property.bedrooms}
-                bathrooms={property.bathrooms}
+                bathrooms={bathrooms}
                 squareFeet={property.squareFeet}
                 propertyType={property.propertyType}
                 floor={property.floor}
                 totalFloors={property.totalFloors}
                 yearBuilt={property.yearBuilt}
                 parkingSpaces={property.parkingSpaces}
-                leaseTermType={property.leaseTermType}
+                leaseTermType={leaseTermType}
               />
             </div>
 
@@ -147,7 +174,7 @@ export default async function ListingDetailPage({
               <h2 className="font-display text-lg font-semibold text-warm-900 mb-4">
                 Amenities
               </h2>
-              <PropertyAmenities amenities={property.amenities} />
+              <PropertyAmenities amenities={amenities} />
             </div>
 
             <Separator className="bg-warm-200" />
@@ -174,7 +201,7 @@ export default async function ListingDetailPage({
                 <CardHeader className="bg-charcoal px-6 py-5 text-white">
                   <CardTitle className="flex items-baseline gap-1">
                     <span className="font-display text-3xl font-bold text-gold-light">
-                      {formatPrice(property.price)}
+                      {formatPrice(price)}
                     </span>
                     <span className="text-sm font-normal text-warm-300">
                       /month
@@ -190,7 +217,7 @@ export default async function ListingDetailPage({
                         Security Deposit
                       </span>
                       <span className="font-medium text-warm-900">
-                        {formatPrice(property.securityDeposit)}
+                        {formatPrice(securityDeposit)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -198,13 +225,13 @@ export default async function ListingDetailPage({
                         Available From
                       </span>
                       <span className="font-medium text-warm-900">
-                        {formatDate(property.availableFrom)}
+                        {formatDate(availableFrom)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-warm-500">Lease Term</span>
                       <span className="font-medium text-warm-900">
-                        {property.leaseTermType}
+                        {leaseTermType}
                       </span>
                     </div>
                   </div>
@@ -221,11 +248,14 @@ export default async function ListingDetailPage({
                       <Link href={`/listings/${slug}/apply`}>Apply Now</Link>
                     </Button>
                     <Button
+                      asChild
                       variant="outline"
                       className="w-full border-warm-200 text-warm-700 hover:bg-ivory-warm"
                       size="lg"
                     >
-                      Schedule Tour
+                      <Link href={`/contact?subject=${encodeURIComponent(`Schedule Tour: ${property.title}`)}`}>
+                        Schedule Tour
+                      </Link>
                     </Button>
                   </div>
 

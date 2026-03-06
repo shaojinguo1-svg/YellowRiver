@@ -90,8 +90,6 @@ export const propertyCreateSchema = z.object({
     .max(160, "Meta description must be at most 160 characters")
     .optional()
     .or(z.literal("")),
-  featured: z.boolean().default(false),
-
   // Relations
   categoryId: z.string().uuid("Invalid category ID").optional().or(z.literal("")),
   amenityIds: z.array(z.string().uuid("Invalid amenity ID")).default([]),

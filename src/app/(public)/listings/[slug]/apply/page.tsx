@@ -1,11 +1,25 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { DEMO_PROPERTY_DETAILS } from "@/lib/demo-data";
+import { prisma } from "@/lib/prisma";
 import { ApplicationForm } from "@/components/application/application-form";
 import type { Metadata } from "next";
 
 type Params = Promise<{ slug: string }>;
+
+async function getProperty(slug: string) {
+  return prisma.property.findUnique({
+    where: { slug, status: "ACTIVE" },
+    select: {
+      id: true,
+      title: true,
+      addressLine1: true,
+      city: true,
+      state: true,
+      price: true,
+    },
+  });
+}
 
 export async function generateMetadata({
   params,
@@ -13,7 +27,7 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const property = DEMO_PROPERTY_DETAILS[slug];
+  const property = await getProperty(slug);
 
   if (!property) {
     return { title: "Property Not Found | YellowRiver" };
@@ -31,11 +45,13 @@ export default async function ApplyPage({
   params: Params;
 }) {
   const { slug } = await params;
-  const property = DEMO_PROPERTY_DETAILS[slug];
+  const property = await getProperty(slug);
 
   if (!property) {
     notFound();
   }
+
+  const price = Number(property.price);
 
   return (
     <div>
@@ -44,7 +60,7 @@ export default async function ApplyPage({
         <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 lg:px-8">
           <Link
             href={`/listings/${slug}`}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-amber-600"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-gold"
           >
             <ArrowLeft className="size-4" />
             Back to Listing
@@ -55,12 +71,12 @@ export default async function ApplyPage({
       {/* Page Header */}
       <div className="mx-auto max-w-4xl px-4 pt-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-warm-900 sm:text-3xl">
             Apply for {property.title}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-warm-500">
             {property.addressLine1}, {property.city}, {property.state} &mdash;
-            ${property.price.toLocaleString()}/mo
+            ${price.toLocaleString()}/mo
           </p>
         </div>
       </div>
@@ -68,6 +84,7 @@ export default async function ApplyPage({
       {/* Application Form */}
       <div className="mx-auto max-w-4xl px-4 pb-16 sm:px-6 lg:px-8">
         <ApplicationForm
+          propertyId={property.id}
           propertySlug={slug}
           propertyTitle={property.title}
         />

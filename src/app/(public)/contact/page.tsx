@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -45,6 +46,15 @@ const CONTACT_DETAILS = [
 ];
 
 export default function ContactPage() {
+  return (
+    <Suspense>
+      <ContactPageContent />
+    </Suspense>
+  );
+}
+
+function ContactPageContent() {
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -58,7 +68,7 @@ export default function ContactPage() {
       name: "",
       email: "",
       phone: "",
-      subject: "",
+      subject: searchParams.get("subject") || "",
       message: "",
     },
   });

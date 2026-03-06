@@ -16,17 +16,21 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const skip = (page - 1) * limit;
 
-    // Check if user is admin to decide what to show
-    const user = await getCurrentUser();
-    const isAdmin = user?.role === "ADMIN";
-
     const where: Prisma.PropertyWhereInput = {};
 
-    // Non-admin users can only see active listings
-    if (!isAdmin) {
+    // Check admin param — only resolve user if admin access requested
+    const adminMode = searchParams.get("admin") === "true";
+    if (adminMode) {
+      const user = await getCurrentUser();
+      if (user?.role !== "ADMIN") {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      }
+      if (status) {
+        where.status = status as Prisma.EnumPropertyStatusFilter;
+      }
+    } else {
+      // Public users only see active listings
       where.status = "ACTIVE";
-    } else if (status) {
-      where.status = status as Prisma.EnumPropertyStatusFilter;
     }
 
     if (propertyType) {

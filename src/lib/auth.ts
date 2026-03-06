@@ -4,13 +4,30 @@ import { prisma } from "@/lib/prisma";
 export async function getCurrentUser() {
   const supabase = await createClient();
   const {
-    data: { user },
+    data: { user: authUser },
   } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!authUser) return null;
 
-  return prisma.user.findUnique({
-    where: { supabaseId: user.id },
+  // Try to find existing Prisma user
+  let dbUser = await prisma.user.findUnique({
+    where: { supabaseId: authUser.id },
   });
+
+  // Auto-sync: if Supabase Auth user exists but no Prisma record, create one
+  if (!dbUser) {
+    const metadata = authUser.user_metadata || {};
+    dbUser = await prisma.user.create({
+      data: {
+        supabaseId: authUser.id,
+        email: authUser.email!,
+        firstName: metadata.first_name || null,
+        lastName: metadata.last_name || null,
+        role: "TENANT", // Default role; admins are set explicitly
+      },
+    });
+  }
+
+  return dbUser;
 }
 
 export async function requireAdmin() {

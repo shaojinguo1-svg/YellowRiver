@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Plus, Building2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -119,9 +120,11 @@ export default async function AdminListingsPage() {
                   <TableRow key={property.id}>
                     <TableCell>
                       {property.images[0] ? (
-                        <img
+                        <Image
                           src={property.images[0].url}
                           alt={property.images[0].alt ?? property.title}
+                          width={48}
+                          height={48}
                           className="size-12 rounded-md object-cover"
                         />
                       ) : (

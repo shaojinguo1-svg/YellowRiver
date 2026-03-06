@@ -12,12 +12,12 @@ import {
 interface PropertyDetailsProps {
   bedrooms: number;
   bathrooms: number;
-  squareFeet: number;
+  squareFeet: number | null;
   propertyType: string;
-  floor: number;
-  totalFloors: number;
-  yearBuilt: number;
-  parkingSpaces: number;
+  floor?: number | null;
+  totalFloors?: number | null;
+  yearBuilt: number | null;
+  parkingSpaces: number | null;
   leaseTermType: string;
 }
 
@@ -27,6 +27,13 @@ const PROPERTY_TYPE_LABELS: Record<string, string> = {
   HOUSE: "House",
   STUDIO: "Studio",
   TOWNHOUSE: "Townhouse",
+};
+
+const LEASE_TERM_LABELS: Record<string, string> = {
+  MONTH_TO_MONTH: "Month to Month",
+  SIX_MONTHS: "6 Months",
+  ONE_YEAR: "12 Months",
+  TWO_YEARS: "24 Months",
 };
 
 export function PropertyDetails({
@@ -54,32 +61,30 @@ export function PropertyDetails({
     {
       icon: Maximize,
       label: "Square Feet",
-      value: squareFeet.toLocaleString(),
+      value: squareFeet ? squareFeet.toLocaleString() : "—",
     },
     {
       icon: Building2,
       label: "Property Type",
       value: PROPERTY_TYPE_LABELS[propertyType] || propertyType,
     },
-    {
-      icon: Layers,
-      label: "Floor",
-      value: `${floor} of ${totalFloors}`,
-    },
+    ...(floor && totalFloors
+      ? [{ icon: Layers, label: "Floor", value: `${floor} of ${totalFloors}` }]
+      : []),
     {
       icon: CalendarDays,
       label: "Year Built",
-      value: yearBuilt.toString(),
+      value: yearBuilt ? yearBuilt.toString() : "—",
     },
     {
       icon: Car,
       label: "Parking",
-      value: parkingSpaces === 0 ? "Street Only" : `${parkingSpaces} ${parkingSpaces === 1 ? "Space" : "Spaces"}`,
+      value: !parkingSpaces ? "Street Only" : `${parkingSpaces} ${parkingSpaces === 1 ? "Space" : "Spaces"}`,
     },
     {
       icon: FileText,
       label: "Lease Term",
-      value: leaseTermType,
+      value: LEASE_TERM_LABELS[leaseTermType] || leaseTermType,
     },
   ];
 

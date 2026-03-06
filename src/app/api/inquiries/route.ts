@@ -81,8 +81,18 @@ export async function POST(request: NextRequest) {
     // Optionally link to the authenticated user
     const user = await getCurrentUser();
 
-    // Check if a propertyId was sent along
-    const propertyId = body.propertyId || null;
+    // Validate propertyId if provided
+    let propertyId: string | null = null;
+    if (body.propertyId && typeof body.propertyId === "string") {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(body.propertyId)) {
+        return NextResponse.json(
+          { message: "Invalid property ID format" },
+          { status: 400 }
+        );
+      }
+      propertyId = body.propertyId;
+    }
 
     const inquiry = await prisma.contactInquiry.create({
       data: {

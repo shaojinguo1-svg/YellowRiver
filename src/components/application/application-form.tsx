@@ -22,11 +22,13 @@ const STORAGE_KEY = "yr-application-draft";
 const TOTAL_STEPS = 6;
 
 interface ApplicationFormProps {
+  propertyId: string;
   propertySlug: string;
   propertyTitle: string;
 }
 
 export function ApplicationForm({
+  propertyId,
   propertySlug,
   propertyTitle,
 }: ApplicationFormProps) {
@@ -177,14 +179,14 @@ export function ApplicationForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
-          propertySlug,
+          propertyId,
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Failed to submit application");
+        throw new Error(result.message || "Failed to submit application");
       }
 
       // Clear saved data

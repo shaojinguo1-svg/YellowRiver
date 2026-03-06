@@ -9,115 +9,15 @@ import {
   Home,
   ArrowRight,
   Phone,
+  Shield,
+  Headphones,
+  DollarSign,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { PropertyGrid } from "@/components/property/property-grid";
 import { HeroSearch } from "@/components/property/hero-search";
-import type { PropertyCardProps } from "@/components/property/property-card";
-
-// ---------------------------------------------------------------------------
-// Demo data -- will be replaced with real DB queries once connected
-// ---------------------------------------------------------------------------
-const DEMO_PROPERTIES: PropertyCardProps[] = [
-  {
-    id: "1",
-    slug: "modern-downtown-apartment",
-    title: "Modern Downtown Apartment with City Views",
-    price: 2450,
-    bedrooms: 2,
-    bathrooms: 2,
-    squareFeet: 1100,
-    city: "Sacramento",
-    state: "CA",
-    propertyType: "Apartment",
-    primaryImage: {
-      url: "https://placehold.co/800x600/f59e0b/ffffff?text=Property+1",
-      alt: "Modern downtown apartment",
-    },
-  },
-  {
-    id: "2",
-    slug: "cozy-suburban-house",
-    title: "Cozy Suburban House with Large Backyard",
-    price: 3200,
-    bedrooms: 4,
-    bathrooms: 3,
-    squareFeet: 2400,
-    city: "Elk Grove",
-    state: "CA",
-    propertyType: "House",
-    primaryImage: {
-      url: "https://placehold.co/800x600/d97706/ffffff?text=Property+2",
-      alt: "Cozy suburban house",
-    },
-  },
-  {
-    id: "3",
-    slug: "luxury-waterfront-condo",
-    title: "Luxury Waterfront Condo in Riverview",
-    price: 3800,
-    bedrooms: 3,
-    bathrooms: 2,
-    squareFeet: 1800,
-    city: "West Sacramento",
-    state: "CA",
-    propertyType: "Condo",
-    primaryImage: {
-      url: "https://placehold.co/800x600/b45309/ffffff?text=Property+3",
-      alt: "Luxury waterfront condo",
-    },
-  },
-  {
-    id: "4",
-    slug: "charming-midtown-studio",
-    title: "Charming Midtown Studio Near Light Rail",
-    price: 1450,
-    bedrooms: 1,
-    bathrooms: 1,
-    squareFeet: 550,
-    city: "Sacramento",
-    state: "CA",
-    propertyType: "Studio",
-    primaryImage: {
-      url: "https://placehold.co/800x600/92400e/ffffff?text=Property+4",
-      alt: "Charming midtown studio",
-    },
-  },
-  {
-    id: "5",
-    slug: "spacious-family-townhouse",
-    title: "Spacious Family Townhouse with Garage",
-    price: 2800,
-    bedrooms: 3,
-    bathrooms: 2,
-    squareFeet: 1950,
-    city: "Roseville",
-    state: "CA",
-    propertyType: "Townhouse",
-    primaryImage: {
-      url: "https://placehold.co/800x600/78350f/ffffff?text=Property+5",
-      alt: "Spacious family townhouse",
-    },
-  },
-  {
-    id: "6",
-    slug: "renovated-historic-flat",
-    title: "Renovated Historic Flat in Old Town",
-    price: 1950,
-    bedrooms: 2,
-    bathrooms: 1,
-    squareFeet: 900,
-    city: "Folsom",
-    state: "CA",
-    propertyType: "Apartment",
-    primaryImage: {
-      url: "https://placehold.co/800x600/451a03/ffffff?text=Property+6",
-      alt: "Renovated historic flat",
-    },
-  },
-];
 
 // ---------------------------------------------------------------------------
 // Stats data
@@ -127,6 +27,36 @@ const STATS = [
   { icon: Users, value: "200+", label: "Happy Tenants" },
   { icon: MapPin, value: "15+", label: "Cities" },
   { icon: Star, value: "5 Star", label: "Rating" },
+];
+
+// ---------------------------------------------------------------------------
+// Why Choose Us advantages
+// ---------------------------------------------------------------------------
+const ADVANTAGES = [
+  {
+    icon: Shield,
+    title: "Quality Properties",
+    description:
+      "Hand-selected, well-maintained rental homes in top neighborhoods. Every property meets our high standards for comfort and quality.",
+  },
+  {
+    icon: Headphones,
+    title: "24/7 Support",
+    description:
+      "Responsive maintenance and a dedicated property management team ready to help whenever you need us.",
+  },
+  {
+    icon: DollarSign,
+    title: "Transparent Pricing",
+    description:
+      "Clear pricing with no hidden fees or surprise charges. What you see is what you pay, every month.",
+  },
+  {
+    icon: Zap,
+    title: "Easy Application",
+    description:
+      "Simple online application with fast review and approval. Move into your new home in days, not weeks.",
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -154,7 +84,7 @@ const STEPS = [
 ];
 
 // ---------------------------------------------------------------------------
-// Page component (Server Component)
+// Page component
 // ---------------------------------------------------------------------------
 export default function HomePage() {
   return (
@@ -222,25 +152,41 @@ export default function HomePage() {
         </section>
 
         {/* ----------------------------------------------------------------- */}
-        {/* Featured Listings Section                                         */}
+        {/* Why Choose Us Section                                             */}
         {/* ----------------------------------------------------------------- */}
         <section className="bg-ivory bg-mesh-light py-24 sm:py-32">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <p className="text-xs font-medium uppercase tracking-[0.2em] text-gold">
-                Curated Selections
+                Why Choose Us
               </p>
               <h2 className="mt-3 font-display text-3xl font-bold text-warm-900 sm:text-4xl">
-                Featured Properties
+                Professional Property Management
               </h2>
               <div className="mx-auto mt-4 h-0.5 w-16 bg-gold mb-6" />
               <p className="mx-auto max-w-2xl text-lg text-warm-500">
-                Explore our handpicked selection of premium rental properties
+                We take pride in providing exceptional rental experiences with
+                properties you can truly call home.
               </p>
             </div>
 
-            <div className="mt-12">
-              <PropertyGrid properties={DEMO_PROPERTIES} />
+            <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {ADVANTAGES.map((adv) => (
+                <div
+                  key={adv.title}
+                  className="rounded-xl border border-warm-200 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                >
+                  <div className="flex size-12 items-center justify-center rounded-full bg-gold/10">
+                    <adv.icon className="size-6 text-gold" />
+                  </div>
+                  <h3 className="mt-4 font-display text-lg font-semibold text-warm-900">
+                    {adv.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-warm-500">
+                    {adv.description}
+                  </p>
+                </div>
+              ))}
             </div>
 
             <div className="mt-12 text-center">

@@ -26,7 +26,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -89,14 +88,12 @@ export function ListingForm({ mode, initialData }: ListingFormProps) {
         : undefined,
       metaTitle: initialData?.metaTitle ?? "",
       metaDescription: initialData?.metaDescription ?? "",
-      featured: initialData?.featured ?? false,
       categoryId: initialData?.categoryId ?? "",
       amenityIds: initialData?.amenityIds ?? [],
     },
   });
 
   const watchedStatus = watch("status");
-  const watchedFeatured = watch("featured");
 
   async function onSubmit(data: PropertyCreateInput) {
     setIsSubmitting(true);
@@ -696,22 +693,6 @@ export function ListingForm({ mode, initialData }: ListingFormProps) {
                 )}
               </div>
 
-              {/* Featured */}
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <Label htmlFor="featured">Featured Listing</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Display this listing in the featured section on the homepage
-                  </p>
-                </div>
-                <Switch
-                  id="featured"
-                  checked={watchedFeatured}
-                  onCheckedChange={(checked) =>
-                    setValue("featured", checked, { shouldValidate: true })
-                  }
-                />
-              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -130,22 +130,24 @@ export function AdminTopbar({ user }: AdminTopbarProps) {
           <Breadcrumb className="hidden sm:block">
             <BreadcrumbList>
               {breadcrumbs.map((crumb, index) => (
-                <BreadcrumbItem key={crumb.href}>
-                  {index < breadcrumbs.length - 1 ? (
-                    <>
+                <span key={crumb.href} className="inline-flex items-center gap-1.5">
+                  <BreadcrumbItem>
+                    {index < breadcrumbs.length - 1 ? (
                       <BreadcrumbLink asChild>
                         <Link href={crumb.href} className="text-xs">
                           {crumb.label}
                         </Link>
                       </BreadcrumbLink>
-                      <BreadcrumbSeparator />
-                    </>
-                  ) : (
-                    <BreadcrumbPage className="text-xs">
-                      {crumb.label}
-                    </BreadcrumbPage>
+                    ) : (
+                      <BreadcrumbPage className="text-xs">
+                        {crumb.label}
+                      </BreadcrumbPage>
+                    )}
+                  </BreadcrumbItem>
+                  {index < breadcrumbs.length - 1 && (
+                    <BreadcrumbSeparator />
                   )}
-                </BreadcrumbItem>
+                </span>
               ))}
             </BreadcrumbList>
           </Breadcrumb>
