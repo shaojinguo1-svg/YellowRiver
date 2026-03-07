@@ -3,10 +3,11 @@ import slugify from "slugify";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, requireAdmin } from "@/lib/auth";
 import { propertyCreateSchema } from "@/validations/property";
+import { apiHandler } from "@/lib/api-handler";
 import type { Prisma } from "@/generated/prisma/client";
 
 export async function GET(request: NextRequest) {
-  try {
+  return apiHandler("GET /api/properties", async () => {
     const { searchParams } = request.nextUrl;
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
     const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit")) || 12));
@@ -18,7 +19,6 @@ export async function GET(request: NextRequest) {
 
     const where: Prisma.PropertyWhereInput = {};
 
-    // Check admin param — only resolve user if admin access requested
     const adminMode = searchParams.get("admin") === "true";
     if (adminMode) {
       const user = await getCurrentUser();
@@ -29,7 +29,6 @@ export async function GET(request: NextRequest) {
         where.status = status as Prisma.EnumPropertyStatusFilter;
       }
     } else {
-      // Public users only see active listings
       where.status = "ACTIVE";
     }
 
@@ -54,10 +53,7 @@ export async function GET(request: NextRequest) {
       prisma.property.findMany({
         where,
         include: {
-          images: {
-            where: { isPrimary: true },
-            take: 1,
-          },
+          images: { where: { isPrimary: true }, take: 1 },
           category: true,
         },
         orderBy: { createdAt: "desc" },
@@ -76,17 +72,11 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error) {
-    console.error("GET /api/properties error:", error);
-    return NextResponse.json(
-      { message: "Failed to fetch properties" },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 export async function POST(request: NextRequest) {
-  try {
+  return apiHandler("POST /api/properties", async () => {
     const admin = await requireAdmin();
 
     const body = await request.json();
@@ -101,13 +91,11 @@ export async function POST(request: NextRequest) {
 
     const data = parsed.data;
 
-    // Generate slug from title + city
     const baseSlug = slugify(`${data.title} ${data.city}`, {
       lower: true,
       strict: true,
     });
 
-    // Ensure slug uniqueness
     let slug = baseSlug;
     let counter = 1;
     while (await prisma.property.findUnique({ where: { slug } })) {
@@ -115,7 +103,6 @@ export async function POST(request: NextRequest) {
       counter++;
     }
 
-    // Separate amenityIds from the rest of the data
     const { amenityIds, categoryId, ...propertyData } = data;
 
     const property = await prisma.property.create({
@@ -134,11 +121,7 @@ export async function POST(request: NextRequest) {
         createdById: admin.id,
         amenities:
           amenityIds && amenityIds.length > 0
-            ? {
-                create: amenityIds.map((amenityId) => ({
-                  amenityId,
-                })),
-              }
+            ? { create: amenityIds.map((amenityId) => ({ amenityId })) }
             : undefined,
       },
       include: {
@@ -149,19 +132,5 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(property, { status: 201 });
-  } catch (error) {
-    console.error("POST /api/properties error:", error);
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    return NextResponse.json(
-      { message: "Failed to create property" },
-      { status: 500 }
-    );
-  }
+  });
 }

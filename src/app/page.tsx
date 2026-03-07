@@ -22,6 +22,10 @@ import { HeroSearch } from "@/components/property/hero-search";
 import { PropertyCard } from "@/components/property/property-card";
 import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
 import { prisma } from "@/lib/prisma";
+import { toPropertyCardData } from "@/lib/mappers";
+
+// ISR: revalidate every 5 minutes
+export const revalidate = 300;
 
 // ---------------------------------------------------------------------------
 // Stats data
@@ -119,19 +123,7 @@ const TESTIMONIALS = [
 // ---------------------------------------------------------------------------
 export default async function HomePage() {
   // Fetch featured properties from the database
-  let featuredProperties: {
-    id: string;
-    slug: string;
-    title: string;
-    price: number;
-    bedrooms: number;
-    bathrooms: number;
-    squareFeet: number;
-    city: string;
-    state: string;
-    propertyType: string;
-    primaryImage?: { url: string; alt: string };
-  }[] = [];
+  let featuredProperties: import("@/lib/mappers").PropertyCardData[] = [];
 
   try {
     const properties = await prisma.property.findMany({
@@ -143,22 +135,7 @@ export default async function HomePage() {
       take: 3,
     });
 
-    featuredProperties = properties.map((p) => ({
-      id: p.id,
-      slug: p.slug,
-      title: p.title,
-      price: Number(p.price),
-      bedrooms: p.bedrooms,
-      bathrooms: Number(p.bathrooms),
-      squareFeet: p.squareFeet ?? 0,
-      city: p.city,
-      state: p.state,
-      propertyType: p.propertyType,
-      availableFrom: p.availableFrom.toISOString(),
-      primaryImage: p.images[0]
-        ? { url: p.images[0].url, alt: p.images[0].alt || p.title }
-        : undefined,
-    }));
+    featuredProperties = properties.map(toPropertyCardData);
   } catch {
     // DB may not be available — show page without featured properties
   }

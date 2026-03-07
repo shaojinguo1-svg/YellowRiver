@@ -1,6 +1,16 @@
 import { PropertyGrid } from "@/components/property/property-grid";
 import { prisma } from "@/lib/prisma";
 import { AnimateOnScroll } from "@/components/ui/animate-on-scroll";
+import { toPropertyCardData } from "@/lib/mappers";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -8,6 +18,11 @@ export const metadata: Metadata = {
   description:
     "Browse current rental properties available through YellowRiver. Find apartments, houses, condos, and more.",
 };
+
+// ISR: revalidate every 5 minutes — property data changes infrequently
+export const revalidate = 300;
+
+const PAGE_SIZE = 12;
 
 export default async function ListingsPage({
   searchParams,
@@ -19,6 +34,8 @@ export default async function ListingsPage({
   const bedroomFilter = params.bedrooms || "";
   const typeFilter = params.type || "";
   const sortBy = params.sort || "newest";
+  const currentPage = Math.max(1, Number(params.page) || 1);
+  const skip = (currentPage - 1) * PAGE_SIZE;
 
   const where: Record<string, unknown> = { status: "ACTIVE" };
 
@@ -39,38 +56,40 @@ export default async function ListingsPage({
     where.propertyType = typeFilter;
   }
 
-  // Sort order
   let orderBy: Record<string, string> = { createdAt: "desc" };
   if (sortBy === "price-asc") orderBy = { price: "asc" };
   else if (sortBy === "price-desc") orderBy = { price: "desc" };
   else if (sortBy === "oldest") orderBy = { createdAt: "asc" };
 
-  const properties = await prisma.property.findMany({
-    where,
-    include: {
-      images: { where: { isPrimary: true }, take: 1 },
-    },
-    orderBy,
-  });
+  // Fetch current page + total count in parallel
+  const [properties, total] = await Promise.all([
+    prisma.property.findMany({
+      where,
+      include: {
+        images: { where: { isPrimary: true }, take: 1 },
+      },
+      orderBy,
+      take: PAGE_SIZE,
+      skip,
+    }),
+    prisma.property.count({ where }),
+  ]);
 
-  const propertyCards = properties.map((p) => ({
-    id: p.id,
-    slug: p.slug,
-    title: p.title,
-    price: Number(p.price),
-    bedrooms: p.bedrooms,
-    bathrooms: Number(p.bathrooms),
-    squareFeet: p.squareFeet ?? 0,
-    city: p.city,
-    state: p.state,
-    propertyType: p.propertyType,
-    availableFrom: p.availableFrom.toISOString(),
-    primaryImage: p.images[0]
-      ? { url: p.images[0].url, alt: p.images[0].alt || p.title }
-      : undefined,
-  }));
-
+  const propertyCards = properties.map(toPropertyCardData);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
   const hasFilters = locationFilter || bedroomFilter || typeFilter || sortBy !== "newest";
+
+  /** Build URL for a given page, preserving existing filter params */
+  function pageUrl(page: number): string {
+    const qs = new URLSearchParams();
+    if (locationFilter) qs.set("location", locationFilter);
+    if (bedroomFilter) qs.set("bedrooms", bedroomFilter);
+    if (typeFilter) qs.set("type", typeFilter);
+    if (sortBy !== "newest") qs.set("sort", sortBy);
+    if (page > 1) qs.set("page", String(page));
+    const str = qs.toString();
+    return `/listings${str ? `?${str}` : ""}`;
+  }
 
   return (
     <div>
@@ -164,13 +183,19 @@ export default async function ListingsPage({
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-8 flex items-center justify-between">
             <p className="text-sm text-warm-500">
-              Showing{" "}
-              <span className="font-medium text-warm-900">
-                {propertyCards.length}
-              </span>{" "}
-              {propertyCards.length === 1 ? "property" : "properties"}
-              {hasFilters && (
-                <span className="text-warm-500"> matching your filters</span>
+              {total > 0 ? (
+                <>
+                  Showing{" "}
+                  <span className="font-medium text-warm-900">
+                    {skip + 1}–{Math.min(skip + PAGE_SIZE, total)}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-medium text-warm-900">{total}</span>{" "}
+                  {total === 1 ? "property" : "properties"}
+                  {hasFilters && <span> matching your filters</span>}
+                </>
+              ) : (
+                <>No properties found{hasFilters && " matching your filters"}</>
               )}
             </p>
           </div>
@@ -178,6 +203,68 @@ export default async function ListingsPage({
           <AnimateOnScroll>
             <PropertyGrid properties={propertyCards} />
           </AnimateOnScroll>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-12">
+              <Pagination>
+                <PaginationContent>
+                  {/* Previous */}
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href={currentPage > 1 ? pageUrl(currentPage - 1) : undefined}
+                      aria-disabled={currentPage <= 1}
+                      className={currentPage <= 1 ? "pointer-events-none opacity-40" : ""}
+                    />
+                  </PaginationItem>
+
+                  {/* Page numbers */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    // Show first, last, current ± 1, and ellipsis
+                    const show =
+                      page === 1 ||
+                      page === totalPages ||
+                      Math.abs(page - currentPage) <= 1;
+
+                    const showEllipsisBefore =
+                      page === currentPage - 2 && currentPage > 3;
+                    const showEllipsisAfter =
+                      page === currentPage + 2 && currentPage < totalPages - 2;
+
+                    if (showEllipsisBefore || showEllipsisAfter) {
+                      return (
+                        <PaginationItem key={`ellipsis-${page}`}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    }
+
+                    if (!show) return null;
+
+                    return (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          href={pageUrl(page)}
+                          isActive={page === currentPage}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+
+                  {/* Next */}
+                  <PaginationItem>
+                    <PaginationNext
+                      href={currentPage < totalPages ? pageUrl(currentPage + 1) : undefined}
+                      aria-disabled={currentPage >= totalPages}
+                      className={currentPage >= totalPages ? "pointer-events-none opacity-40" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       </section>
     </div>

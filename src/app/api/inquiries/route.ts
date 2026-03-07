@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin, getCurrentUser } from "@/lib/auth";
 import { inquirySchema } from "@/validations/inquiry";
+import { apiHandler } from "@/lib/api-handler";
 
 export async function GET(request: NextRequest) {
-  try {
+  return apiHandler("GET /api/inquiries", async () => {
     await requireAdmin();
 
     const { searchParams } = request.nextUrl;
@@ -14,21 +15,14 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
-    if (status) {
-      where.status = status;
-    }
+    if (status) where.status = status;
 
     const [inquiries, total] = await Promise.all([
       prisma.contactInquiry.findMany({
         where,
         include: {
           user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
+            select: { id: true, firstName: true, lastName: true, email: true },
           },
         },
         orderBy: { createdAt: "desc" },
@@ -40,32 +34,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       inquiries,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     });
-  } catch (error) {
-    console.error("GET /api/inquiries error:", error);
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    return NextResponse.json(
-      { message: "Failed to fetch inquiries" },
-      { status: 500 }
-    );
-  }
+  });
 }
 
 export async function POST(request: NextRequest) {
-  try {
+  return apiHandler("POST /api/inquiries", async () => {
     const body = await request.json();
     const parsed = inquirySchema.safeParse(body);
 
@@ -77,19 +52,13 @@ export async function POST(request: NextRequest) {
     }
 
     const data = parsed.data;
-
-    // Optionally link to the authenticated user
     const user = await getCurrentUser();
 
-    // Validate propertyId if provided
     let propertyId: string | null = null;
     if (body.propertyId && typeof body.propertyId === "string") {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(body.propertyId)) {
-        return NextResponse.json(
-          { message: "Invalid property ID format" },
-          { status: 400 }
-        );
+        return NextResponse.json({ message: "Invalid property ID format" }, { status: 400 });
       }
       propertyId = body.propertyId;
     }
@@ -110,11 +79,5 @@ export async function POST(request: NextRequest) {
       { message: "Inquiry submitted successfully", inquiry },
       { status: 201 }
     );
-  } catch (error) {
-    console.error("POST /api/inquiries error:", error);
-    return NextResponse.json(
-      { message: "Failed to submit inquiry" },
-      { status: 500 }
-    );
-  }
+  });
 }

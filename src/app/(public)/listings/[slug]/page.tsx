@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, PawPrint, Mail } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { formatPrice, formatDate } from "@/lib/format";
 import { PropertyGallery } from "@/components/property/property-gallery";
 import { PropertyDetails } from "@/components/property/property-details";
 import { PropertyAmenities } from "@/components/property/property-amenities";
@@ -16,26 +18,23 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { Metadata } from "next";
 
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price);
-}
+// ISR: revalidate every 5 minutes
+export const revalidate = 300;
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+const LEASE_LABELS: Record<string, string> = {
+  MONTH_TO_MONTH: "Month to Month",
+  SIX_MONTHS: "6 Months",
+  ONE_YEAR: "12 Months",
+  TWO_YEARS: "24 Months",
+};
 
 type Params = Promise<{ slug: string }>;
 
-async function getProperty(slug: string) {
+/**
+ * Wrapped in React cache() so generateMetadata and the page component
+ * share a single DB query per request — no double-fetch.
+ */
+const getProperty = cache(async (slug: string) => {
   return prisma.property.findUnique({
     where: { slug },
     include: {
@@ -43,7 +42,7 @@ async function getProperty(slug: string) {
       amenities: { include: { amenity: true } },
     },
   });
-}
+});
 
 export async function generateMetadata({
   params,
@@ -69,6 +68,7 @@ export default async function ListingDetailPage({
   params: Params;
 }) {
   const { slug } = await params;
+  // Shared with generateMetadata — no second DB query
   const property = await getProperty(slug);
 
   if (!property) {
@@ -83,13 +83,10 @@ export default async function ListingDetailPage({
     alt: img.alt || property.title,
   }));
   const amenities = property.amenities.map((pa) => pa.amenity.name);
-  const LEASE_LABELS: Record<string, string> = {
-    MONTH_TO_MONTH: "Month to Month",
-    SIX_MONTHS: "6 Months",
-    ONE_YEAR: "12 Months",
-    TWO_YEARS: "24 Months",
-  };
-  const leaseTermType = LEASE_LABELS[property.leaseTermType || ""] || property.leaseTermType || "Month to Month";
+  const leaseTermType =
+    LEASE_LABELS[property.leaseTermType || ""] ||
+    property.leaseTermType ||
+    "Month to Month";
   const availableFrom = property.availableFrom.toISOString().split("T")[0];
 
   return (
@@ -138,7 +135,9 @@ export default async function ListingDetailPage({
               variant="outline"
               className="border-warm-200"
             >
-              <Link href={`/contact?subject=${encodeURIComponent(`Tour: ${property.title}`)}`}>
+              <Link
+                href={`/contact?subject=${encodeURIComponent(`Tour: ${property.title}`)}`}
+              >
                 Tour
               </Link>
             </Button>
@@ -245,17 +244,13 @@ export default async function ListingDetailPage({
                   {/* Pricing Details */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-warm-500">
-                        Security Deposit
-                      </span>
+                      <span className="text-warm-500">Security Deposit</span>
                       <span className="font-medium text-warm-900">
                         {formatPrice(securityDeposit)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-warm-500">
-                        Available From
-                      </span>
+                      <span className="text-warm-500">Available From</span>
                       <span className="font-medium text-warm-900">
                         {formatDate(availableFrom)}
                       </span>
@@ -285,7 +280,9 @@ export default async function ListingDetailPage({
                       className="w-full border-warm-200 text-warm-700 hover:bg-ivory-warm"
                       size="lg"
                     >
-                      <Link href={`/contact?subject=${encodeURIComponent(`Schedule Tour: ${property.title}`)}`}>
+                      <Link
+                        href={`/contact?subject=${encodeURIComponent(`Schedule Tour: ${property.title}`)}`}
+                      >
                         Schedule Tour
                       </Link>
                     </Button>

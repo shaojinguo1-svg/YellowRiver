@@ -1,6 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BedDouble, Bath, Maximize, MapPin, ArrowRight, CalendarDays } from "lucide-react";
+import { formatPrice, formatAvailableDate } from "@/lib/format";
+
+// Lightweight base64 grey placeholder — avoids blank flash on image load (P2 #8)
+const BLUR_DATA_URL =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F9PQAI8wNPvd7POQAAAABJRU5ErkJggg==";
 
 export interface PropertyCardProps {
   id: string;
@@ -20,22 +25,6 @@ export interface PropertyCardProps {
   };
 }
 
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price);
-}
-
-function formatAvailableDate(dateStr?: string): string | null {
-  if (!dateStr) return null;
-  const date = new Date(dateStr);
-  const now = new Date();
-  if (date <= now) return "Available Now";
-  return `Available ${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
-}
 
 export function PropertyCard({
   slug,
@@ -63,6 +52,8 @@ export function PropertyCard({
               fill
               className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
             />
           ) : (
             <div className="flex h-full items-center justify-center bg-ivory-warm text-warm-300">
