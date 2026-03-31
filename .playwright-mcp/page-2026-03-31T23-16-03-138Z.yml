@@ -1,0 +1,84 @@
+- generic [ref=e1]:
+  - generic [active]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - navigation [ref=e7]:
+            - button "previous" [disabled] [ref=e8]:
+              - img "previous" [ref=e9]
+            - generic [ref=e11]:
+              - generic [ref=e12]: 1/
+              - text: "1"
+            - button "next" [disabled] [ref=e13]:
+              - img "next" [ref=e14]
+          - img
+        - generic [ref=e16]:
+          - link "Next.js 16.1.6 (stale) Turbopack" [ref=e17] [cursor=pointer]:
+            - /url: https://nextjs.org/docs/messages/version-staleness
+            - img [ref=e18]
+            - generic "There is a newer version (16.2.1) available, upgrade recommended!" [ref=e20]: Next.js 16.1.6 (stale)
+            - generic [ref=e21]: Turbopack
+          - img
+      - dialog "Runtime DriverAdapterError" [ref=e23]:
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - generic [ref=e28]:
+              - generic [ref=e29]:
+                - generic [ref=e30]: Runtime DriverAdapterError
+                - generic [ref=e31]: Server
+              - generic [ref=e32]:
+                - button "Copy Error Info" [ref=e33] [cursor=pointer]:
+                  - img [ref=e34]
+                - button "No related documentation found" [disabled] [ref=e36]:
+                  - img [ref=e37]
+                - button "Attach Node.js inspector" [ref=e39] [cursor=pointer]:
+                  - img [ref=e40]
+            - generic [ref=e49]: Tenant or user not found
+          - generic [ref=e50]:
+            - generic [ref=e51]:
+              - paragraph [ref=e53]:
+                - img [ref=e55]
+                - generic [ref=e58]: src/app/(public)/listings/page.tsx (66:31) @ ListingsPage
+                - button "Open in editor" [ref=e59] [cursor=pointer]:
+                  - img [ref=e61]
+              - generic [ref=e64]:
+                - generic [ref=e65]: 64 |
+                - generic [ref=e66]: 65 | // Fetch current page + total count in parallel
+                - generic [ref=e67]: "> 66 | const [properties, total] = await Promise.all(["
+                - generic [ref=e68]: "| ^"
+                - generic [ref=e69]: "67 | prisma.property.findMany({"
+                - generic [ref=e70]: 68 | where,
+                - generic [ref=e71]: "69 | include: {"
+            - generic [ref=e72]:
+              - generic [ref=e73]:
+                - paragraph [ref=e74]:
+                  - text: Call Stack
+                  - generic [ref=e75]: "7"
+                - button "Show 5 ignore-listed frame(s)" [ref=e76] [cursor=pointer]:
+                  - text: Show 5 ignore-listed frame(s)
+                  - img [ref=e77]
+              - generic [ref=e79]:
+                - generic [ref=e80]: Function.all
+                - text: <anonymous>
+              - generic [ref=e81]:
+                - generic [ref=e82]:
+                  - text: ListingsPage
+                  - button "Open ListingsPage in editor" [ref=e83] [cursor=pointer]:
+                    - img [ref=e84]
+                - text: src/app/(public)/listings/page.tsx (66:31)
+        - generic [ref=e86]: "1"
+        - generic [ref=e87]: "2"
+    - generic [ref=e92] [cursor=pointer]:
+      - button "Open Next.js Dev Tools" [ref=e93]:
+        - img [ref=e94]
+      - generic [ref=e97]:
+        - button "Open issues overlay" [ref=e98]:
+          - generic [ref=e99]:
+            - generic [ref=e100]: "0"
+            - generic [ref=e101]: "1"
+          - generic [ref=e102]: Issue
+        - button "Collapse issues badge" [ref=e103]:
+          - img [ref=e104]
+  - generic [ref=e107]:
+    - 'heading "Application error: a server-side exception has occurred while loading localhost (see the server logs for more information)." [level=2] [ref=e108]'
+    - paragraph [ref=e109]: "Digest: 453218228"

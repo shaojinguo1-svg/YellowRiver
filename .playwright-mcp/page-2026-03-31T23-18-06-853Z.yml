@@ -1,0 +1,289 @@
+- generic:
+  - generic:
+    - banner:
+      - generic:
+        - button:
+          - img
+        - link:
+          - /url: /
+          - generic: Yellow
+          - generic: River
+    - main:
+      - generic:
+        - generic:
+          - paragraph: Premium Rental Living
+          - heading [level=1]: Find Your Perfect Rental Home
+          - paragraph: Discover our collection of premium apartments and rental homes, professionally managed for your comfort.
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                  - textbox:
+                    - /placeholder: City, neighborhood, or ZIP
+                - combobox:
+                  - generic: Bedrooms
+                  - img
+                - button:
+                  - img
+                  - text: Search
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - paragraph: 50+
+                - paragraph: Properties
+              - generic:
+                - generic:
+                  - img
+                - paragraph: 200+
+                - paragraph: Happy Tenants
+              - generic:
+                - generic:
+                  - img
+                - paragraph: 15+
+                - paragraph: Cities
+              - generic:
+                - generic:
+                  - img
+                - paragraph: 5 Star
+                - paragraph: Rating
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - paragraph: Why Choose Us
+              - heading [level=2]: Professional Property Management
+              - paragraph: We take pride in providing exceptional rental experiences with properties you can truly call home.
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - heading [level=3]: Quality Properties
+                - paragraph: Hand-selected, well-maintained rental homes in top neighborhoods. Every property meets our high standards for comfort and quality.
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - heading [level=3]: 24/7 Support
+                - paragraph: Responsive maintenance and a dedicated property management team ready to help whenever you need us.
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - heading [level=3]: Transparent Pricing
+                - paragraph: Clear pricing with no hidden fees or surprise charges. What you see is what you pay, every month.
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - heading [level=3]: Easy Application
+                - paragraph: Simple online application with fast review and approval. Move into your new home in days, not weeks.
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - paragraph: Testimonials
+              - heading [level=2]: What Our Tenants Say
+          - generic:
+            - generic:
+              - generic:
+                - img
+                - generic:
+                  - img
+                  - img
+                  - img
+                  - img
+                  - img
+                - paragraph: “YellowRiver made the entire rental process incredibly smooth. From browsing listings to move-in day, every step was handled professionally. I love my new apartment!”
+                - generic:
+                  - generic: S
+                  - generic:
+                    - paragraph: Sarah M.
+                    - paragraph: Tenant since 2024
+            - generic:
+              - generic:
+                - img
+                - generic:
+                  - img
+                  - img
+                  - img
+                  - img
+                  - img
+                - paragraph: “The maintenance team is outstanding. Any issue I've had was resolved within 24 hours. It's clear they genuinely care about their tenants' comfort.”
+                - generic:
+                  - generic: J
+                  - generic:
+                    - paragraph: James L.
+                    - paragraph: Tenant since 2023
+            - generic:
+              - generic:
+                - img
+                - generic:
+                  - img
+                  - img
+                  - img
+                  - img
+                  - img
+                - paragraph: “The online application was so easy, and I was approved within two days. The apartment is exactly as advertised — beautiful and well-maintained.”
+                - generic:
+                  - generic: E
+                  - generic:
+                    - paragraph: Emily R.
+                    - paragraph: Tenant since 2024
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - paragraph: How It Works
+              - heading [level=2]: Renting Made Simple
+          - generic:
+            - generic:
+              - generic:
+                - generic: "1"
+                - generic:
+                  - img
+                - heading [level=3]: Browse Listings
+                - paragraph: Search our curated collection of rental properties by location, price, and amenities to find the perfect match.
+            - generic:
+              - generic:
+                - generic: "2"
+                - generic:
+                  - img
+                - heading [level=3]: Submit Application
+                - paragraph: Found your ideal home? Complete a simple online application and our team will review it promptly.
+            - generic:
+              - generic:
+                - generic: "3"
+                - generic:
+                  - img
+                - heading [level=3]: Move In
+                - paragraph: Once approved, sign your lease and pick up your keys. Welcome to your new home!
+      - generic:
+        - generic:
+          - generic:
+            - heading [level=2]: Ready to Find Your New Home?
+            - paragraph: Start browsing our listings today or get in touch with our team. We are here to help you every step of the way.
+            - generic:
+              - link:
+                - /url: /listings
+                - img
+                - text: Browse Listings
+              - link:
+                - /url: /contact
+                - img
+                - text: Contact Us
+    - contentinfo:
+      - generic:
+        - generic:
+          - generic:
+            - link:
+              - /url: /
+              - generic: Yellow
+              - generic: River
+            - paragraph: Premium apartment living, professionally managed. Explore our collection of quality rental homes across top neighborhoods.
+            - generic:
+              - link:
+                - /url: https://facebook.com
+                - img
+              - link:
+                - /url: https://x.com
+                - img
+              - link:
+                - /url: https://instagram.com
+                - img
+              - link:
+                - /url: https://linkedin.com
+                - img
+          - generic:
+            - heading [level=3]: Quick Links
+            - list:
+              - listitem:
+                - link:
+                  - /url: /listings
+                  - text: Listings
+              - listitem:
+                - link:
+                  - /url: /about
+                  - text: About
+              - listitem:
+                - link:
+                  - /url: /contact
+                  - text: Contact
+              - listitem:
+                - link:
+                  - /url: /faq
+                  - text: FAQ
+              - listitem:
+                - link:
+                  - /url: /login
+                  - text: Admin Login
+          - generic:
+            - heading [level=3]: Contact Us
+            - list:
+              - listitem:
+                - link:
+                  - /url: tel:+15551234567
+                  - img
+                  - generic: (555) 123-4567
+              - listitem:
+                - link:
+                  - /url: mailto:info@yellowriver.com
+                  - img
+                  - generic: info@yellowriver.com
+              - listitem:
+                - link:
+                  - /url: "#"
+                  - img
+                  - generic: 123 River Street, Suite 100, Sacramento, CA 95814
+          - generic:
+            - heading [level=3]: Business Hours
+            - list:
+              - listitem:
+                - generic: Monday - Friday
+                - generic: 9:00 AM - 6:00 PM
+              - listitem:
+                - generic: Saturday
+                - generic: 10:00 AM - 4:00 PM
+              - listitem:
+                - generic: Sunday
+                - generic: Closed
+        - generic:
+          - paragraph: © 2026 YellowRiver. All rights reserved.
+          - generic:
+            - link:
+              - /url: "#"
+              - text: Privacy Policy
+            - link:
+              - /url: "#"
+              - text: Terms of Service
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e297] [cursor=pointer]:
+    - img [ref=e298]
+  - alert
+  - dialog "Yellow River" [ref=e303]:
+    - generic [ref=e304]:
+      - heading "Yellow River" [level=2] [ref=e305]:
+        - link "Yellow River" [ref=e306] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e307]: Yellow
+          - generic [ref=e308]: River
+      - paragraph [ref=e309]: Navigation menu
+    - navigation [ref=e310]:
+      - link "Listings" [ref=e311] [cursor=pointer]:
+        - /url: /listings
+      - link "About" [ref=e312] [cursor=pointer]:
+        - /url: /about
+      - link "Contact" [ref=e313] [cursor=pointer]:
+        - /url: /contact
+      - link "FAQ" [ref=e314] [cursor=pointer]:
+        - /url: /faq
+    - link "Sign In" [ref=e316] [cursor=pointer]:
+      - /url: /login
+    - button "Close" [active] [ref=e317]:
+      - img [ref=e318]
+      - generic [ref=e321]: Close

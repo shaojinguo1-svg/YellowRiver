@@ -1,0 +1,226 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - button "Open navigation menu" [ref=e5]:
+          - img
+        - link "Yellow River" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: Yellow
+          - generic [ref=e8]: River
+    - main [ref=e9]:
+      - generic [ref=e15]:
+        - paragraph [ref=e16]: Premium Rental Living
+        - heading "Find Your Perfect Rental Home" [level=1] [ref=e17]:
+          - text: Find Your Perfect
+          - text: Rental Home
+        - paragraph [ref=e20]: Discover our collection of premium apartments and rental homes, professionally managed for your comfort.
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - img [ref=e25]
+            - textbox "City, neighborhood, or ZIP" [ref=e28]
+          - combobox [ref=e29]:
+            - generic: Bedrooms
+            - img
+          - button "Search" [ref=e30]:
+            - img
+            - text: Search
+      - generic [ref=e34]:
+        - generic [ref=e35]:
+          - img [ref=e37]
+          - paragraph [ref=e41]: 50+
+          - paragraph [ref=e42]: Properties
+        - generic [ref=e43]:
+          - img [ref=e45]
+          - paragraph [ref=e50]: 200+
+          - paragraph [ref=e51]: Happy Tenants
+        - generic [ref=e52]:
+          - img [ref=e54]
+          - paragraph [ref=e57]: 15+
+          - paragraph [ref=e58]: Cities
+        - generic [ref=e59]:
+          - img [ref=e61]
+          - paragraph [ref=e63]: 5 Star
+          - paragraph [ref=e64]: Rating
+      - generic [ref=e66]:
+        - generic [ref=e68]:
+          - paragraph [ref=e69]: Why Choose Us
+          - heading "Professional Property Management" [level=2] [ref=e70]
+          - paragraph [ref=e72]: We take pride in providing exceptional rental experiences with properties you can truly call home.
+        - generic [ref=e73]:
+          - generic [ref=e75]:
+            - img [ref=e77]
+            - heading "Quality Properties" [level=3] [ref=e79]
+            - paragraph [ref=e80]: Hand-selected, well-maintained rental homes in top neighborhoods. Every property meets our high standards for comfort and quality.
+          - generic [ref=e82]:
+            - img [ref=e84]
+            - heading "24/7 Support" [level=3] [ref=e86]
+            - paragraph [ref=e87]: Responsive maintenance and a dedicated property management team ready to help whenever you need us.
+          - generic [ref=e89]:
+            - img [ref=e91]
+            - heading "Transparent Pricing" [level=3] [ref=e93]
+            - paragraph [ref=e94]: Clear pricing with no hidden fees or surprise charges. What you see is what you pay, every month.
+          - generic [ref=e96]:
+            - img [ref=e98]
+            - heading "Easy Application" [level=3] [ref=e100]
+            - paragraph [ref=e101]: Simple online application with fast review and approval. Move into your new home in days, not weeks.
+      - generic [ref=e103]:
+        - generic [ref=e105]:
+          - paragraph [ref=e106]: Testimonials
+          - heading "What Our Tenants Say" [level=2] [ref=e107]
+        - generic [ref=e109]:
+          - generic [ref=e111]:
+            - img [ref=e112]
+            - generic [ref=e115]:
+              - img [ref=e116]
+              - img [ref=e118]
+              - img [ref=e120]
+              - img [ref=e122]
+              - img [ref=e124]
+            - paragraph [ref=e126]: “YellowRiver made the entire rental process incredibly smooth. From browsing listings to move-in day, every step was handled professionally. I love my new apartment!”
+            - generic [ref=e127]:
+              - generic [ref=e128]: S
+              - generic [ref=e129]:
+                - paragraph [ref=e130]: Sarah M.
+                - paragraph [ref=e131]: Tenant since 2024
+          - generic [ref=e133]:
+            - img [ref=e134]
+            - generic [ref=e137]:
+              - img [ref=e138]
+              - img [ref=e140]
+              - img [ref=e142]
+              - img [ref=e144]
+              - img [ref=e146]
+            - paragraph [ref=e148]: “The maintenance team is outstanding. Any issue I've had was resolved within 24 hours. It's clear they genuinely care about their tenants' comfort.”
+            - generic [ref=e149]:
+              - generic [ref=e150]: J
+              - generic [ref=e151]:
+                - paragraph [ref=e152]: James L.
+                - paragraph [ref=e153]: Tenant since 2023
+          - generic [ref=e155]:
+            - img [ref=e156]
+            - generic [ref=e159]:
+              - img [ref=e160]
+              - img [ref=e162]
+              - img [ref=e164]
+              - img [ref=e166]
+              - img [ref=e168]
+            - paragraph [ref=e170]: “The online application was so easy, and I was approved within two days. The apartment is exactly as advertised — beautiful and well-maintained.”
+            - generic [ref=e171]:
+              - generic [ref=e172]: E
+              - generic [ref=e173]:
+                - paragraph [ref=e174]: Emily R.
+                - paragraph [ref=e175]: Tenant since 2024
+      - generic [ref=e177]:
+        - generic [ref=e179]:
+          - paragraph [ref=e180]: How It Works
+          - heading "Renting Made Simple" [level=2] [ref=e181]
+        - generic [ref=e183]:
+          - generic [ref=e185]:
+            - generic: "1"
+            - img [ref=e187]
+            - heading "Browse Listings" [level=3] [ref=e190]
+            - paragraph [ref=e191]: Search our curated collection of rental properties by location, price, and amenities to find the perfect match.
+          - generic [ref=e193]:
+            - generic: "2"
+            - img [ref=e195]
+            - heading "Submit Application" [level=3] [ref=e198]
+            - paragraph [ref=e199]: Found your ideal home? Complete a simple online application and our team will review it promptly.
+          - generic [ref=e201]:
+            - generic: "3"
+            - img [ref=e203]
+            - heading "Move In" [level=3] [ref=e206]
+            - paragraph [ref=e207]: Once approved, sign your lease and pick up your keys. Welcome to your new home!
+      - generic [ref=e211]:
+        - heading "Ready to Find Your New Home?" [level=2] [ref=e212]
+        - paragraph [ref=e214]: Start browsing our listings today or get in touch with our team. We are here to help you every step of the way.
+        - generic [ref=e215]:
+          - link "Browse Listings" [ref=e216] [cursor=pointer]:
+            - /url: /listings
+            - img
+            - text: Browse Listings
+          - link "Contact Us" [ref=e217] [cursor=pointer]:
+            - /url: /contact
+            - img
+            - text: Contact Us
+    - contentinfo [ref=e218]:
+      - generic [ref=e219]:
+        - generic [ref=e220]:
+          - generic [ref=e221]:
+            - link "Yellow River" [ref=e222] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e223]: Yellow
+              - generic [ref=e224]: River
+            - paragraph [ref=e225]: Premium apartment living, professionally managed. Explore our collection of quality rental homes across top neighborhoods.
+            - generic [ref=e226]:
+              - link "Facebook" [ref=e227] [cursor=pointer]:
+                - /url: https://facebook.com
+                - img [ref=e228]
+              - link "Twitter" [ref=e230] [cursor=pointer]:
+                - /url: https://x.com
+                - img [ref=e231]
+              - link "Instagram" [ref=e233] [cursor=pointer]:
+                - /url: https://instagram.com
+                - img [ref=e234]
+              - link "LinkedIn" [ref=e237] [cursor=pointer]:
+                - /url: https://linkedin.com
+                - img [ref=e238]
+          - generic [ref=e242]:
+            - heading "Quick Links" [level=3] [ref=e243]
+            - list [ref=e244]:
+              - listitem [ref=e245]:
+                - link "Listings" [ref=e246] [cursor=pointer]:
+                  - /url: /listings
+              - listitem [ref=e247]:
+                - link "About" [ref=e248] [cursor=pointer]:
+                  - /url: /about
+              - listitem [ref=e249]:
+                - link "Contact" [ref=e250] [cursor=pointer]:
+                  - /url: /contact
+              - listitem [ref=e251]:
+                - link "FAQ" [ref=e252] [cursor=pointer]:
+                  - /url: /faq
+              - listitem [ref=e253]:
+                - link "Admin Login" [ref=e254] [cursor=pointer]:
+                  - /url: /login
+          - generic [ref=e255]:
+            - heading "Contact Us" [level=3] [ref=e256]
+            - list [ref=e257]:
+              - listitem [ref=e258]:
+                - link "(555) 123-4567" [ref=e259] [cursor=pointer]:
+                  - /url: tel:+15551234567
+                  - img [ref=e260]
+                  - generic [ref=e262]: (555) 123-4567
+              - listitem [ref=e263]:
+                - link "info@yellowriver.com" [ref=e264] [cursor=pointer]:
+                  - /url: mailto:info@yellowriver.com
+                  - img [ref=e265]
+                  - generic [ref=e268]: info@yellowriver.com
+              - listitem [ref=e269]:
+                - link "123 River Street, Suite 100, Sacramento, CA 95814" [ref=e270] [cursor=pointer]:
+                  - /url: "#"
+                  - img [ref=e271]
+                  - generic [ref=e274]: 123 River Street, Suite 100, Sacramento, CA 95814
+          - generic [ref=e275]:
+            - heading "Business Hours" [level=3] [ref=e276]
+            - list [ref=e277]:
+              - listitem [ref=e278]:
+                - generic [ref=e279]: Monday - Friday
+                - generic [ref=e280]: 9:00 AM - 6:00 PM
+              - listitem [ref=e281]:
+                - generic [ref=e282]: Saturday
+                - generic [ref=e283]: 10:00 AM - 4:00 PM
+              - listitem [ref=e284]:
+                - generic [ref=e285]: Sunday
+                - generic [ref=e286]: Closed
+        - generic [ref=e287]:
+          - paragraph [ref=e288]: © 2026 YellowRiver. All rights reserved.
+          - generic [ref=e289]:
+            - link "Privacy Policy" [ref=e290] [cursor=pointer]:
+              - /url: "#"
+            - link "Terms of Service" [ref=e291] [cursor=pointer]:
+              - /url: "#"
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e297] [cursor=pointer]:
+    - img [ref=e298]
+  - alert [ref=e301]

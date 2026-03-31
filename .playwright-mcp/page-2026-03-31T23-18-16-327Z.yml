@@ -1,0 +1,170 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - button "Open navigation menu" [ref=e5]:
+          - img
+        - link "Yellow River" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: Yellow
+          - generic [ref=e8]: River
+    - main [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e13]:
+          - paragraph [ref=e14]: Get In Touch
+          - heading "Contact Us" [level=1] [ref=e15]
+          - paragraph [ref=e17]: Have a question about a property or need help with your rental search? We would love to hear from you.
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - heading "Send Us a Message" [level=2] [ref=e22]
+            - paragraph [ref=e23]: Fill out the form below and our team will respond within one business day.
+            - generic [ref=e24]:
+              - generic [ref=e25]:
+                - generic [ref=e26]:
+                  - generic [ref=e27]:
+                    - text: Full Name
+                    - generic [ref=e28]: "*"
+                  - textbox "Full Name *" [ref=e29]:
+                    - /placeholder: John Doe
+                - generic [ref=e30]:
+                  - generic [ref=e31]:
+                    - text: Email Address
+                    - generic [ref=e32]: "*"
+                  - textbox "Email Address *" [ref=e33]:
+                    - /placeholder: john@example.com
+              - generic [ref=e34]:
+                - generic [ref=e35]:
+                  - generic [ref=e36]: Phone Number
+                  - textbox "Phone Number" [ref=e37]:
+                    - /placeholder: (555) 000-0000
+                - generic [ref=e38]:
+                  - generic [ref=e39]:
+                    - text: Subject
+                    - generic [ref=e40]: "*"
+                  - textbox "Subject *" [ref=e41]:
+                    - /placeholder: Property inquiry
+              - generic [ref=e42]:
+                - generic [ref=e43]:
+                  - text: Message
+                  - generic [ref=e44]: "*"
+                - textbox "Message *" [ref=e45]:
+                  - /placeholder: Tell us how we can help you...
+              - button "Send Message" [ref=e46]
+          - generic [ref=e47]:
+            - generic [ref=e48]:
+              - generic [ref=e50]: Contact Information
+              - generic [ref=e51]:
+                - generic [ref=e52]:
+                  - img [ref=e54]
+                  - generic [ref=e56]:
+                    - paragraph [ref=e57]: Phone
+                    - link "(555) 123-4567" [ref=e58] [cursor=pointer]:
+                      - /url: tel:+15551234567
+                - generic [ref=e59]:
+                  - img [ref=e61]
+                  - generic [ref=e64]:
+                    - paragraph [ref=e65]: Email
+                    - link "info@yellowriver.com" [ref=e66] [cursor=pointer]:
+                      - /url: mailto:info@yellowriver.com
+                - generic [ref=e67]:
+                  - img [ref=e69]
+                  - generic [ref=e72]:
+                    - paragraph [ref=e73]: Address
+                    - paragraph [ref=e74]: 123 River Street, Suite 100, Sacramento, CA 95814
+                - generic [ref=e75]:
+                  - img [ref=e77]
+                  - generic [ref=e80]:
+                    - paragraph [ref=e81]: Business Hours
+                    - paragraph [ref=e82]: "Mon-Fri: 9AM-6PM | Sat: 10AM-4PM"
+            - generic [ref=e83]:
+              - generic [ref=e85]:
+                - img [ref=e86]
+                - generic [ref=e89]: Our Office
+              - generic [ref=e90]:
+                - paragraph [ref=e91]: 123 River Street, Suite 100
+                - paragraph [ref=e92]: Sacramento, CA 95814
+                - link "Get Directions" [ref=e94] [cursor=pointer]:
+                  - /url: https://maps.google.com/?q=123+River+Street+Sacramento+CA+95814
+                  - img [ref=e95]
+                  - text: Get Directions
+    - contentinfo [ref=e98]:
+      - generic [ref=e99]:
+        - generic [ref=e100]:
+          - generic [ref=e101]:
+            - link "Yellow River" [ref=e102] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e103]: Yellow
+              - generic [ref=e104]: River
+            - paragraph [ref=e105]: Premium apartment living, professionally managed. Explore our collection of quality rental homes across top neighborhoods.
+            - generic [ref=e106]:
+              - link "Facebook" [ref=e107] [cursor=pointer]:
+                - /url: https://facebook.com
+                - img [ref=e108]
+              - link "Twitter" [ref=e110] [cursor=pointer]:
+                - /url: https://x.com
+                - img [ref=e111]
+              - link "Instagram" [ref=e113] [cursor=pointer]:
+                - /url: https://instagram.com
+                - img [ref=e114]
+              - link "LinkedIn" [ref=e117] [cursor=pointer]:
+                - /url: https://linkedin.com
+                - img [ref=e118]
+          - generic [ref=e122]:
+            - heading "Quick Links" [level=3] [ref=e123]
+            - list [ref=e124]:
+              - listitem [ref=e125]:
+                - link "Listings" [ref=e126] [cursor=pointer]:
+                  - /url: /listings
+              - listitem [ref=e127]:
+                - link "About" [ref=e128] [cursor=pointer]:
+                  - /url: /about
+              - listitem [ref=e129]:
+                - link "Contact" [ref=e130] [cursor=pointer]:
+                  - /url: /contact
+              - listitem [ref=e131]:
+                - link "FAQ" [ref=e132] [cursor=pointer]:
+                  - /url: /faq
+              - listitem [ref=e133]:
+                - link "Admin Login" [ref=e134] [cursor=pointer]:
+                  - /url: /login
+          - generic [ref=e135]:
+            - heading "Contact Us" [level=3] [ref=e136]
+            - list [ref=e137]:
+              - listitem [ref=e138]:
+                - link "(555) 123-4567" [ref=e139] [cursor=pointer]:
+                  - /url: tel:+15551234567
+                  - img [ref=e140]
+                  - generic [ref=e142]: (555) 123-4567
+              - listitem [ref=e143]:
+                - link "info@yellowriver.com" [ref=e144] [cursor=pointer]:
+                  - /url: mailto:info@yellowriver.com
+                  - img [ref=e145]
+                  - generic [ref=e148]: info@yellowriver.com
+              - listitem [ref=e149]:
+                - link "123 River Street, Suite 100, Sacramento, CA 95814" [ref=e150] [cursor=pointer]:
+                  - /url: "#"
+                  - img [ref=e151]
+                  - generic [ref=e154]: 123 River Street, Suite 100, Sacramento, CA 95814
+          - generic [ref=e155]:
+            - heading "Business Hours" [level=3] [ref=e156]
+            - list [ref=e157]:
+              - listitem [ref=e158]:
+                - generic [ref=e159]: Monday - Friday
+                - generic [ref=e160]: 9:00 AM - 6:00 PM
+              - listitem [ref=e161]:
+                - generic [ref=e162]: Saturday
+                - generic [ref=e163]: 10:00 AM - 4:00 PM
+              - listitem [ref=e164]:
+                - generic [ref=e165]: Sunday
+                - generic [ref=e166]: Closed
+        - generic [ref=e167]:
+          - paragraph [ref=e168]: © 2026 YellowRiver. All rights reserved.
+          - generic [ref=e169]:
+            - link "Privacy Policy" [ref=e170] [cursor=pointer]:
+              - /url: "#"
+            - link "Terms of Service" [ref=e171] [cursor=pointer]:
+              - /url: "#"
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e177] [cursor=pointer]:
+    - img [ref=e178]
+  - alert [ref=e181]
