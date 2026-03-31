@@ -11,6 +11,7 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
+import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -166,12 +167,12 @@ export default async function ListingsPage({
                 Filter
               </button>
               {hasFilters && (
-                <a
+                <Link
                   href="/listings"
                   className="text-sm text-warm-500 hover:text-gold transition-colors"
                 >
                   Clear
-                </a>
+                </Link>
               )}
             </div>
           </form>

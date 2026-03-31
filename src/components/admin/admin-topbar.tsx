@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Menu,
   LogOut,
-  User,
   Building2,
   LayoutDashboard,
   FileText,

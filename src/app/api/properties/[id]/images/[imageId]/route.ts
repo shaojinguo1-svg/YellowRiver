@@ -32,19 +32,20 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     if (body.isPrimary !== undefined) {
+      updateData.isPrimary = body.isPrimary;
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
       if (body.isPrimary) {
-        // Unset other primary images for this property
-        await prisma.propertyImage.updateMany({
+        await tx.propertyImage.updateMany({
           where: { propertyId: id, isPrimary: true },
           data: { isPrimary: false },
         });
       }
-      updateData.isPrimary = body.isPrimary;
-    }
-
-    const updated = await prisma.propertyImage.update({
-      where: { id: imageId },
-      data: updateData,
+      return tx.propertyImage.update({
+        where: { id: imageId },
+        data: updateData,
+      });
     });
 
     return NextResponse.json(updated);

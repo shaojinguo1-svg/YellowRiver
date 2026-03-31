@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     const application = await prisma.rentalApplication.create({
       data: {
         applicationNumber,
-        propertyId: body.propertyId,
+        propertyId: property.id,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -177,7 +177,13 @@ export async function POST(request: NextRequest) {
         applicantName,
         propertyTitle,
       }),
-    ]).catch((err) => console.error("Email notification error:", err));
+    ]).then((results) => {
+      results.forEach((result, i) => {
+        if (result.status === "rejected") {
+          console.error(`Email notification ${i} failed:`, result.reason);
+        }
+      });
+    });
 
     return NextResponse.json(
       {

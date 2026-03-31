@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Fragment, useState } from "react";
 import { format } from "date-fns";
 import {
   MessageSquare,
@@ -72,7 +71,6 @@ export function InquiriesClient({
   inquiries: initialInquiries,
   fetchError,
 }: InquiriesClientProps) {
-  const router = useRouter();
   const [inquiries, setInquiries] =
     useState<SerializedInquiry[]>(initialInquiries);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -209,9 +207,8 @@ export function InquiriesClient({
                 </TableRow>
               ) : (
                 inquiries.map((inquiry) => (
-                  <>
+                  <Fragment key={inquiry.id}>
                     <TableRow
-                      key={inquiry.id}
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => handleToggle(inquiry)}
                     >
@@ -360,7 +357,7 @@ export function InquiriesClient({
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </Fragment>
                 ))
               )}
             </TableBody>

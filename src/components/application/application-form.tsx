@@ -76,7 +76,6 @@ export function ApplicationForm({
     watch,
     setValue,
     getValues,
-    reset,
     formState: { errors },
   } = form;
 
@@ -102,7 +101,7 @@ export function ApplicationForm({
     } catch {
       // Silently ignore parse errors
     }
-  }, [propertySlug, setValue]);
+  }, [propertySlug, setValue, form]);
 
   // Save form data to localStorage whenever values change
   const saveToStorage = useCallback(() => {

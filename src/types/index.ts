@@ -5,7 +5,6 @@ import type {
   Category,
   RentalApplication,
   ApplicationDocument,
-  ContactInquiry,
   User,
 } from "@/generated/prisma/client";
 

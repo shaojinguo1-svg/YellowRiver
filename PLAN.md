@@ -1,54 +1,78 @@
-# Plan: UI/UX Polish Pass
+# Plan: Multi-Agent Development Architecture
 
 ## Goal
-Comprehensive UI/UX refinements across the entire app to elevate the premium feel, improve usability, and fix visual inconsistencies.
+建立 Claude Code Multi-Agent 开发架构，让 5 个专职 Agent 分工协作开发 YellowRiver 项目，提高开发效率和代码质量。
 
-## Audit Findings
+## Agent 架构
 
-### 🔴 High Priority
-1. **Listing Detail — Price card on desktop has no visual breathing room** — "Apply Now" and "Schedule Tour" buttons feel cramped
-2. **Contact page — "Map coming soon" placeholder** — looks unfinished; replace with an embedded static map or a styled location card
-3. **About page — Team section is empty** — just a paragraph, no team members; either add placeholder team cards or remove the section
-4. **FAQ — no search** — 10 questions but no way to filter/search them
-5. **Homepage — CTA section is similar to hero** — both dark charcoal with gold; differentiate them visually
+### 1. `planner` — 规划协调 Agent (Opus)
+- 需求分析与任务拆解
+- 维护 PLAN.md 和 TO-DO.md
+- 协调其他 Agent，决定执行顺序
+- 可调用其他 4 个 Agent
 
-### 🟡 Medium Priority
-6. **Property Card — no "Available" date indicator** — users have to click through to see when it's available
-7. **Listings page — no sort options** — can filter but not sort (price low→high, newest, etc.)
-8. **Application Form — step indicator could show progress %** — mobile progress bar is good but desktop could use a percentage
-9. **Footer — social links go to "#"** — placeholder hrefs look broken on hover
-10. **Header — no active state for current page** — nav links don't highlight which page you're on
+### 2. `frontend` — 前端 UI Agent (Sonnet)
+- React 组件开发 (`src/components/`)
+- 页面布局与路由 (`src/app/**/page.tsx`)
+- Tailwind + Shadcn UI 样式
+- 响应式设计与交互
 
-### 🟢 Polish
-11. **Consistent section headers** — some use "p > h2 > divider > p" pattern, some don't; standardize
-12. **Empty states** — listings page empty state could be more inviting
-13. **Loading states** — no skeleton loaders for listing cards
-14. **Scroll to top** — add a back-to-top button for long pages
-15. **Favicon** — verify it's set correctly
+### 3. `backend` — 后端 API Agent (Sonnet)
+- API 路由 (`src/app/api/`)
+- Prisma schema 与数据库操作
+- Zod 验证 + 类型定义
+- 邮件发送与服务端逻辑
+
+### 4. `auth-infra` — 认证基础设施 Agent (Sonnet)
+- Supabase Auth 集成
+- Middleware 路由保护
+- Storage + RLS 配置
+- 环境变量与 CI/CD
+
+### 5. `qa` — 质量保障 Agent (Sonnet, 只读)
+- TypeScript 类型检查
+- 构建验证
+- 代码审查与安全检查
+- 输出问题报告（不直接修改代码）
+
+## 典型工作流
+
+```
+用户需求 → @planner 制定计划
+         → @backend 开发 API（如需要）
+         → @auth-infra 配置认证/存储（如需要）
+         → @frontend 开发 UI
+         → @qa 验证质量
+         → @planner 更新 TO-DO.md
+```
+
+## 使用方式
+
+### 在 Claude Code CLI 中
+```bash
+# 以特定 Agent 启动会话
+claude --agent planner
+claude --agent frontend
+
+# 在会话中 @-mention 调用
+@frontend 开发用户资料页面
+@qa 检查最近的改动
+```
 
 ## Changes
-
-### Files to modify:
-- [ ] `src/components/layout/header.tsx` — active nav state
-- [ ] `src/components/layout/footer.tsx` — remove dead social links or mark as "Coming Soon"
-- [ ] `src/app/page.tsx` — differentiate CTA from hero, polish
-- [ ] `src/app/(public)/about/page.tsx` — team section → placeholder cards or remove
-- [ ] `src/app/(public)/contact/page.tsx` — replace map placeholder with styled location card
-- [ ] `src/app/(public)/listings/page.tsx` — add sort dropdown
-- [ ] `src/app/(public)/listings/[slug]/page.tsx` — spacing in price card
-- [ ] `src/components/property/property-card.tsx` — add available date
-- [ ] `src/components/ui/scroll-to-top.tsx` — new component
-- [ ] `src/app/(public)/layout.tsx` — add ScrollToTop
-
-### New files:
-- [ ] `src/components/ui/scroll-to-top.tsx`
+- [x] `.claude/agents/frontend.md` — 前端 Agent 定义
+- [x] `.claude/agents/backend.md` — 后端 Agent 定义
+- [x] `.claude/agents/auth-infra.md` — 认证基础设施 Agent 定义
+- [x] `.claude/agents/qa.md` — QA Agent 定义
+- [x] `.claude/agents/planner.md` — 规划协调 Agent 定义
 
 ## Testing
-- Visual inspection of all pages
-- All pages return 200
-- Build succeeds
-- TypeScript clean
+- 在 Claude Code 中运行 `/agents` 确认所有 Agent 可见
+- 测试 `claude --agent planner` 能否正常启动
+- 测试 Agent 间调用（planner 调用 frontend/backend/qa）
 
 ## Notes
-- Keep changes CSS/layout only where possible — minimize logic changes
-- Maintain the gold/charcoal luxury theme throughout
+- Planner Agent 使用 Opus 模型（更强的推理能力适合规划）
+- QA Agent 是只读角色，不直接修改代码
+- 所有 Agent 遵循 CLAUDE.md 中的 Plan Before Code 规则
+- Agent 文件应提交到 Git，团队成员共享使用
