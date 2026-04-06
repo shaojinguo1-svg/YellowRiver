@@ -49,7 +49,7 @@ export async function middleware(request: NextRequest) {
     if (serviceRoleKey && supabaseUrl) {
       try {
         const res = await fetch(
-          `${supabaseUrl}/rest/v1/User?supabaseId=eq.${user.id}&select=role`,
+          `${supabaseUrl}/rest/v1/users?supabase_id=eq.${user.id}&select=role`,
           {
             headers: {
               apikey: serviceRoleKey,
