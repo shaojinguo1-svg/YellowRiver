@@ -164,43 +164,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="bg-ivory py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="font-display text-3xl font-bold tracking-tight text-warm-900">
-              Our Team
-            </h2>
-            <div className="mx-auto mt-4 w-12 h-0.5 bg-gold" />
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-warm-500">
-              Meet the professionals behind YellowRiver. Our team brings decades
-              of combined experience in property management.
-            </p>
-          </div>
-
-          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { name: "Sarah Chen", role: "Managing Director", initials: "SC" },
-              { name: "Marcus Rivera", role: "Head of Operations", initials: "MR" },
-              { name: "Emily Park", role: "Client Relations Manager", initials: "EP" },
-            ].map((member) => (
-              <div
-                key={member.name}
-                className="flex flex-col items-center rounded-xl border border-warm-200 bg-white p-8 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-              >
-                <div className="flex size-20 items-center justify-center rounded-full bg-gold/10 font-display text-2xl font-bold text-gold">
-                  {member.initials}
-                </div>
-                <h3 className="mt-4 font-display text-lg font-semibold text-warm-900">
-                  {member.name}
-                </h3>
-                <p className="mt-1 text-sm text-warm-500">{member.role}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* CTA */}
       <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

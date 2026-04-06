@@ -58,7 +58,7 @@ export default function AdminSettingsPage() {
                 <Input
                   id="phone"
                   type="tel"
-                  defaultValue="(555) 123-4567"
+                  defaultValue="(626) 492-6480"
                   placeholder="Enter phone number"
                 />
               </div>

@@ -38,7 +38,7 @@ const FAQ_ITEMS = [
   {
     question: "Can I schedule a property tour?",
     answer:
-      "Absolutely. We encourage prospective tenants to tour properties before applying. You can schedule a tour directly from any listing page by selecting your preferred date and time, or by contacting our office at (555) 123-4567. We offer tours Monday through Saturday and can accommodate evening appointments upon request.",
+      "Absolutely. We encourage prospective tenants to tour properties before applying. You can schedule a tour directly from any listing page by selecting your preferred date and time, or by contacting our office at (626) 492-6480. We offer tours Monday through Saturday and can accommodate evening appointments upon request.",
   },
   {
     question: "What is the security deposit?",
@@ -53,7 +53,7 @@ const FAQ_ITEMS = [
   {
     question: "How do I report maintenance issues?",
     answer:
-      "Current tenants can submit maintenance requests through their online tenant portal 24/7. For urgent issues such as water leaks, heating failures, or security concerns, please call our emergency maintenance line at (555) 123-4568. Non-emergency requests are typically addressed within 1-3 business days. We take pride in maintaining our properties to the highest standard.",
+      "Current tenants can submit maintenance requests through their online tenant portal 24/7. For urgent issues such as water leaks, heating failures, or security concerns, please call our emergency maintenance line at (626) 492-6480. Non-emergency requests are typically addressed within 1-3 business days. We take pride in maintaining our properties to the highest standard.",
   },
   {
     question: "What happens if my application is denied?",

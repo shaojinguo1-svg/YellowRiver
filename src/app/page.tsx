@@ -446,8 +446,7 @@ export default async function HomePage() {
                 <Button
                   asChild
                   size="lg"
-                  variant="outline"
-                  className="border-white/40 text-white hover:bg-white/10"
+                  className="bg-charcoal text-white hover:bg-charcoal-light font-semibold shadow-lg"
                 >
                   <Link href="/contact">
                     <Phone className="mr-2 size-4" />

@@ -22,8 +22,8 @@ const CONTACT_DETAILS = [
   {
     icon: Phone,
     label: "Phone",
-    value: "(555) 123-4567",
-    href: "tel:+15551234567",
+    value: "(626) 492-6480",
+    href: "tel:+16264926480",
   },
   {
     icon: Mail,
@@ -34,7 +34,7 @@ const CONTACT_DETAILS = [
   {
     icon: MapPin,
     label: "Address",
-    value: "123 River Street, Suite 100, Sacramento, CA 95814",
+    value: "301 E Colorado Blvd, Pasadena, CA 91101",
     href: null,
   },
   {
@@ -288,12 +288,12 @@ function ContactPageContent() {
                 </div>
                 <CardContent className="p-6">
                   <p className="text-sm font-medium text-warm-900">
-                    123 River Street, Suite 100
+                    301 E Colorado Blvd
                   </p>
-                  <p className="text-sm text-warm-500">Sacramento, CA 95814</p>
+                  <p className="text-sm text-warm-500">Pasadena, CA 91101</p>
                   <div className="mt-4 flex gap-2">
                     <a
-                      href="https://maps.google.com/?q=123+River+Street+Sacramento+CA+95814"
+                      href="https://maps.google.com/?q=301+E+Colorado+Blvd+Pasadena+CA+91101"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-lg bg-gold/10 px-3 py-1.5 text-xs font-medium text-gold-dark transition-colors hover:bg-gold/20"

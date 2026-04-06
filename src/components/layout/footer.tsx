@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { Mail, MapPin, Phone, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { NAV_LINKS, APP_NAME } from "@/lib/constants";
 
 const CONTACT_INFO = [
   {
     icon: Phone,
-    label: "(555) 123-4567",
-    href: "tel:+15551234567",
+    label: "(626) 492-6480",
+    href: "tel:+16264926480",
   },
   {
     icon: Mail,
@@ -16,16 +16,9 @@ const CONTACT_INFO = [
   },
   {
     icon: MapPin,
-    label: "123 River Street, Suite 100, Sacramento, CA 95814",
+    label: "301 E Colorado Blvd, Pasadena, CA 91101",
     href: "#",
   },
-];
-
-const SOCIAL_LINKS = [
-  { icon: Facebook, href: "https://facebook.com", label: "Facebook" },
-  { icon: Twitter, href: "https://x.com", label: "Twitter" },
-  { icon: Instagram, href: "https://instagram.com", label: "Instagram" },
-  { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
 ];
 
 export function Footer() {
@@ -50,21 +43,6 @@ export function Footer() {
               Premium apartment living, professionally managed. Explore our
               collection of quality rental homes across top neighborhoods.
             </p>
-            {/* Social links */}
-            <div className="mt-6 flex items-center gap-3">
-              {SOCIAL_LINKS.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.label}
-                  className="flex size-9 items-center justify-center rounded-full bg-charcoal-light text-warm-300 transition-colors hover:bg-gold hover:text-white"
-                >
-                  <social.icon className="size-4" />
-                </a>
-              ))}
-            </div>
           </div>
 
           {/* Quick Links */}
