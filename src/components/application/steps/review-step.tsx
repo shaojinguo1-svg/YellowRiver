@@ -56,7 +56,7 @@ function ReviewSection({
   return (
     <Card>
       <CardContent className="p-4 sm:p-6">
-        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-amber-600">
+        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gold-dark">
           {title}
         </h3>
         <div className="space-y-3">{children}</div>
@@ -188,7 +188,7 @@ export function ReviewStep({ formData, errors, setValue, watch }: ReviewStepProp
       {/* Consent Checkboxes */}
       <Card>
         <CardContent className="space-y-5 p-4 sm:p-6">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-600">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-gold-dark">
             Consent & Agreement
           </h3>
 

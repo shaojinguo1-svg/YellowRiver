@@ -144,14 +144,19 @@ export async function POST(request: NextRequest) {
       // Not logged in — that's fine, proceed without linking
     }
 
-    // Extract documents from body (not part of Zod schema)
-    const documents: Array<{
-      fileName: string;
-      storagePath: string;
-      url: string;
-      fileSize?: number;
-      mimeType?: string;
-    }> = Array.isArray(body.documents) ? body.documents : [];
+    // Validate and extract documents from body
+    interface DocInput { fileName: string; storagePath: string; url: string; fileSize?: number; mimeType?: string }
+    const rawDocs: unknown[] = Array.isArray(body.documents) ? body.documents : [];
+    const documents: DocInput[] = rawDocs
+      .filter(
+        (d): d is DocInput =>
+          typeof d === "object" &&
+          d !== null &&
+          typeof (d as Record<string, unknown>).fileName === "string" &&
+          typeof (d as Record<string, unknown>).storagePath === "string" &&
+          typeof (d as Record<string, unknown>).url === "string"
+      )
+      .slice(0, 10); // Max 10 documents
 
     const application = await prisma.rentalApplication.create({
       data: {

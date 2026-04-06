@@ -15,9 +15,10 @@ import { NAV_LINKS } from "@/lib/constants";
 interface MobileNavProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isLoggedIn?: boolean;
 }
 
-export function MobileNav({ open, onOpenChange }: MobileNavProps) {
+export function MobileNav({ open, onOpenChange, isLoggedIn }: MobileNavProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-72 bg-ivory">
@@ -59,8 +60,8 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
             asChild
             className="w-full rounded-sm bg-gold text-white hover:bg-gold-dark"
           >
-            <Link href="/login" onClick={() => onOpenChange(false)}>
-              Sign In
+            <Link href={isLoggedIn ? "/dashboard" : "/login"} onClick={() => onOpenChange(false)}>
+              {isLoggedIn ? "Dashboard" : "Sign In"}
             </Link>
           </Button>
         </div>

@@ -71,7 +71,8 @@ export async function middleware(request: NextRequest) {
           return NextResponse.redirect(new URL("/", request.url));
         }
       } catch {
-        // If role check fails, fall through to layout-level check
+        // If role check fails, block access for safety
+        return NextResponse.redirect(new URL("/", request.url));
       }
     }
   }

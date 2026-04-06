@@ -99,7 +99,7 @@ export function Header() {
       </div>
 
       {/* Mobile navigation */}
-      <MobileNav open={mobileOpen} onOpenChange={setMobileOpen} />
+      <MobileNav open={mobileOpen} onOpenChange={setMobileOpen} isLoggedIn={isLoggedIn} />
     </header>
   );
 }

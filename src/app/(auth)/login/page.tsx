@@ -24,7 +24,11 @@ import { loginSchema, type LoginInput } from "@/validations/auth";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/admin/dashboard";
+  const rawRedirect = searchParams.get("redirect") || "";
+  // Only allow relative paths (prevent open redirect)
+  const redirectTo = rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+    ? rawRedirect
+    : "/dashboard";
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -55,17 +59,18 @@ function LoginForm() {
 
       // Determine redirect based on user role
       let dest = redirectTo;
-      if (dest === "/admin/dashboard") {
-        // Default redirect — check role to decide
-        try {
-          const res = await fetch("/api/auth/me");
-          if (res.ok) {
-            const user = await res.json();
-            dest = user.role === "ADMIN" ? "/admin/dashboard" : "/dashboard";
+      try {
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const user = await res.json();
+          if (user.role === "ADMIN" && !dest.startsWith("/admin")) {
+            dest = "/admin/dashboard";
+          } else if (user.role !== "ADMIN" && dest.startsWith("/admin")) {
+            dest = "/dashboard";
           }
-        } catch {
-          // Fall through to default
         }
+      } catch {
+        // Fall through to default
       }
 
       router.push(dest);
