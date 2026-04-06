@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser, requireAdmin } from "@/lib/auth";
 import { propertyCreateSchema } from "@/validations/property";
 import { apiHandler } from "@/lib/api-handler";
-import type { Prisma } from "@/generated/prisma/client";
+import type { Prisma, PropertyStatus, PropertyType } from "@/generated/prisma/client";
 
 export async function GET(request: NextRequest) {
   return apiHandler("GET /api/properties", async () => {
@@ -17,6 +17,9 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const skip = (page - 1) * limit;
 
+    const VALID_STATUSES: PropertyStatus[] = ["DRAFT", "ACTIVE", "RENTED", "INACTIVE", "ARCHIVED"];
+    const VALID_PROPERTY_TYPES: PropertyType[] = ["APARTMENT", "HOUSE", "CONDO", "TOWNHOUSE", "STUDIO"];
+
     const where: Prisma.PropertyWhereInput = {};
 
     const adminMode = searchParams.get("admin") === "true";
@@ -26,6 +29,9 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
       }
       if (status) {
+        if (!VALID_STATUSES.includes(status as PropertyStatus)) {
+          return NextResponse.json({ message: `Invalid status: ${status}` }, { status: 400 });
+        }
         where.status = status as Prisma.EnumPropertyStatusFilter;
       }
     } else {
@@ -33,6 +39,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (propertyType) {
+      if (!VALID_PROPERTY_TYPES.includes(propertyType as PropertyType)) {
+        return NextResponse.json({ message: `Invalid propertyType: ${propertyType}` }, { status: 400 });
+      }
       where.propertyType = propertyType as Prisma.EnumPropertyTypeFilter;
     }
 

@@ -42,6 +42,15 @@ export function useImageUpload(
   const imagesRef = useRef(images);
   useEffect(() => { imagesRef.current = images; }, [images]);
 
+  // Cleanup object URLs on unmount to prevent memory leaks
+  const uploadingRef = useRef(uploading);
+  useEffect(() => { uploadingRef.current = uploading; }, [uploading]);
+  useEffect(() => {
+    return () => {
+      uploadingRef.current.forEach((u) => URL.revokeObjectURL(u.preview));
+    };
+  }, []);
+
   const notifyChange = useCallback(
     (updated: PropertyImageData[]) => onImagesChange?.(updated),
     [onImagesChange]
@@ -227,6 +236,7 @@ export function useImageUpload(
     const swapIndex = direction === "up" ? index - 1 : index + 1;
     if (swapIndex < 0 || swapIndex >= images.length) return;
 
+    const previous = [...images];
     const updated = [...images];
     [updated[index], updated[swapIndex]] = [updated[swapIndex], updated[index]];
     const reordered = updated.map((img, i) => ({ ...img, sortOrder: i }));
@@ -235,13 +245,18 @@ export function useImageUpload(
     notifyChange(reordered);
 
     try {
-      await fetch(`/api/properties/${propertyId}/images/reorder`, {
+      const res = await fetch(`/api/properties/${propertyId}/images/reorder`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageIds: reordered.map((img) => img.id) }),
       });
+      if (!res.ok) throw new Error("Server error");
     } catch (error) {
       console.error("Failed to persist image order:", error);
+      // Rollback to previous state
+      setImages(previous);
+      notifyChange(previous);
+      toast.error("Failed to reorder images — please try again.");
     }
   }
 

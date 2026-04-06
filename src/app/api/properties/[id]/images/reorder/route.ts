@@ -22,6 +22,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       );
     }
 
+    // Check for duplicate IDs
+    const uniqueIds = new Set(imageIds);
+    if (uniqueIds.size !== imageIds.length) {
+      return NextResponse.json(
+        { message: "imageIds must not contain duplicates" },
+        { status: 400 }
+      );
+    }
+
     // Verify all images belong to this property
     const images = await prisma.propertyImage.findMany({
       where: { propertyId: id },

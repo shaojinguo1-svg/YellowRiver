@@ -16,6 +16,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate bucket is in the allowed list
+    const ALLOWED_BUCKETS = ["property-images"];
+    if (!ALLOWED_BUCKETS.includes(bucket)) {
+      return NextResponse.json(
+        { message: "Invalid bucket" },
+        { status: 400 }
+      );
+    }
+
+    // Prevent path traversal attacks
+    if (path.includes("..") || path.startsWith("/")) {
+      return NextResponse.json(
+        { message: "Invalid path" },
+        { status: 400 }
+      );
+    }
+
+    // Validate content type
+    const ALLOWED_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    if (!ALLOWED_CONTENT_TYPES.includes(contentType)) {
+      return NextResponse.json(
+        { message: "Invalid content type. Allowed: JPEG, PNG, WebP" },
+        { status: 400 }
+      );
+    }
+
     const supabase = await createClient();
 
     const { data, error } = await supabase.storage

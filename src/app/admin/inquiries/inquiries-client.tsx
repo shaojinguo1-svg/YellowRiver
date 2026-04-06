@@ -136,6 +136,7 @@ export function InquiriesClient({
 
       const updatedInquiry = await response.json();
 
+      // Only update local state and clear reply text AFTER API confirms success
       setInquiries((prev) =>
         prev.map((inq) =>
           inq.id === inquiryId
@@ -152,6 +153,7 @@ export function InquiriesClient({
       setReplyText((prev) => ({ ...prev, [inquiryId]: "" }));
       setSuccessId(inquiryId);
     } catch (err) {
+      // Reply text is preserved in state — user can retry without retyping
       setError(
         err instanceof Error ? err.message : "Failed to send reply"
       );

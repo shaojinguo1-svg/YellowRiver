@@ -89,10 +89,13 @@ export async function PATCH(
     const { id } = await params;
 
     const body = await request.json();
-    const { status, adminNotes } = body as {
-      status?: string;
-      adminNotes?: string;
-    };
+
+    if (typeof body !== "object" || body === null) {
+      return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
+    }
+
+    const status = typeof body.status === "string" ? body.status : undefined;
+    const adminNotes = typeof body.adminNotes === "string" ? body.adminNotes : undefined;
 
     // Fetch the current application
     const existing = await prisma.rentalApplication.findUnique({

@@ -113,7 +113,7 @@ export default async function AdminApplicationsPage({
             <input type="hidden" name="status" value={statusFilter} />
           )}
         </form>
-        <form action="/admin/applications">
+        <form action="/admin/applications" className="flex items-center gap-2">
           {searchQuery && (
             <input type="hidden" name="search" value={searchQuery} />
           )}
@@ -130,11 +130,9 @@ export default async function AdminApplicationsPage({
               ))}
             </SelectContent>
           </Select>
-          <noscript>
-            <Button type="submit" size="sm" className="ml-2">
-              Filter
-            </Button>
-          </noscript>
+          <Button type="submit" size="sm" variant="outline">
+            Filter
+          </Button>
         </form>
       </div>
 

@@ -15,10 +15,13 @@ export async function PATCH(
     const { id } = await params;
 
     const body = await request.json();
-    const { status, adminReply } = body as {
-      status?: string;
-      adminReply?: string;
-    };
+
+    if (typeof body !== "object" || body === null) {
+      return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
+    }
+
+    const status = typeof body.status === "string" ? body.status : undefined;
+    const adminReply = typeof body.adminReply === "string" ? body.adminReply : undefined;
 
     // Fetch the current inquiry
     const existing = await prisma.contactInquiry.findUnique({

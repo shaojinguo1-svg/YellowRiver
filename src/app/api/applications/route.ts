@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { applicationSchema } from "@/validations/application";
+import type { ApplicationStatus } from "@/generated/prisma/client";
 import {
   sendApplicationConfirmation,
   sendAdminNewApplicationNotification,
 } from "@/lib/email";
+
+const VALID_APP_STATUSES: ApplicationStatus[] = [
+  "SUBMITTED", "UNDER_REVIEW", "APPROVED", "REJECTED", "WITHDRAWN",
+];
 
 function generateApplicationNumber(): string {
   const year = new Date().getFullYear();
@@ -27,6 +32,9 @@ export async function GET(request: NextRequest) {
 
     const where: Record<string, unknown> = {};
     if (status && status !== "all") {
+      if (!VALID_APP_STATUSES.includes(status as ApplicationStatus)) {
+        return NextResponse.json({ message: `Invalid status: ${status}` }, { status: 400 });
+      }
       where.status = status;
     }
     if (propertyId && propertyId !== "all") {
