@@ -1,12 +1,25 @@
 "use client";
 
+import { useState, useRef, useCallback } from "react";
 import type { UseFormRegister, FieldErrors, UseFormWatch, UseFormSetValue } from "react-hook-form";
 import type { ApplicationInput } from "@/validations/application";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload } from "lucide-react";
+import { Upload, X, FileText, Loader2, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
+
+const ACCEPTED_TYPES = ["application/pdf", "image/jpeg", "image/png"];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const BUCKET = "application-documents";
+
+interface UploadedFile {
+  name: string;
+  url: string;
+  storagePath: string;
+}
 
 interface DocumentsStepProps {
   register: UseFormRegister<ApplicationInput>;
@@ -18,27 +31,144 @@ interface DocumentsStepProps {
 function FileUploadZone({
   label,
   required,
+  onUpload,
 }: {
   label: string;
   required?: boolean;
+  onUpload?: (file: UploadedFile) => void;
 }) {
+  const [uploading, setUploading] = useState(false);
+  const [uploaded, setUploaded] = useState<UploadedFile | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = useCallback(
+    async (file: File) => {
+      if (!ACCEPTED_TYPES.includes(file.type)) {
+        toast.error(`"${file.name}" is not supported. Use PDF, JPG, or PNG.`);
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`"${file.name}" exceeds the 10MB limit.`);
+        return;
+      }
+
+      setUploading(true);
+      try {
+        const supabase = createClient();
+        const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
+        const storagePath = `${crypto.randomUUID()}.${ext}`;
+
+        const { error } = await supabase.storage
+          .from(BUCKET)
+          .upload(storagePath, file, { contentType: file.type, upsert: false });
+
+        if (error) throw new Error(error.message);
+
+        const { data: { publicUrl } } = supabase.storage
+          .from(BUCKET)
+          .getPublicUrl(storagePath);
+
+        const uploadedFile: UploadedFile = {
+          name: file.name,
+          url: publicUrl,
+          storagePath,
+        };
+
+        setUploaded(uploadedFile);
+        onUpload?.(uploadedFile);
+        toast.success(`${file.name} uploaded`);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Upload failed");
+      } finally {
+        setUploading(false);
+      }
+    },
+    [onUpload]
+  );
+
+  const handleRemove = useCallback(async () => {
+    if (!uploaded) return;
+    try {
+      const supabase = createClient();
+      await supabase.storage.from(BUCKET).remove([uploaded.storagePath]);
+    } catch {
+      // best-effort cleanup
+    }
+    setUploaded(null);
+    if (inputRef.current) inputRef.current.value = "";
+  }, [uploaded]);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files?.[0];
+      if (file) handleFile(file);
+    },
+    [handleFile]
+  );
+
+  if (uploaded) {
+    return (
+      <div className="space-y-2">
+        <Label>
+          {label}{" "}
+          {required && <span className="text-destructive">*</span>}
+        </Label>
+        <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 dark:border-green-900 dark:bg-green-950/30">
+          <CheckCircle2 className="size-5 shrink-0 text-green-600" />
+          <div className="flex-1 min-w-0">
+            <p className="truncate text-sm font-medium text-foreground">
+              {uploaded.name}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-2">
       <Label>
         {label}{" "}
         {required && <span className="text-destructive">*</span>}
       </Label>
-      <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/30 px-6 py-8 text-center transition-colors hover:border-muted-foreground/40 hover:bg-muted/50">
-        <Upload className="size-8 text-muted-foreground/50" />
+      <label
+        className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/30 px-6 py-8 text-center transition-colors hover:border-muted-foreground/40 hover:bg-muted/50"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handleDrop}
+      >
+        {uploading ? (
+          <Loader2 className="size-8 animate-spin text-gold" />
+        ) : (
+          <Upload className="size-8 text-muted-foreground/50" />
+        )}
         <div>
           <p className="text-sm font-medium text-muted-foreground">
-            Drag & drop or click to upload
+            {uploading ? "Uploading..." : "Drag & drop or click to upload"}
           </p>
           <p className="mt-1 text-xs text-muted-foreground/70">
             PDF, JPG, PNG up to 10MB
           </p>
         </div>
-      </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          className="hidden"
+          disabled={uploading}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFile(file);
+          }}
+        />
+      </label>
     </div>
   );
 }
@@ -159,13 +289,6 @@ export function DocumentsStep({
         </div>
 
         <FileUploadZone label="Additional Documents" />
-
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
-          <p className="text-sm text-amber-800 dark:text-amber-200">
-            File upload will be connected after database setup. For now, you may
-            proceed without uploading documents.
-          </p>
-        </div>
       </div>
     </div>
   );

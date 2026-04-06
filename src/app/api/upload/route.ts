@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate bucket is in the allowed list
-    const ALLOWED_BUCKETS = ["property-images"];
+    const ALLOWED_BUCKETS = ["property-images", "application-documents"];
     if (!ALLOWED_BUCKETS.includes(bucket)) {
       return NextResponse.json(
         { message: "Invalid bucket" },
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate content type
-    const ALLOWED_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    const ALLOWED_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
     if (!ALLOWED_CONTENT_TYPES.includes(contentType)) {
       return NextResponse.json(
         { message: "Invalid content type. Allowed: JPEG, PNG, WebP" },
