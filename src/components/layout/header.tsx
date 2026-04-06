@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { NAV_LINKS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -21,6 +23,13 @@ export function Header() {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setIsLoggedIn(!!data.user);
+    });
   }, []);
 
   return (
@@ -75,12 +84,14 @@ export function Header() {
           })}
         </nav>
 
-        {/* Sign In button */}
+        {/* Auth button */}
         <Button
           asChild
           className="hidden rounded-sm bg-gold text-white hover:bg-gold-dark md:inline-flex"
         >
-          <Link href="/login">Sign In</Link>
+          <Link href={isLoggedIn ? "/dashboard" : "/login"}>
+            {isLoggedIn ? "Dashboard" : "Sign In"}
+          </Link>
         </Button>
 
         {/* Spacer for mobile to balance the layout */}

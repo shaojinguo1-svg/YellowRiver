@@ -34,6 +34,15 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Protect /dashboard (tenant) routes — require login
+  if (request.nextUrl.pathname.startsWith("/dashboard")) {
+    if (!user) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
   // Protect /admin routes
   if (request.nextUrl.pathname.startsWith("/admin")) {
     // Redirect unauthenticated users to login
@@ -71,5 +80,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/auth/callback"],
+  matcher: ["/admin/:path*", "/dashboard/:path*", "/dashboard", "/auth/callback"],
 };

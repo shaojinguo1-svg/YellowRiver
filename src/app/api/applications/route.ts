@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, getCurrentUser } from "@/lib/auth";
 import { applicationSchema } from "@/validations/application";
 import type { ApplicationStatus } from "@/generated/prisma/client";
 import {
@@ -135,6 +135,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Link to logged-in user if available
+    let applicantId: string | null = null;
+    try {
+      const currentUser = await getCurrentUser();
+      if (currentUser) applicantId = currentUser.id;
+    } catch {
+      // Not logged in — that's fine, proceed without linking
+    }
+
     // Extract documents from body (not part of Zod schema)
     const documents: Array<{
       fileName: string;
@@ -148,6 +157,7 @@ export async function POST(request: NextRequest) {
       data: {
         applicationNumber,
         propertyId: property.id,
+        applicantId,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,

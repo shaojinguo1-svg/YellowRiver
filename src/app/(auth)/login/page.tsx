@@ -53,7 +53,22 @@ function LoginForm() {
         return;
       }
 
-      router.push(redirectTo);
+      // Determine redirect based on user role
+      let dest = redirectTo;
+      if (dest === "/admin/dashboard") {
+        // Default redirect — check role to decide
+        try {
+          const res = await fetch("/api/auth/me");
+          if (res.ok) {
+            const user = await res.json();
+            dest = user.role === "ADMIN" ? "/admin/dashboard" : "/dashboard";
+          }
+        } catch {
+          // Fall through to default
+        }
+      }
+
+      router.push(dest);
       router.refresh();
     } catch {
       toast.error("An unexpected error occurred. Please try again.");
