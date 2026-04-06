@@ -19,6 +19,8 @@ interface UploadedFile {
   name: string;
   url: string;
   storagePath: string;
+  fileSize: number;
+  mimeType: string;
 }
 
 interface DocumentsStepProps {
@@ -26,16 +28,20 @@ interface DocumentsStepProps {
   errors: FieldErrors<ApplicationInput>;
   watch: UseFormWatch<ApplicationInput>;
   setValue: UseFormSetValue<ApplicationInput>;
+  onFilesChange?: (files: UploadedFile[]) => void;
+  uploadedFiles?: UploadedFile[];
 }
 
 function FileUploadZone({
   label,
   required,
   onUpload,
+  onRemove: onRemoveCallback,
 }: {
   label: string;
   required?: boolean;
   onUpload?: (file: UploadedFile) => void;
+  onRemove?: (storagePath: string) => void;
 }) {
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState<UploadedFile | null>(null);
@@ -72,6 +78,8 @@ function FileUploadZone({
           name: file.name,
           url: publicUrl,
           storagePath,
+          fileSize: file.size,
+          mimeType: file.type,
         };
 
         setUploaded(uploadedFile);
@@ -94,9 +102,10 @@ function FileUploadZone({
     } catch {
       // best-effort cleanup
     }
+    onRemoveCallback?.(uploaded.storagePath);
     setUploaded(null);
     if (inputRef.current) inputRef.current.value = "";
-  }, [uploaded]);
+  }, [uploaded, onRemoveCallback]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -173,13 +182,33 @@ function FileUploadZone({
   );
 }
 
+export { type UploadedFile };
+
 export function DocumentsStep({
   register,
   errors,
   watch,
   setValue,
+  onFilesChange,
+  uploadedFiles = [],
 }: DocumentsStepProps) {
   const hasPets = watch("hasPets");
+
+  const handleUpload = useCallback(
+    (category: string) => (file: UploadedFile) => {
+      const tagged = { ...file, name: `[${category}] ${file.name}` };
+      const updated = [...uploadedFiles.filter((f) => f.storagePath !== tagged.storagePath), tagged];
+      onFilesChange?.(updated);
+    },
+    [onFilesChange, uploadedFiles]
+  );
+
+  const handleRemoveFile = useCallback(
+    (storagePath: string) => {
+      onFilesChange?.(uploadedFiles.filter((f) => f.storagePath !== storagePath));
+    },
+    [onFilesChange, uploadedFiles]
+  );
 
   return (
     <div className="space-y-8">
@@ -284,11 +313,25 @@ export function DocumentsStep({
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <FileUploadZone label="Government ID" required />
-          <FileUploadZone label="Proof of Income" required />
+          <FileUploadZone
+            label="Government ID"
+            required
+            onUpload={handleUpload("Government ID")}
+            onRemove={handleRemoveFile}
+          />
+          <FileUploadZone
+            label="Proof of Income"
+            required
+            onUpload={handleUpload("Proof of Income")}
+            onRemove={handleRemoveFile}
+          />
         </div>
 
-        <FileUploadZone label="Additional Documents" />
+        <FileUploadZone
+          label="Additional Documents"
+          onUpload={handleUpload("Additional")}
+          onRemove={handleRemoveFile}
+        />
       </div>
     </div>
   );

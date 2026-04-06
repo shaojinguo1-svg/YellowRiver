@@ -135,6 +135,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Extract documents from body (not part of Zod schema)
+    const documents: Array<{
+      fileName: string;
+      storagePath: string;
+      url: string;
+      fileSize?: number;
+      mimeType?: string;
+    }> = Array.isArray(body.documents) ? body.documents : [];
+
     const application = await prisma.rentalApplication.create({
       data: {
         applicationNumber,
@@ -166,6 +175,18 @@ export async function POST(request: NextRequest) {
         additionalNotes: data.additionalNotes || null,
         consentBackground: data.consentBackground,
         consentTerms: data.consentTerms,
+        documents: documents.length > 0
+          ? {
+              create: documents.map((doc) => ({
+                fileName: doc.fileName,
+                fileType: doc.fileName.split(".").pop()?.toLowerCase() || "unknown",
+                fileSize: doc.fileSize || 0,
+                mimeType: doc.mimeType || "application/octet-stream",
+                storagePath: doc.storagePath,
+                url: doc.url,
+              })),
+            }
+          : undefined,
       },
     });
 

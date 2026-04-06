@@ -15,7 +15,7 @@ import { PersonalInfoStep } from "@/components/application/steps/personal-info-s
 import { CurrentAddressStep } from "@/components/application/steps/current-address-step";
 import { EmploymentStep } from "@/components/application/steps/employment-step";
 import { ReferencesStep } from "@/components/application/steps/references-step";
-import { DocumentsStep } from "@/components/application/steps/documents-step";
+import { DocumentsStep, type UploadedFile } from "@/components/application/steps/documents-step";
 import { ReviewStep } from "@/components/application/steps/review-step";
 
 const STORAGE_KEY = "yr-application-draft";
@@ -36,6 +36,7 @@ export function ApplicationForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [applicationNumber, setApplicationNumber] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 
   const form = useForm<ApplicationInput>({
     resolver: zodResolver(applicationSchema),
@@ -179,6 +180,13 @@ export function ApplicationForm({
         body: JSON.stringify({
           ...data,
           propertyId,
+          documents: uploadedFiles.map((f) => ({
+            fileName: f.name,
+            storagePath: f.storagePath,
+            url: f.url,
+            fileSize: f.fileSize,
+            mimeType: f.mimeType,
+          })),
         }),
       });
 
@@ -299,6 +307,8 @@ export function ApplicationForm({
                 errors={errors}
                 watch={watch}
                 setValue={setValue}
+                uploadedFiles={uploadedFiles}
+                onFilesChange={setUploadedFiles}
               />
             )}
 
