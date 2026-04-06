@@ -1,6 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -44,14 +43,27 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Verify admin role at database level
-    const dbUser = await prisma.user.findUnique({
-      where: { supabaseId: user.id },
-      select: { role: true },
-    });
-
-    if (!dbUser || dbUser.role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/", request.url));
+    // Verify admin role via Supabase REST API (Prisma cannot run in Edge Runtime)
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (serviceRoleKey && supabaseUrl) {
+      try {
+        const res = await fetch(
+          `${supabaseUrl}/rest/v1/User?supabaseId=eq.${user.id}&select=role`,
+          {
+            headers: {
+              apikey: serviceRoleKey,
+              Authorization: `Bearer ${serviceRoleKey}`,
+            },
+          }
+        );
+        const rows = await res.json();
+        if (!Array.isArray(rows) || rows.length === 0 || rows[0].role !== "ADMIN") {
+          return NextResponse.redirect(new URL("/", request.url));
+        }
+      } catch {
+        // If role check fails, fall through to layout-level check
+      }
     }
   }
 
