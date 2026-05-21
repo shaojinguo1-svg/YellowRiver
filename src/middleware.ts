@@ -1,14 +1,40 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+function redirectToLogin(request: NextRequest) {
+  const loginUrl = new URL("/login", request.url);
+  loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
+  return NextResponse.redirect(loginUrl);
+}
+
+function redirectAway(request: NextRequest) {
+  return NextResponse.redirect(new URL("/", request.url));
+}
+
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isDashboardRoute = pathname.startsWith("/dashboard");
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
   let supabaseResponse = NextResponse.next({
     request,
   });
 
+  if (!supabaseUrl || !supabaseAnonKey) {
+    if (isAdminRoute) {
+      return redirectAway(request);
+    }
+    if (isDashboardRoute) {
+      return redirectToLogin(request);
+    }
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -35,45 +61,54 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Protect /dashboard (tenant) routes — require login
-  if (request.nextUrl.pathname.startsWith("/dashboard")) {
+  if (isDashboardRoute) {
     if (!user) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
-      return NextResponse.redirect(loginUrl);
+      return redirectToLogin(request);
     }
   }
 
   // Protect /admin routes
-  if (request.nextUrl.pathname.startsWith("/admin")) {
+  if (isAdminRoute) {
     // Redirect unauthenticated users to login
     if (!user) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
-      return NextResponse.redirect(loginUrl);
+      return redirectToLogin(request);
     }
 
     // Verify admin role via Supabase REST API (Prisma cannot run in Edge Runtime)
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (serviceRoleKey && supabaseUrl) {
-      try {
-        const res = await fetch(
-          `${supabaseUrl}/rest/v1/users?supabase_id=eq.${user.id}&select=role`,
-          {
-            headers: {
-              apikey: serviceRoleKey,
-              Authorization: `Bearer ${serviceRoleKey}`,
-            },
-          }
-        );
-        const rows = await res.json();
-        if (!Array.isArray(rows) || rows.length === 0 || rows[0].role !== "ADMIN") {
-          return NextResponse.redirect(new URL("/", request.url));
-        }
-      } catch {
-        // If role check fails, block access for safety
-        return NextResponse.redirect(new URL("/", request.url));
+    if (!serviceRoleKey) {
+      return redirectAway(request);
+    }
+
+    try {
+      const roleCheckUrl = new URL("/rest/v1/users", supabaseUrl);
+      roleCheckUrl.searchParams.set("supabase_id", `eq.${user.id}`);
+      roleCheckUrl.searchParams.set("select", "role");
+
+      const res = await fetch(roleCheckUrl, {
+        headers: {
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+        },
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        return redirectAway(request);
       }
+
+      const rows: unknown = await res.json();
+      if (!Array.isArray(rows) || rows.length !== 1) {
+        return redirectAway(request);
+      }
+
+      const row = rows[0];
+      if (!row || typeof row !== "object" || !("role" in row) || row.role !== "ADMIN") {
+        return redirectAway(request);
+      }
+    } catch {
+      // If role check fails, block access for safety
+      return redirectAway(request);
     }
   }
 
