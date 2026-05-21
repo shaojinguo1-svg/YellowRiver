@@ -6,9 +6,11 @@ Close the remaining P2 product trust gaps after Phase 1 and Phase 2: make inquir
 No business code should be changed until this Phase 3 plan is approved.
 
 ## Changes
-- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — rename reply UI from “Send Reply” to save-only language, such as “Save Reply Note” / “Update Reply Note”, because the current API only stores `adminReply` in the database.
-- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — update success and error copy from “send” wording to “save” wording, and preserve the existing retry behavior that keeps unsaved text when the API fails.
-- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — adjust the inquiry status badge label for `REPLIED` if needed so the admin UI does not imply an email was delivered.
+- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — rename reply UI from outbound-email language to save-only note language, such as “Reply Note”, “Internal Reply Note”, “Save Reply Note”, and “Update Reply Note”, because the current API only stores `adminReply` in the database.
+- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — replace outbound-email affordances: remove the `Send` paper-plane icon from the save button and the `Mail` icon from the saved reply block, using neutral save/note icons instead.
+- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — update label, placeholder, button text, success copy, error copy, and loading copy so they consistently use save/note wording instead of send/email wording.
+- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — preserve the existing draft behavior: failed saves must keep the draft text for retry, and successful saves should clear the draft only after the API confirms success.
+- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — keep the DB enum/status value `REPLIED`, but change the admin UI badge label to non-delivery wording such as “Reply Note Saved” or “Note Saved”; do not leave the label as “Replied”.
 - [ ] `src/app/api/inquiries/[id]/route.ts` — keep the route save-only for this phase, but align comments/error messages with “save reply” behavior. Do not add Resend delivery in Phase 3 unless reviewer explicitly requests it.
 
 - [ ] `src/app/admin/settings/page.tsx` — remove or disable the fake editable form and the fake “Save Changes” button. Minimum approved behavior: the page must not present editable controls that appear to persist when they do not.
@@ -20,7 +22,8 @@ No business code should be changed until this Phase 3 plan is approved.
 ## Expected Behavior
 - Admin inquiry replies are clearly treated as saved internal/admin reply notes, not outbound emails.
 - Saving or updating a reply note still updates inquiry state, preserves failed draft text, and shows accurate success/error feedback.
-- The UI no longer claims “Send Reply” unless a real email is sent in a future phase.
+- The UI no longer claims or visually implies “Send Reply” unless a real email is sent in a future phase.
+- `REPLIED` remains the persisted status, but the admin-facing badge copy reads as a saved note, not delivered email.
 - Settings no longer shows a fake form or a fake save action.
 - Existing tenant lint warnings are gone without changing tenant dashboard behavior.
 
@@ -29,11 +32,12 @@ No business code should be changed until this Phase 3 plan is approved.
 - Run `npx tsc --noEmit`.
 - Run `npm run lint` and confirm the existing three tenant unused-import warnings are gone.
 - Run `npm run build`; Next 16 middleware/proxy and SWC fallback warnings may remain as already-approved non-blocking warnings.
-- Manually test admin inquiry expand, mark-as-read, save reply note, update reply note, failed save retry, and status badge copy.
+- Manually test admin inquiry expand, mark-as-read, save reply note, update reply note, failed save retry, draft clearing only after confirmed success, neutral icons, unified save/note copy, and status badge copy.
 - Manually review Settings page and confirm there are no editable fake fields or fake save actions.
 - Manually spot-check tenant dashboard still renders after unused import cleanup.
 
 ## Notes
 - Real outbound inquiry reply email remains deferred. Adding it later should include a Resend helper, delivery error handling, and UI copy that only says “Send” when delivery is attempted.
 - Full persisted Settings management remains deferred. The `SiteSettings` model exists, but wiring a form that saves values not consumed by the public site would still be misleading.
+- Do not change the inquiry DB enum or API status model in Phase 3; only the admin-facing copy/affordance should clarify that this is a saved note.
 - Do not reopen Phase 1 or Phase 2 work in this phase: private document storage, HMAC descriptors, token single-use, admin fail-closed, reset password, build/font, recovery marker, rate limit upgrades, orphan cleanup, signed URL proxy/referrer policy, and Next 16 middleware rename remain out of scope unless they block verification.
