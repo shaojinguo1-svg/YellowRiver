@@ -1,46 +1,39 @@
-# Plan: Phase 2 Auth and Build Blockers
+# Plan: Phase 3 Product Polish and Cleanup
 
 ## Goal
-Fix the approved Phase 2 P1 blockers after Phase 1 launch-security review: fail closed on admin auth misconfiguration, complete the password reset flow, and make production builds stable without outbound Google font access.
+Close the remaining P2 product trust gaps after Phase 1 and Phase 2: make inquiry reply behavior match what the system actually does, remove the misleading Settings fake form, and clean up known lint warnings without expanding into deferred architecture work.
 
-No business code should be changed until this Phase 2 plan is approved.
+No business code should be changed until this Phase 3 plan is approved.
 
 ## Changes
-- [x] `src/middleware.ts` — fail closed for `/admin` when required auth env is missing. Required env should include `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`; missing service-role/admin-check config must redirect away instead of skipping role verification.
-- [x] `src/middleware.ts` — make admin role verification strict: non-OK Supabase REST responses, malformed JSON, missing rows, or any role other than `ADMIN` should block `/admin`. Keep tenant `/dashboard` session protection unchanged.
-- [x] `src/middleware.ts` or Next 16 routing file — keep the middleware deprecation item scoped to this phase. Only rename/migrate to the Next 16 replacement file if `npm run build` or runtime behavior is blocked; otherwise leave a note for a later cleanup.
+- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — rename reply UI from “Send Reply” to save-only language, such as “Save Reply Note” / “Update Reply Note”, because the current API only stores `adminReply` in the database.
+- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — update success and error copy from “send” wording to “save” wording, and preserve the existing retry behavior that keeps unsaved text when the API fails.
+- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — adjust the inquiry status badge label for `REPLIED` if needed so the admin UI does not imply an email was delivered.
+- [ ] `src/app/api/inquiries/[id]/route.ts` — keep the route save-only for this phase, but align comments/error messages with “save reply” behavior. Do not add Resend delivery in Phase 3 unless reviewer explicitly requests it.
 
-- [x] `src/app/(auth)/forgot-password/page.tsx` — send reset emails to a dedicated recovery callback path, using a safe redirect such as `/auth/callback?next=/reset-password` instead of sending users to a generic dashboard callback.
-- [x] `src/app/(auth)/auth/callback/route.ts` — after exchanging the Supabase code, honor only safe relative `next` destinations. Password-recovery links should land on `/reset-password`; normal login/signup callbacks should keep the existing role-based redirect.
-- [x] `src/app/(auth)/reset-password/page.tsx` — add a real client-side reset form using the active Supabase recovery session, with new password, confirm password, loading/error/success states, and redirect after a successful `updateUser({ password })`.
-- [x] `src/validations/auth.ts` — add a reset-password Zod schema with password length and confirmation matching.
+- [ ] `src/app/admin/settings/page.tsx` — remove or disable the fake editable form and the fake “Save Changes” button. Minimum approved behavior: the page must not present editable controls that appear to persist when they do not.
+- [ ] `src/app/admin/settings/page.tsx` — keep the admin navigation target valid with a small non-editable settings/status view, rather than wiring a half-complete form that is not consumed by the public site.
 
-- [x] `src/app/layout.tsx` — remove `next/font/google` imports and generated font classes so builds no longer fetch Google Fonts.
-- [x] `src/app/globals.css` — define build-safe font CSS variables for `font-sans`, `font-display`, and `font-mono` using local/system fallback families. Preserve the project convention that headings use `font-display` and body text uses `font-sans`.
-- [x] `package.json` — if the local/CI Next 16 build still fails on the default Turbopack path, pin the production build script to the stable webpack path, for example `next build --webpack`. Do not change the dev script unless needed.
+- [ ] `src/app/(tenant)/dashboard/page.tsx` — remove unused `CardHeader` and `CardTitle` imports flagged by lint.
+- [ ] `src/app/(tenant)/layout.tsx` — remove unused `createClient` import flagged by lint.
 
 ## Expected Behavior
-- `/admin` never opens because of missing service-role/admin-check env. A logged-in non-admin, a failed role lookup, or malformed role response is redirected away.
-- `/dashboard` tenant protection behaves as before.
-- Forgot-password emails create a recovery session and take the user to `/reset-password`, not straight to a dashboard.
-- The reset page actually updates the Supabase password and gives clear validation/error states.
-- Normal auth callbacks still redirect admins to `/admin/dashboard` and other users to `/dashboard`.
-- `npm run build` can complete in the approved local/CI environment without outbound Google font access.
-- If Next 16 middleware deprecation is only a warning, it stays documented rather than expanding this phase.
+- Admin inquiry replies are clearly treated as saved internal/admin reply notes, not outbound emails.
+- Saving or updating a reply note still updates inquiry state, preserves failed draft text, and shows accurate success/error feedback.
+- The UI no longer claims “Send Reply” unless a real email is sent in a future phase.
+- Settings no longer shows a fake form or a fake save action.
+- Existing tenant lint warnings are gone without changing tenant dashboard behavior.
 
 ## Testing
 - Run `npx prisma validate`.
 - Run `npx tsc --noEmit`.
-- Run `npm run lint`; existing tenant unused-import warnings may remain deferred unless touched by this phase.
-- Run `npm run build` and confirm it does not attempt to fetch Google Fonts.
-- Manually test `/admin` with missing `SUPABASE_SERVICE_ROLE_KEY`, invalid role-check response, non-admin user, and admin user.
-- Manually test tenant `/dashboard` unauthenticated and authenticated access.
-- Manually test forgot-password from email submission through callback to `/reset-password`, then confirm password update succeeds and the new password works at login.
-- Manually test an expired or invalid reset link and confirm it redirects/shows a safe error path.
+- Run `npm run lint` and confirm the existing three tenant unused-import warnings are gone.
+- Run `npm run build`; Next 16 middleware/proxy and SWC fallback warnings may remain as already-approved non-blocking warnings.
+- Manually test admin inquiry expand, mark-as-read, save reply note, update reply note, failed save retry, and status badge copy.
+- Manually review Settings page and confirm there are no editable fake fields or fake save actions.
+- Manually spot-check tenant dashboard still renders after unused import cleanup.
 
 ## Notes
-- Phase 1 implementation and reviewer fixes are complete; this plan should not reopen private bucket, HMAC descriptor, token single-use, or storage policy work.
-- The reset callback should only accept relative internal `next` values to avoid open redirects.
-- Middleware cannot use Prisma in the Edge runtime, so the admin role check should continue using Supabase REST or another Edge-safe method.
-- Build/font changes should prefer the smallest reliable fix. If real brand font files are later supplied, they can be wired with `next/font/local` in a separate polish pass.
-- Do not handle Phase 3 items in this phase: inquiry reply behavior, Settings UI, tenant unused imports outside touched files, rate limit upgrades, orphan upload cleanup, or signed URL proxy/referrer policy.
+- Real outbound inquiry reply email remains deferred. Adding it later should include a Resend helper, delivery error handling, and UI copy that only says “Send” when delivery is attempted.
+- Full persisted Settings management remains deferred. The `SiteSettings` model exists, but wiring a form that saves values not consumed by the public site would still be misleading.
+- Do not reopen Phase 1 or Phase 2 work in this phase: private document storage, HMAC descriptors, token single-use, admin fail-closed, reset password, build/font, recovery marker, rate limit upgrades, orphan cleanup, signed URL proxy/referrer policy, and Next 16 middleware rename remain out of scope unless they block verification.
