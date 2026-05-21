@@ -26,6 +26,7 @@ const MIME_TO_EXTENSION: Record<string, string> = {
 };
 
 type DescriptorPayload = Omit<ApplicationDocumentDescriptor, "signature">;
+type StorageObjectRecord = Record<string, unknown>;
 
 export class UploadDescriptorError extends Error {
   status = 400;
@@ -181,36 +182,90 @@ function assertDescriptorShape(
   verifyDescriptorSignature(descriptor);
 }
 
-async function assertStorageObjectMatches(descriptor: ApplicationDocumentDescriptor) {
-  const lastSlash = descriptor.storagePath.lastIndexOf("/");
-  const folder = lastSlash >= 0 ? descriptor.storagePath.slice(0, lastSlash) : "";
-  const name = lastSlash >= 0 ? descriptor.storagePath.slice(lastSlash + 1) : descriptor.storagePath;
+function asStorageObjectRecord(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  return value as StorageObjectRecord;
+}
 
+function confirmedStorageObjectSize(object: StorageObjectRecord) {
+  const metadata = asStorageObjectRecord(object.metadata);
+  const candidates = [
+    object.size,
+    object.contentLength,
+    object.content_length,
+    metadata?.size,
+    metadata?.contentLength,
+    metadata?.content_length,
+  ];
+
+  for (const candidate of candidates) {
+    if (
+      typeof candidate === "number" &&
+      Number.isSafeInteger(candidate) &&
+      candidate >= 0
+    ) {
+      return candidate;
+    }
+    if (typeof candidate === "string" && /^\d+$/.test(candidate)) {
+      const parsed = Number(candidate);
+      if (Number.isSafeInteger(parsed)) {
+        return parsed;
+      }
+    }
+  }
+
+  return null;
+}
+
+function confirmedStorageObjectMimeType(object: StorageObjectRecord) {
+  const metadata = asStorageObjectRecord(object.metadata);
+  const candidates = [
+    object.contentType,
+    object.content_type,
+    metadata?.mimetype,
+    metadata?.mimeType,
+    metadata?.contentType,
+    metadata?.content_type,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.length > 0) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+async function assertStorageObjectMatches(descriptor: ApplicationDocumentDescriptor) {
   const supabase = createServiceRoleClient();
-  const { data, error } = await supabase.storage
+  const { data: object, error } = await supabase.storage
     .from(APPLICATION_DOCUMENTS_BUCKET)
-    .list(folder, { limit: 20, search: name });
+    .info(descriptor.storagePath);
 
   if (error) {
     throw new Error(error.message);
   }
-
-  const object = data?.find((item) => item.name === name);
   if (!object) {
     throw new UploadDescriptorError("Uploaded document was not found");
   }
 
-  const metadata = object.metadata as
-    | { size?: number; mimetype?: string; mimeType?: string; contentType?: string }
-    | null
-    | undefined;
-  const objectSize = Number(metadata?.size);
-  if (Number.isFinite(objectSize) && objectSize !== descriptor.fileSize) {
+  const objectRecord = object as StorageObjectRecord;
+  const objectSize = confirmedStorageObjectSize(objectRecord);
+  if (objectSize === null) {
+    throw new UploadDescriptorError("Uploaded document size could not be verified");
+  }
+  if (objectSize !== descriptor.fileSize) {
     throw new UploadDescriptorError("Uploaded document size does not match");
   }
 
-  const objectMimeType = metadata?.mimetype || metadata?.mimeType || metadata?.contentType;
-  if (objectMimeType && objectMimeType !== descriptor.mimeType) {
+  const objectMimeType = confirmedStorageObjectMimeType(objectRecord);
+  if (!objectMimeType) {
+    throw new UploadDescriptorError("Uploaded document type could not be verified");
+  }
+  if (objectMimeType !== descriptor.mimeType) {
     throw new UploadDescriptorError("Uploaded document type does not match");
   }
 }
