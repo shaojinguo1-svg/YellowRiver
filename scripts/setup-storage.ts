@@ -35,80 +35,86 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
   auth: { persistSession: false },
 });
 
-const BUCKET = "property-images";
+const PROPERTY_IMAGES_BUCKET = "property-images";
+const APPLICATION_DOCUMENTS_BUCKET = "application-documents";
+
+async function ensureBucket(
+  name: string,
+  options: {
+    public: boolean;
+    fileSizeLimit: number;
+    allowedMimeTypes: string[];
+  }
+) {
+  const { data: buckets } = await supabase.storage.listBuckets();
+  const exists = buckets?.some((b) => b.name === name);
+
+  if (exists) {
+    const { error } = await supabase.storage.updateBucket(name, options);
+    if (error) {
+      console.error(`❌ Failed to update bucket "${name}":`, error.message);
+      process.exit(1);
+    }
+    console.log(`✅ Bucket "${name}" already exists; configuration updated`);
+    return;
+  }
+
+  const { error } = await supabase.storage.createBucket(name, options);
+  if (error) {
+    console.error(`❌ Failed to create bucket "${name}":`, error.message);
+    process.exit(1);
+  }
+  console.log(`✅ Created bucket "${name}"`);
+}
 
 async function main() {
   console.log("🗂️  Setting up Supabase Storage...\n");
 
   // ── 1. Create bucket if it doesn't exist ──────────────────────
-  const { data: buckets } = await supabase.storage.listBuckets();
-  const exists = buckets?.some((b) => b.name === BUCKET);
+  await ensureBucket(PROPERTY_IMAGES_BUCKET, {
+    public: true,
+    fileSizeLimit: 10 * 1024 * 1024, // 10MB
+    allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
+  });
 
-  if (exists) {
-    console.log(`✅ Bucket "${BUCKET}" already exists`);
-  } else {
-    const { error } = await supabase.storage.createBucket(BUCKET, {
-      public: true,
-      fileSizeLimit: 10 * 1024 * 1024, // 10MB
-      allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
-    });
-    if (error) {
-      console.error(`❌ Failed to create bucket:`, error.message);
-      process.exit(1);
-    }
-    console.log(`✅ Created bucket "${BUCKET}"`);
-  }
+  await ensureBucket(APPLICATION_DOCUMENTS_BUCKET, {
+    public: false,
+    fileSizeLimit: 10 * 1024 * 1024, // 10MB
+    allowedMimeTypes: ["application/pdf", "image/jpeg", "image/png"],
+  });
 
   // ── 2. Create RLS policies ────────────────────────────────────
   console.log("\n📋 Setting up RLS policies on storage.objects...");
 
   const pool = new Pool({ connectionString: databaseUrl });
 
-  const policies = [
-    {
-      name: "Public read property-images",
-      action: "SELECT",
-      role: "public",
-      using: `bucket_id = '${BUCKET}'`,
-      check: null,
-    },
-    {
-      name: "Auth upload property-images",
-      action: "INSERT",
-      role: "authenticated",
-      using: null,
-      check: `bucket_id = '${BUCKET}'`,
-    },
-    {
-      name: "Auth update property-images",
-      action: "UPDATE",
-      role: "authenticated",
-      using: `bucket_id = '${BUCKET}'`,
-      check: null,
-    },
-    {
-      name: "Auth delete property-images",
-      action: "DELETE",
-      role: "authenticated",
-      using: `bucket_id = '${BUCKET}'`,
-      check: null,
-    },
+  const oldPoliciesToDrop = [
+    "Public read property-images",
+    "Auth upload property-images",
+    "Auth update property-images",
+    "Auth delete property-images",
+    "Public read application-documents",
+    "Auth upload application-documents",
+    "Auth update application-documents",
+    "Auth delete application-documents",
   ];
 
   try {
-    for (const p of policies) {
-      // Drop existing policy
-      await pool.query(`DROP POLICY IF EXISTS "${p.name}" ON storage.objects;`);
-
-      // Build CREATE POLICY statement
-      let sql = `CREATE POLICY "${p.name}" ON storage.objects FOR ${p.action} TO ${p.role}`;
-      if (p.using) sql += ` USING (${p.using})`;
-      if (p.check) sql += ` WITH CHECK (${p.check})`;
-      sql += ";";
-
-      await pool.query(sql);
-      console.log(`   ✅ ${p.action} → ${p.role}`);
+    for (const policyName of oldPoliciesToDrop) {
+      await pool.query(`DROP POLICY IF EXISTS "${policyName}" ON storage.objects;`);
     }
+
+    await pool.query(`
+      CREATE POLICY "Public read property-images"
+      ON storage.objects
+      FOR SELECT
+      TO public
+      USING (bucket_id = '${PROPERTY_IMAGES_BUCKET}');
+    `);
+
+    console.log("   ✅ property-images SELECT → public");
+    console.log("   ✅ property-images writes → service role only");
+    console.log("   ✅ application-documents reads/writes → service role or signed URL only");
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`\n❌ Policy error: ${msg}`);
@@ -117,7 +123,7 @@ async function main() {
   }
 
   await pool.end();
-  console.log("\n🎉 Storage setup complete! Image uploads should now work.");
+  console.log("\n🎉 Storage setup complete. Run the storage/data audit before launch.");
 }
 
 main().catch((err) => {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 interface RouteContext {
   params: Promise<{ id: string; imageId: string }>;
@@ -85,7 +85,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     // Delete from Supabase Storage
     try {
-      const supabase = await createClient();
+      const supabase = createServiceRoleClient();
       await supabase.storage
         .from("property-images")
         .remove([image.storagePath]);

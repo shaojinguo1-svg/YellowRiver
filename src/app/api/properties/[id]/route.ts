@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { propertyUpdateSchema } from "@/validations/property";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { apiHandler } from "@/lib/api-handler";
 
 interface RouteContext {
@@ -112,7 +112,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     if (property.images.length > 0) {
       try {
-        const supabase = await createClient();
+        const supabase = createServiceRoleClient();
         await supabase.storage
           .from("property-images")
           .remove(property.images.map((img) => img.storagePath));

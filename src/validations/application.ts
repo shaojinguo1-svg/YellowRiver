@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 const usPhoneRegex = /^\(?(\d{3})\)?[-.\s]?(\d{3})[-.\s]?(\d{4})$/;
+const maxDocumentSize = 10 * 1024 * 1024;
+const acceptedDocumentMimeTypes = ["application/pdf", "image/jpeg", "image/png"] as const;
 
 // Step 1 - Personal Info
 export const personalInfoSchema = z.object({
@@ -186,6 +188,66 @@ export const applicationSchema = z.object({
   }),
 });
 
+export const applicationDocumentCategorySchema = z.enum([
+  "GOVERNMENT_ID",
+  "PROOF_OF_INCOME",
+  "ADDITIONAL",
+]);
+
+export const applicationDocumentDescriptorSchema = z.object({
+  version: z.literal(1),
+  uploadSessionId: z.string().uuid("Invalid upload session ID"),
+  nonce: z.string().min(16, "Invalid upload descriptor"),
+  storagePath: z.string().min(1, "Storage path is required").max(512),
+  category: applicationDocumentCategorySchema,
+  fileName: z.string().min(1, "File name is required").max(255),
+  fileSize: z
+    .number()
+    .int("File size must be a whole number")
+    .positive("File size must be positive")
+    .max(maxDocumentSize, "File must be 10MB or smaller"),
+  mimeType: z.enum(acceptedDocumentMimeTypes, {
+    message: "Documents must be PDF, JPG, or PNG",
+  }),
+  expiresAt: z.string().min(1, "Descriptor expiry is required"),
+  signature: z.string().min(32, "Invalid upload descriptor"),
+});
+
+export const applicationSubmissionSchema = applicationSchema.extend({
+  propertyId: z.string().uuid("Invalid property ID"),
+  uploadSessionId: z.string().uuid("Invalid upload session ID"),
+  documents: z
+    .array(applicationDocumentDescriptorSchema)
+    .min(2, "Government ID and Proof of Income are required")
+    .max(10, "You can upload at most 10 documents"),
+}).superRefine((data, ctx) => {
+  const categories = new Set(data.documents.map((doc) => doc.category));
+  if (!categories.has("GOVERNMENT_ID")) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["documents"],
+      message: "Government ID is required",
+    });
+  }
+  if (!categories.has("PROOF_OF_INCOME")) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["documents"],
+      message: "Proof of Income is required",
+    });
+  }
+  for (const doc of data.documents) {
+    if (doc.uploadSessionId !== data.uploadSessionId) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["documents"],
+        message: "Document upload session does not match this application",
+      });
+      break;
+    }
+  }
+});
+
 // Field groups for step-by-step validation
 export const STEP_FIELDS = {
   1: ["firstName", "lastName", "email", "phone", "dateOfBirth"] as const,
@@ -198,6 +260,9 @@ export const STEP_FIELDS = {
 
 // The inferred type keeps everything as strings (matching form inputs)
 export type ApplicationInput = z.infer<typeof applicationSchema>;
+export type ApplicationSubmissionInput = z.infer<typeof applicationSubmissionSchema>;
+export type ApplicationDocumentCategory = z.infer<typeof applicationDocumentCategorySchema>;
+export type ApplicationDocumentDescriptor = z.infer<typeof applicationDocumentDescriptorSchema>;
 export type PersonalInfoInput = z.infer<typeof personalInfoSchema>;
 export type CurrentAddressInput = z.infer<typeof currentAddressSchema>;
 export type EmploymentInput = z.infer<typeof employmentSchema>;

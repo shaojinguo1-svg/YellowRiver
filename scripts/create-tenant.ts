@@ -6,12 +6,22 @@ import { config } from "dotenv";
 
 config({ path: ".env.local" });
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const DATABASE_URL = process.env.DATABASE_URL!;
+function requireEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    console.error(`❌ Missing ${name} in .env.local`);
+    process.exit(1);
+  }
+  return value;
+}
 
-const EMAIL = "sleepingalarm@outlook.com";
-const PASSWORD = "Gshj123456";
+const SUPABASE_URL = requireEnv("NEXT_PUBLIC_SUPABASE_URL");
+const SERVICE_ROLE_KEY = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+const DATABASE_URL = requireEnv("DATABASE_URL");
+const EMAIL = requireEnv("TENANT_EMAIL");
+const PASSWORD = requireEnv("TENANT_PASSWORD");
+const FIRST_NAME = process.env.TENANT_FIRST_NAME?.trim() || "Tenant";
+const LAST_NAME = process.env.TENANT_LAST_NAME?.trim() || "User";
 
 async function main() {
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
@@ -24,7 +34,7 @@ async function main() {
     email: EMAIL,
     password: PASSWORD,
     email_confirm: true,
-    user_metadata: { first_name: "Tenant", last_name: "User" },
+    user_metadata: { first_name: FIRST_NAME, last_name: LAST_NAME },
   });
 
   let supabaseUserId: string;
@@ -55,8 +65,8 @@ async function main() {
       create: {
         supabaseId: supabaseUserId,
         email: EMAIL,
-        firstName: "Tenant",
-        lastName: "User",
+        firstName: FIRST_NAME,
+        lastName: LAST_NAME,
         role: "TENANT",
       },
     });
@@ -64,7 +74,7 @@ async function main() {
     console.log(`✅ Tenant user created:`);
     console.log(`   Email: ${user.email}`);
     console.log(`   Role: ${user.role}`);
-    console.log(`\n🎉 Done! Login with: ${EMAIL} / ${PASSWORD}`);
+    console.log(`\n🎉 Done! Login with the TENANT_EMAIL and TENANT_PASSWORD you provided.`);
   } finally {
     await prisma.$disconnect();
     await pool.end();

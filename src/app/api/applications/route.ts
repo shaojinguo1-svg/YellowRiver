@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin, getCurrentUser } from "@/lib/auth";
-import { applicationSchema } from "@/validations/application";
+import { applicationSubmissionSchema } from "@/validations/application";
 import type { ApplicationStatus } from "@/generated/prisma/client";
 import {
   sendApplicationConfirmation,
   sendAdminNewApplicationNotification,
 } from "@/lib/email";
+import {
+  UploadDescriptorError,
+  validateApplicationDocumentDescriptors,
+} from "@/lib/application-document-upload";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 const VALID_APP_STATUSES: ApplicationStatus[] = [
   "SUBMITTED", "UNDER_REVIEW", "APPROVED", "REJECTED", "WITHDRAWN",
@@ -98,11 +103,20 @@ export async function GET(request: NextRequest) {
 
 // POST /api/applications - Submit new application
 export async function POST(request: NextRequest) {
+  const limited = checkRateLimit(request, {
+    keyPrefix: "application-submit",
+    limit: 10,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (limited.limited) {
+    return rateLimitResponse(limited.retryAfter);
+  }
+
   try {
     const body = await request.json();
 
-    // Validate with full application schema
-    const parsed = applicationSchema.safeParse(body);
+    // Validate with full submission schema, including property and documents
+    const parsed = applicationSubmissionSchema.safeParse(body);
 
     if (!parsed.success) {
       const fieldErrors = parsed.error.issues.map((issue) => ({
@@ -124,7 +138,7 @@ export async function POST(request: NextRequest) {
 
     // Verify property exists
     const property = await prisma.property.findUnique({
-      where: { id: body.propertyId },
+      where: { id: data.propertyId },
       select: { id: true, title: true },
     });
 
@@ -144,65 +158,74 @@ export async function POST(request: NextRequest) {
       // Not logged in — that's fine, proceed without linking
     }
 
-    // Validate and extract documents from body
-    interface DocInput { fileName: string; storagePath: string; url: string; fileSize?: number; mimeType?: string }
-    const rawDocs: unknown[] = Array.isArray(body.documents) ? body.documents : [];
-    const documents: DocInput[] = rawDocs
-      .filter(
-        (d): d is DocInput =>
-          typeof d === "object" &&
-          d !== null &&
-          typeof (d as Record<string, unknown>).fileName === "string" &&
-          typeof (d as Record<string, unknown>).storagePath === "string" &&
-          typeof (d as Record<string, unknown>).url === "string"
-      )
-      .slice(0, 10); // Max 10 documents
+    const documents = await validateApplicationDocumentDescriptors(
+      data.uploadSessionId,
+      data.documents
+    );
 
-    const application = await prisma.rentalApplication.create({
-      data: {
-        applicationNumber,
-        propertyId: property.id,
-        applicantId,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        dateOfBirth: data.dateOfBirth
-          ? new Date(data.dateOfBirth)
-          : null,
-        currentAddress: data.currentAddress,
-        currentCity: data.currentCity,
-        currentState: data.currentState,
-        currentZip: data.currentZip,
-        monthlyRent: data.monthlyRent || null,
-        moveInDate: new Date(data.moveInDate),
-        employer: data.employer || null,
-        jobTitle: data.jobTitle || null,
-        monthlyIncome: data.monthlyIncome || null,
-        employmentLength: data.employmentLength || null,
-        landlordName: data.landlordName || null,
-        landlordPhone: data.landlordPhone || null,
-        emergencyName: data.emergencyName,
-        emergencyPhone: data.emergencyPhone,
-        numberOfOccupants: parseInt(data.numberOfOccupants, 10),
-        hasPets: data.hasPets,
-        petDescription: data.petDescription || null,
-        additionalNotes: data.additionalNotes || null,
-        consentBackground: data.consentBackground,
-        consentTerms: data.consentTerms,
-        documents: documents.length > 0
-          ? {
-              create: documents.map((doc) => ({
-                fileName: doc.fileName,
-                fileType: doc.fileName.split(".").pop()?.toLowerCase() || "unknown",
-                fileSize: doc.fileSize || 0,
-                mimeType: doc.mimeType || "application/octet-stream",
-                storagePath: doc.storagePath,
-                url: doc.url,
-              })),
-            }
-          : undefined,
-      },
+    const application = await prisma.$transaction(async (tx) => {
+      const consumedAt = new Date();
+
+      for (const doc of documents) {
+        const consumed = await tx.applicationUploadToken.updateMany({
+          where: {
+            nonce: doc.nonce,
+            consumedAt: null,
+            expiresAt: { gt: consumedAt },
+          },
+          data: { consumedAt },
+        });
+
+        if (consumed.count !== 1) {
+          throw new UploadDescriptorError("Upload descriptor has already been used");
+        }
+      }
+
+      return tx.rentalApplication.create({
+        data: {
+          applicationNumber,
+          propertyId: property.id,
+          applicantId,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+          dateOfBirth: data.dateOfBirth
+            ? new Date(data.dateOfBirth)
+            : null,
+          currentAddress: data.currentAddress,
+          currentCity: data.currentCity,
+          currentState: data.currentState,
+          currentZip: data.currentZip,
+          monthlyRent: data.monthlyRent || null,
+          moveInDate: new Date(data.moveInDate),
+          employer: data.employer || null,
+          jobTitle: data.jobTitle || null,
+          monthlyIncome: data.monthlyIncome || null,
+          employmentLength: data.employmentLength || null,
+          landlordName: data.landlordName || null,
+          landlordPhone: data.landlordPhone || null,
+          emergencyName: data.emergencyName,
+          emergencyPhone: data.emergencyPhone,
+          numberOfOccupants: parseInt(data.numberOfOccupants, 10),
+          hasPets: data.hasPets,
+          petDescription: data.petDescription || null,
+          additionalNotes: data.additionalNotes || null,
+          consentBackground: data.consentBackground,
+          consentTerms: data.consentTerms,
+          documents: {
+            create: documents.map((doc) => ({
+              category: doc.category,
+              fileName: doc.fileName,
+              fileType: doc.fileType,
+              fileSize: doc.fileSize,
+              mimeType: doc.mimeType,
+              storagePath: doc.storagePath,
+              url: null,
+            })),
+          },
+        },
+      });
     });
 
     // Send email notifications (fire-and-forget, don't block the response)
@@ -240,6 +263,14 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("POST /api/applications error:", error);
+
+    if (error instanceof UploadDescriptorError) {
+      return NextResponse.json(
+        { message: error.message },
+        { status: error.status }
+      );
+    }
+
     return NextResponse.json(
       { message: "Failed to submit application" },
       { status: 500 }

@@ -72,8 +72,7 @@ export function useImageUpload(
 
   async function uploadFile(file: File, tempId: string) {
     const supabase = createClient();
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const storagePath = `${propertyId}/${crypto.randomUUID()}.${ext}`;
+    let storagePath = "";
 
     const setProgress = (progress: number) =>
       setUploading((prev) =>
@@ -83,19 +82,36 @@ export function useImageUpload(
     try {
       setProgress(20);
 
+      const uploadUrlResponse = await fetch("/api/property-images/upload-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          propertyId,
+          fileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type,
+        }),
+      });
+
+      const uploadUrlResult = await uploadUrlResponse.json();
+      if (!uploadUrlResponse.ok) {
+        throw new Error(uploadUrlResult.message || "Upload could not be started");
+      }
+
+      storagePath = uploadUrlResult.path;
+      const publicUrl = uploadUrlResult.publicUrl;
+
+      setProgress(40);
+
       const { error: uploadError } = await supabase.storage
         .from(BUCKET_NAME)
-        .upload(storagePath, file, { contentType: file.type, upsert: false });
+        .uploadToSignedUrl(storagePath, uploadUrlResult.token, file, {
+          contentType: file.type,
+        });
 
       if (uploadError) throw new Error(uploadError.message);
 
       setProgress(60);
-
-      const { data: { publicUrl } } = supabase.storage
-        .from(BUCKET_NAME)
-        .getPublicUrl(storagePath);
-
-      setProgress(80);
 
       // Use imagesRef.current (not images) to avoid stale closure when uploading concurrently
       const currentImages = imagesRef.current;
@@ -134,13 +150,6 @@ export function useImageUpload(
         500
       );
     } catch (error) {
-      // Best-effort cleanup in Supabase Storage
-      try {
-        await createClient().storage.from(BUCKET_NAME).remove([storagePath]);
-      } catch {
-        // ignore
-      }
-
       setUploading((prev) =>
         prev.map((u) =>
           u.id === tempId

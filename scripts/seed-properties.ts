@@ -7,7 +7,7 @@ import { config } from "dotenv";
 config({ path: ".env.local" });
 
 const DATABASE_URL = process.env.DATABASE_URL!;
-const ADMIN_EMAIL = "shaojin.guo1@gmail.com";
+const ADMIN_EMAIL = (process.env.SEED_ADMIN_EMAIL || process.env.ADMIN_EMAIL)?.trim();
 
 // ─── Lease term mapping ────────────────────────────────────
 function mapLeaseTermType(term: string) {
@@ -278,6 +278,10 @@ const PROPERTIES = [
 async function main() {
   if (!DATABASE_URL) {
     console.error("Missing DATABASE_URL in .env.local");
+    process.exit(1);
+  }
+  if (!ADMIN_EMAIL) {
+    console.error("Missing SEED_ADMIN_EMAIL or ADMIN_EMAIL in .env.local");
     process.exit(1);
   }
 

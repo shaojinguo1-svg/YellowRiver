@@ -1,9 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
+}
+
+const PROPERTY_IMAGES_BUCKET = "property-images";
+
+async function storageObjectExists(storagePath: string) {
+  const lastSlash = storagePath.lastIndexOf("/");
+  const folder = lastSlash >= 0 ? storagePath.slice(0, lastSlash) : "";
+  const name = lastSlash >= 0 ? storagePath.slice(lastSlash + 1) : storagePath;
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase.storage
+    .from(PROPERTY_IMAGES_BUCKET)
+    .list(folder, { limit: 20, search: name });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data?.some((item) => item.name === name) ?? false;
 }
 
 // GET - List all images for a property
@@ -42,14 +62,39 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     const body = await request.json();
-    const { url, storagePath, alt, sortOrder, isPrimary } = body;
+    const { storagePath, alt, sortOrder, isPrimary } = body;
 
-    if (!url || !storagePath) {
+    if (!storagePath || typeof storagePath !== "string") {
       return NextResponse.json(
-        { message: "Missing required fields: url, storagePath" },
+        { message: "Missing required field: storagePath" },
         { status: 400 }
       );
     }
+
+    if (
+      storagePath.includes("..") ||
+      storagePath.startsWith("/") ||
+      !storagePath.startsWith(`${id}/`)
+    ) {
+      return NextResponse.json(
+        { message: "Image path does not belong to this property" },
+        { status: 400 }
+      );
+    }
+
+    const exists = await storageObjectExists(storagePath);
+    if (!exists) {
+      return NextResponse.json(
+        { message: "Uploaded image was not found" },
+        { status: 400 }
+      );
+    }
+
+    const {
+      data: { publicUrl },
+    } = createServiceRoleClient().storage
+      .from(PROPERTY_IMAGES_BUCKET)
+      .getPublicUrl(storagePath);
 
     // If this image is set as primary, unset all others first
     if (isPrimary) {
@@ -62,7 +107,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const image = await prisma.propertyImage.create({
       data: {
         propertyId: id,
-        url,
+        url: publicUrl,
         storagePath,
         alt: alt || null,
         sortOrder: sortOrder ?? 0,

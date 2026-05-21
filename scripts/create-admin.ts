@@ -7,22 +7,24 @@ import { config } from "dotenv";
 // Load .env.local
 config({ path: ".env.local" });
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const DATABASE_URL = process.env.DATABASE_URL!;
-
-// Admin credentials
-const ADMIN_EMAIL = "shaojin.guo1@gmail.com";
-const ADMIN_PASSWORD = "Gshj123456";
-const ADMIN_FIRST_NAME = "Shaojin";
-const ADMIN_LAST_NAME = "Guo";
-
-async function main() {
-  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-    console.error("❌ Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local");
+function requireEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    console.error(`❌ Missing ${name} in .env.local`);
     process.exit(1);
   }
+  return value;
+}
 
+const SUPABASE_URL = requireEnv("NEXT_PUBLIC_SUPABASE_URL");
+const SERVICE_ROLE_KEY = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+const DATABASE_URL = requireEnv("DATABASE_URL");
+const ADMIN_EMAIL = requireEnv("ADMIN_EMAIL");
+const ADMIN_PASSWORD = requireEnv("ADMIN_PASSWORD");
+const ADMIN_FIRST_NAME = process.env.ADMIN_FIRST_NAME?.trim() || "Admin";
+const ADMIN_LAST_NAME = process.env.ADMIN_LAST_NAME?.trim() || "User";
+
+async function main() {
   console.log("🔧 Creating admin user...\n");
 
   // 1. Create Supabase Admin client (service role bypasses RLS)
@@ -90,9 +92,7 @@ async function main() {
     console.log(`   Role: ${user.role}`);
     console.log(`   Supabase ID: ${user.supabaseId}`);
     console.log(`\n🎉 Admin user setup complete!`);
-    console.log(`   Login at /login with:`);
-    console.log(`   Email: ${ADMIN_EMAIL}`);
-    console.log(`   Password: ${ADMIN_PASSWORD}`);
+    console.log(`   Login at /login with the ADMIN_EMAIL and ADMIN_PASSWORD you provided.`);
   } catch (error) {
     console.error("❌ Failed to create Prisma User:", error);
     process.exit(1);

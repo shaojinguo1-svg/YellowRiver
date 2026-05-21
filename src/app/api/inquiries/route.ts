@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin, getCurrentUser } from "@/lib/auth";
 import { inquirySchema } from "@/validations/inquiry";
 import { apiHandler } from "@/lib/api-handler";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
   return apiHandler("GET /api/inquiries", async () => {
@@ -41,6 +42,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   return apiHandler("POST /api/inquiries", async () => {
+    const limited = checkRateLimit(request, {
+      keyPrefix: "inquiry-submit",
+      limit: 10,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (limited.limited) {
+      return rateLimitResponse(limited.retryAfter);
+    }
+
     const body = await request.json();
     const parsed = inquirySchema.safeParse(body);
 

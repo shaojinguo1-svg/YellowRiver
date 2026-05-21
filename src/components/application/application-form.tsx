@@ -37,6 +37,8 @@ export function ApplicationForm({
   const [submitted, setSubmitted] = useState(false);
   const [applicationNumber, setApplicationNumber] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [documentError, setDocumentError] = useState<string | null>(null);
+  const [uploadSessionId] = useState(() => crypto.randomUUID());
 
   const form = useForm<ApplicationInput>({
     resolver: zodResolver(applicationSchema),
@@ -139,8 +141,20 @@ export function ApplicationForm({
         });
         return false;
       }
+
+      const hasGovernmentId = uploadedFiles.some(
+        (file) => file.category === "GOVERNMENT_ID"
+      );
+      const hasProofOfIncome = uploadedFiles.some(
+        (file) => file.category === "PROOF_OF_INCOME"
+      );
+      if (!hasGovernmentId || !hasProofOfIncome) {
+        setDocumentError("Government ID and Proof of Income are required.");
+        return false;
+      }
     }
 
+    setDocumentError(null);
     return result;
   };
 
@@ -180,13 +194,8 @@ export function ApplicationForm({
         body: JSON.stringify({
           ...data,
           propertyId,
-          documents: uploadedFiles.map((f) => ({
-            fileName: f.name,
-            storagePath: f.storagePath,
-            url: f.url,
-            fileSize: f.fileSize,
-            mimeType: f.mimeType,
-          })),
+          uploadSessionId,
+          documents: uploadedFiles.map((f) => f.descriptor),
         }),
       });
 
@@ -198,6 +207,7 @@ export function ApplicationForm({
 
       // Clear saved data
       localStorage.removeItem(STORAGE_KEY);
+      setUploadedFiles([]);
       setApplicationNumber(result.applicationNumber);
       setSubmitted(true);
       toast.success("Application submitted successfully!");
@@ -308,7 +318,12 @@ export function ApplicationForm({
                 watch={watch}
                 setValue={setValue}
                 uploadedFiles={uploadedFiles}
-                onFilesChange={setUploadedFiles}
+                onFilesChange={(files) => {
+                  setUploadedFiles(files);
+                  setDocumentError(null);
+                }}
+                uploadSessionId={uploadSessionId}
+                documentError={documentError}
               />
             )}
 

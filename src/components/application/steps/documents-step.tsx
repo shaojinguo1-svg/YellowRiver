@@ -2,12 +2,16 @@
 
 import { useState, useRef, useCallback } from "react";
 import type { UseFormRegister, FieldErrors, UseFormWatch, UseFormSetValue } from "react-hook-form";
-import type { ApplicationInput } from "@/validations/application";
+import type {
+  ApplicationDocumentCategory,
+  ApplicationDocumentDescriptor,
+  ApplicationInput,
+} from "@/validations/application";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, X, FileText, Loader2, CheckCircle2 } from "lucide-react";
+import { Upload, X, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 
@@ -17,10 +21,11 @@ const BUCKET = "application-documents";
 
 interface UploadedFile {
   name: string;
-  url: string;
   storagePath: string;
   fileSize: number;
   mimeType: string;
+  category: ApplicationDocumentCategory;
+  descriptor: ApplicationDocumentDescriptor;
 }
 
 interface DocumentsStepProps {
@@ -30,16 +35,22 @@ interface DocumentsStepProps {
   setValue: UseFormSetValue<ApplicationInput>;
   onFilesChange?: (files: UploadedFile[]) => void;
   uploadedFiles?: UploadedFile[];
+  uploadSessionId: string;
+  documentError?: string | null;
 }
 
 function FileUploadZone({
   label,
+  category,
   required,
+  uploadSessionId,
   onUpload,
   onRemove: onRemoveCallback,
 }: {
   label: string;
+  category: ApplicationDocumentCategory;
   required?: boolean;
+  uploadSessionId: string;
   onUpload?: (file: UploadedFile) => void;
   onRemove?: (storagePath: string) => void;
 }) {
@@ -60,26 +71,41 @@ function FileUploadZone({
 
       setUploading(true);
       try {
-        const supabase = createClient();
-        const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
-        const storagePath = `${crypto.randomUUID()}.${ext}`;
+        const uploadUrlResponse = await fetch("/api/application-documents/upload-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            uploadSessionId,
+            category,
+            fileName: file.name,
+            fileSize: file.size,
+            mimeType: file.type,
+          }),
+        });
 
+        const uploadUrlResult = await uploadUrlResponse.json();
+        if (!uploadUrlResponse.ok) {
+          throw new Error(uploadUrlResult.message || "Upload could not be started");
+        }
+
+        const supabase = createClient();
         const { error } = await supabase.storage
           .from(BUCKET)
-          .upload(storagePath, file, { contentType: file.type, upsert: false });
+          .uploadToSignedUrl(uploadUrlResult.path, uploadUrlResult.token, file, {
+            contentType: file.type,
+          });
 
         if (error) throw new Error(error.message);
 
-        const { data: { publicUrl } } = supabase.storage
-          .from(BUCKET)
-          .getPublicUrl(storagePath);
+        const descriptor = uploadUrlResult.descriptor as ApplicationDocumentDescriptor;
 
         const uploadedFile: UploadedFile = {
-          name: file.name,
-          url: publicUrl,
-          storagePath,
-          fileSize: file.size,
-          mimeType: file.type,
+          name: descriptor.fileName,
+          storagePath: descriptor.storagePath,
+          fileSize: descriptor.fileSize,
+          mimeType: descriptor.mimeType,
+          category: descriptor.category,
+          descriptor,
         };
 
         setUploaded(uploadedFile);
@@ -91,17 +117,11 @@ function FileUploadZone({
         setUploading(false);
       }
     },
-    [onUpload]
+    [category, onUpload, uploadSessionId]
   );
 
   const handleRemove = useCallback(async () => {
     if (!uploaded) return;
-    try {
-      const supabase = createClient();
-      await supabase.storage.from(BUCKET).remove([uploaded.storagePath]);
-    } catch {
-      // best-effort cleanup
-    }
     onRemoveCallback?.(uploaded.storagePath);
     setUploaded(null);
     if (inputRef.current) inputRef.current.value = "";
@@ -191,13 +211,14 @@ export function DocumentsStep({
   setValue,
   onFilesChange,
   uploadedFiles = [],
+  uploadSessionId,
+  documentError,
 }: DocumentsStepProps) {
   const hasPets = watch("hasPets");
 
   const handleUpload = useCallback(
-    (category: string) => (file: UploadedFile) => {
-      const tagged = { ...file, name: `[${category}] ${file.name}` };
-      const updated = [...uploadedFiles.filter((f) => f.storagePath !== tagged.storagePath), tagged];
+    (category: ApplicationDocumentCategory) => (file: UploadedFile) => {
+      const updated = [...uploadedFiles.filter((f) => f.category !== category), file];
       onFilesChange?.(updated);
     },
     [onFilesChange, uploadedFiles]
@@ -312,24 +333,36 @@ export function DocumentsStep({
           </h3>
         </div>
 
+        {documentError && (
+          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-destructive">
+            {documentError}
+          </p>
+        )}
+
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <FileUploadZone
             label="Government ID"
+            category="GOVERNMENT_ID"
             required
-            onUpload={handleUpload("Government ID")}
+            uploadSessionId={uploadSessionId}
+            onUpload={handleUpload("GOVERNMENT_ID")}
             onRemove={handleRemoveFile}
           />
           <FileUploadZone
             label="Proof of Income"
+            category="PROOF_OF_INCOME"
             required
-            onUpload={handleUpload("Proof of Income")}
+            uploadSessionId={uploadSessionId}
+            onUpload={handleUpload("PROOF_OF_INCOME")}
             onRemove={handleRemoveFile}
           />
         </div>
 
         <FileUploadZone
           label="Additional Documents"
-          onUpload={handleUpload("Additional")}
+          category="ADDITIONAL"
+          uploadSessionId={uploadSessionId}
+          onUpload={handleUpload("ADDITIONAL")}
           onRemove={handleRemoveFile}
         />
       </div>

@@ -10,6 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApplicationReviewForm } from "./review-form";
 
+const DOCUMENT_CATEGORY_LABELS: Record<string, string> = {
+  GOVERNMENT_ID: "Government ID",
+  PROOF_OF_INCOME: "Proof of Income",
+  ADDITIONAL: "Additional",
+};
+
 export default async function ApplicationDetailPage({
   params,
 }: {
@@ -334,6 +340,7 @@ export default async function ApplicationDetailPage({
                         <div>
                           <p className="text-sm font-medium">{doc.fileName}</p>
                           <p className="text-xs text-muted-foreground">
+                            {DOCUMENT_CATEGORY_LABELS[doc.category] ?? doc.category} &middot;{" "}
                             {doc.fileType} &middot;{" "}
                             {(doc.fileSize / 1024).toFixed(1)} KB
                           </p>
@@ -341,7 +348,7 @@ export default async function ApplicationDetailPage({
                       </div>
                       <Button asChild variant="ghost" size="sm">
                         <a
-                          href={doc.url}
+                          href={`/api/applications/${application.id}/documents/${doc.id}/signed-url`}
                           target="_blank"
                           rel="noopener noreferrer"
                         >

@@ -57,6 +57,12 @@ enum InquiryStatus {
   ARCHIVED
 }
 
+enum ApplicationDocumentCategory {
+  GOVERNMENT_ID
+  PROOF_OF_INCOME
+  ADDITIONAL
+}
+
 // ─── MODELS ──────────────────────────────────────────────
 
 model User {
@@ -263,20 +269,42 @@ model RentalApplication {
 }
 
 model ApplicationDocument {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationId String   @map("application_id") @db.Uuid
-  fileName      String   @map("file_name")
-  fileType      String   @map("file_type")
-  fileSize      Int      @map("file_size")
-  mimeType      String   @map("mime_type")
-  storagePath   String   @map("storage_path")
-  url           String
-  createdAt     DateTime @default(now()) @map("created_at")
+  id            String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId String                      @map("application_id") @db.Uuid
+  category      ApplicationDocumentCategory @default(ADDITIONAL)
+  fileName      String                      @map("file_name")
+  fileType      String                      @map("file_type")
+  fileSize      Int                         @map("file_size")
+  mimeType      String                      @map("mime_type")
+  storagePath   String                      @map("storage_path")
+  // Legacy only. Sensitive documents must use storagePath + short-lived signed URLs.
+  url           String?
+  createdAt     DateTime                    @default(now()) @map("created_at")
 
   application RentalApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([applicationId])
+  @@index([category])
   @@map("application_documents")
+}
+
+model ApplicationUploadToken {
+  id              String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  uploadSessionId String                      @map("upload_session_id") @db.Uuid
+  nonce           String                      @unique
+  storagePath     String                      @unique @map("storage_path")
+  category        ApplicationDocumentCategory
+  fileName        String                      @map("file_name")
+  fileSize        Int                         @map("file_size")
+  mimeType        String                      @map("mime_type")
+  signature       String
+  expiresAt       DateTime                    @map("expires_at")
+  consumedAt      DateTime?                   @map("consumed_at")
+  createdAt       DateTime                    @default(now()) @map("created_at")
+
+  @@index([uploadSessionId])
+  @@index([expiresAt])
+  @@map("application_upload_tokens")
 }
 
 model ContactInquiry {

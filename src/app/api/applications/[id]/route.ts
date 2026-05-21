@@ -33,7 +33,18 @@ export async function GET(
     const application = await prisma.rentalApplication.findUnique({
       where: { id },
       include: {
-        documents: true,
+        documents: {
+          select: {
+            id: true,
+            category: true,
+            fileName: true,
+            fileType: true,
+            fileSize: true,
+            mimeType: true,
+            storagePath: true,
+            createdAt: true,
+          },
+        },
         property: {
           include: {
             images: {
@@ -153,7 +164,18 @@ export async function PATCH(
       where: { id },
       data: updateData,
       include: {
-        documents: true,
+        documents: {
+          select: {
+            id: true,
+            category: true,
+            fileName: true,
+            fileType: true,
+            fileSize: true,
+            mimeType: true,
+            storagePath: true,
+            createdAt: true,
+          },
+        },
         property: true,
         applicant: {
           select: {
