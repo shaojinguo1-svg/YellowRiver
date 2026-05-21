@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'/Users/shaojin/YellowRiver/.codex/hooks/auto-push.sh'",
+            "timeout": 30000
+          }
+        ]
+      }
+    ]
+  }
+}
