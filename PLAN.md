@@ -1,43 +1,71 @@
-# Plan: Phase 3 Product Polish and Cleanup
+# Plan: Phase 4 Email Delivery and Build/CI Readiness
 
 ## Goal
-Close the remaining P2 product trust gaps after Phase 1 and Phase 2: make inquiry reply behavior match what the system actually does, remove the misleading Settings fake form, and clean up known lint warnings without expanding into deferred architecture work.
+Make launch verification less fragile by removing the email layer's import-time dependency on `RESEND_API_KEY`, clarifying what email delivery is and is not supported, and giving GitHub a minimal CI path that can validate future branches without relying only on local builds.
 
-No business code should be changed until this Phase 3 plan is approved.
+No business code should be changed until this Phase 4 plan is approved.
 
 ## Changes
-- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — rename reply UI from outbound-email language to save-only note language, such as “Reply Note”, “Internal Reply Note”, “Save Reply Note”, and “Update Reply Note”, because the current API only stores `adminReply` in the database.
-- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — replace outbound-email affordances: remove the `Send` paper-plane icon from the save button and the `Mail` icon from the saved reply block, using neutral save/note icons instead.
-- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — update label, placeholder, button text, success copy, error copy, and loading copy so they consistently use save/note wording instead of send/email wording.
-- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — preserve the existing draft behavior: failed saves must keep the draft text for retry, and successful saves should clear the draft only after the API confirms success.
-- [ ] `src/app/admin/inquiries/inquiries-client.tsx` — keep the DB enum/status value `REPLIED`, but change the admin UI badge label to non-delivery wording such as “Reply Note Saved” or “Note Saved”; do not leave the label as “Replied”.
-- [ ] `src/app/api/inquiries/[id]/route.ts` — keep the route save-only for this phase, but align comments/error messages with “save reply” behavior. Do not add Resend delivery in Phase 3 unless reviewer explicitly requests it.
-
-- [ ] `src/app/admin/settings/page.tsx` — remove or disable the fake editable form and the fake “Save Changes” button. Minimum approved behavior: the page must not present editable controls that appear to persist when they do not.
-- [ ] `src/app/admin/settings/page.tsx` — keep the admin navigation target valid with a small non-editable settings/status view, rather than wiring a half-complete form that is not consumed by the public site.
-
-- [ ] `src/app/(tenant)/dashboard/page.tsx` — remove unused `CardHeader` and `CardTitle` imports flagged by lint.
-- [ ] `src/app/(tenant)/layout.tsx` — remove unused `createClient` import flagged by lint.
+- [ ] `src/lib/email.ts` — lazy-create the Resend client inside email delivery functions instead of constructing `new Resend(process.env.RESEND_API_KEY)` at module import time. Importing this module must be build-safe when `RESEND_API_KEY` is missing.
+- [ ] `src/lib/email.ts` — add a small shared delivery helper or guard that classifies email configuration failures clearly. Missing `RESEND_API_KEY` should never crash build/import. Optional fire-and-forget notifications should skip delivery and log a concise warning; explicit user-requested email sends in future work should fail closed and surface an error.
+- [ ] `src/lib/email.ts` — make application email behavior explicit:
+  - application confirmation to applicant remains fire-and-forget after successful application creation;
+  - admin new-application notification remains fire-and-forget and is skipped if `ADMIN_EMAIL` or `RESEND_API_KEY` is missing;
+  - application status update email remains fire-and-forget after a valid status change;
+  - all delivery failures should be logged with helper name and non-secret context, without blocking the database mutation.
+- [ ] `src/app/api/applications/route.ts` and `src/app/api/applications/[id]/route.ts` — keep application email side effects non-blocking, but route logging should distinguish skipped configuration from provider/send failures so launch debugging is less ambiguous.
+- [ ] `src/app/api/inquiries/route.ts` and `src/lib/email.ts` — decide and implement the contact inquiry boundary for this phase. Recommended minimum: after a contact inquiry is saved, send a fire-and-forget admin notification when `ADMIN_EMAIL` and `RESEND_API_KEY` are configured; skip and log when email configuration is absent. Keep the public API response tied to database persistence, not email delivery.
+- [ ] `src/lib/email.ts` — keep or adjust the existing inquiry confirmation helper only if the reviewer chooses user confirmation emails for contact forms. Recommended default: do not send user inquiry confirmation in Phase 4 unless reviewer explicitly wants both admin notification and user confirmation.
+- [ ] `src/app/admin/inquiries/inquiries-client.tsx` and `src/app/api/inquiries/[id]/route.ts` — preserve Phase 3 semantics: admin inquiry reply remains a saved internal reply note only. Do not reintroduce "Send Reply" UI copy or outbound reply behavior in this phase.
+- [ ] `.github/workflows/ci.yml` — update CI so it can run on reviewable branches and pull requests. Minimum recommended trigger: `pull_request` to `main`/`develop`, `push` to `main`/`develop`/`codex/**`, plus `workflow_dispatch`.
+- [ ] `.github/workflows/ci.yml` — run the launch-readiness checks in CI: `npm ci`, `npx prisma validate`, `npx prisma generate`, `npx tsc --noEmit`, `npm run lint`, and `npm run build`.
+- [ ] `.github/workflows/ci.yml` — use dummy non-secret env values for build-only checks, including placeholder Supabase URLs/keys, placeholder `DATABASE_URL`, placeholder `RESEND_API_KEY`, placeholder `ADMIN_EMAIL`, and `NEXT_PUBLIC_APP_URL`. CI must not require real production secrets.
+- [ ] `.env.example` — only update if needed to document optional email behavior or add a missing non-secret variable description. Do not commit real secrets.
 
 ## Expected Behavior
-- Admin inquiry replies are clearly treated as saved internal/admin reply notes, not outbound emails.
-- Saving or updating a reply note still updates inquiry state, preserves failed draft text, and shows accurate success/error feedback.
-- The UI no longer claims or visually implies “Send Reply” unless a real email is sent in a future phase.
-- `REPLIED` remains the persisted status, but the admin-facing badge copy reads as a saved note, not delivered email.
-- Settings no longer shows a fake form or a fake save action.
-- Existing tenant lint warnings are gone without changing tenant dashboard behavior.
+- `npm run build` can collect route data without a real `RESEND_API_KEY`; importing `src/lib/email.ts` no longer throws.
+- Missing email configuration does not block application submission, application status updates, or contact inquiry persistence. Those flows should still return based on database success.
+- Optional notification delivery is transparent in logs: skipped configuration and provider failures are distinguishable.
+- Application emails remain a best-effort notification layer, not the source of truth for application state.
+- Contact inquiry submission remains database-first. If Phase 4 includes admin notification, it is best-effort and does not change the public success response.
+- Admin inquiry reply stays honest: it saves an internal note and does not imply an email was sent.
+- GitHub can run the same minimum validation expected locally, including Prisma validation, TypeScript, ESLint, and production build.
+- CI succeeds without real Resend, Supabase, or database secrets.
+
+## Out of Scope
+- Do not implement real admin inquiry reply email in Phase 4. If this is added later, it must include a Resend helper, explicit send action, delivery failure handling, accurate UI copy/status, and tests/manual verification for failed delivery.
+- Do not change the inquiry DB enum or application status model.
+- Do not make email delivery transactional with database writes.
+- Do not add persisted Settings management, analytics, marketing copy, large UI redesign, or new admin dashboards.
+- Do not reopen Phase 1/Phase 2 security, upload, auth, signed URL, recovery, rate-limit, or storage work unless it directly blocks CI/build.
+- Do not add real secrets to `.env.example`, CI YAML, code, logs, or commits.
+- Do not require a live database or real Resend account for CI.
 
 ## Testing
 - Run `npx prisma validate`.
+- Run `npx prisma generate`.
 - Run `npx tsc --noEmit`.
-- Run `npm run lint` and confirm the existing three tenant unused-import warnings are gone.
-- Run `npm run build`; Next 16 middleware/proxy and SWC fallback warnings may remain as already-approved non-blocking warnings.
-- Manually test admin inquiry expand, mark-as-read, save reply note, update reply note, failed save retry, draft clearing only after confirmed success, neutral icons, unified save/note copy, and status badge copy.
-- Manually review Settings page and confirm there are no editable fake fields or fake save actions.
-- Manually spot-check tenant dashboard still renders after unused import cleanup.
+- Run `npm run lint`.
+- Run `npm run build` with no real `RESEND_API_KEY` and confirm build no longer fails at route data collection.
+- Run `npm run build` with dummy CI-style env values and confirm it passes.
+- Manually exercise application submission with email env present and absent:
+  - database record is created in both cases;
+  - missing email config logs a skipped notification;
+  - provider failure logs an email failure without changing the successful API response.
+- Manually exercise application status update with email env present and absent:
+  - valid status change persists in both cases;
+  - email send remains best-effort and does not mask the database update response.
+- If contact inquiry admin notification is included, manually submit contact form with email env present and absent:
+  - inquiry is saved in both cases;
+  - admin notification sends when configured;
+  - missing config logs a skip and does not change the public success response.
+- Confirm admin inquiry "Save Reply Note" still only saves `adminReply`, keeps Phase 3 copy, and does not send email.
+- After pushing Phase 4 implementation, confirm GitHub Actions runs on the branch and reports all required checks.
 
-## Notes
-- Real outbound inquiry reply email remains deferred. Adding it later should include a Resend helper, delivery error handling, and UI copy that only says “Send” when delivery is attempted.
-- Full persisted Settings management remains deferred. The `SiteSettings` model exists, but wiring a form that saves values not consumed by the public site would still be misleading.
-- Do not change the inquiry DB enum or API status model in Phase 3; only the admin-facing copy/affordance should clarify that this is a saved note.
-- Do not reopen Phase 1 or Phase 2 work in this phase: private document storage, HMAC descriptors, token single-use, admin fail-closed, reset password, build/font, recovery marker, rate limit upgrades, orphan cleanup, signed URL proxy/referrer policy, and Next 16 middleware rename remain out of scope unless they block verification.
+## Risks / Reviewer Questions
+- Should Phase 4 send only admin notifications for contact inquiries, or both admin notification and user confirmation? Recommended default is admin notification only to keep scope small and avoid new user-facing delivery promises.
+- Should missing `RESEND_API_KEY` be logged as `console.warn` with a skipped result, or should helpers reject with a typed configuration error that callers catch? Recommended default is a shared optional-delivery wrapper that logs skips once per attempted email path and resolves with a skipped result.
+- Application status update email is currently fire-and-forget. Should admins see an inline delivery warning when status email fails, or is server logging enough for launch? Recommended default is server logging only, because the status change itself is the committed action.
+- CI currently exists but did not trigger for the Phase 3 branch. Should CI run on all `codex/**` pushes, or only PRs plus manual dispatch? Recommended default is `codex/**` push coverage so reviewer branches get immediate feedback.
+- Should CI use Node 22, matching the existing workflow, or move to Node 24 to match the local runtime used by Codex verification? Recommended default is keep Node 22 unless project engines or Next.js requirements force a change.
+- Do we want a later Phase 5 for explicit admin inquiry reply email? If yes, it should be planned separately so Phase 3's honest internal-note UI is not quietly reversed.
