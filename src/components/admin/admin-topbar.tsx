@@ -12,6 +12,7 @@ import {
   MessageSquare,
   Settings,
   Users,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -51,6 +52,7 @@ const iconMap: Record<string, LucideIcon> = {
   MessageSquare,
   Settings,
   Users,
+  Wrench,
 };
 
 interface AdminTopbarProps {
@@ -72,6 +74,7 @@ function getPageTitle(pathname: string): string {
     listings: "Listings",
     applications: "Applications",
     residents: "Residents",
+    maintenance: "Maintenance",
     inquiries: "Inquiries",
     settings: "Settings",
     new: "New",

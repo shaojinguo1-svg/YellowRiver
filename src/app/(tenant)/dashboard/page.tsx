@@ -16,6 +16,11 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getCurrentLeaseForUser } from "@/lib/resident-leases";
 import {
+  listTenantMaintenanceRequests,
+  serializeTenantMaintenanceRequest,
+} from "@/lib/maintenance-requests";
+import { MaintenanceRequestsClient } from "./maintenance-requests-client";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -54,6 +59,9 @@ export default async function TenantDashboardPage() {
 
   if (currentLeaseResident) {
     const { lease } = currentLeaseResident;
+    const maintenanceRequests = (
+      await listTenantMaintenanceRequests(user.id)
+    ).map(serializeTenantMaintenanceRequest);
     const primaryResident = lease.residents.find((resident) => resident.isPrimary);
     const residentNames = lease.residents
       .map((resident) =>
@@ -178,6 +186,8 @@ export default async function TenantDashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        <MaintenanceRequestsClient initialRequests={maintenanceRequests} />
       </div>
     );
   }

@@ -70,6 +70,29 @@ enum LeaseStatus {
   CANCELLED
 }
 
+enum MaintenanceRequestStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CANCELLED
+}
+
+enum MaintenanceRequestPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum MaintenanceRequestCategory {
+  GENERAL
+  PLUMBING
+  ELECTRICAL
+  HVAC
+  APPLIANCE
+  OTHER
+}
+
 // ─── MODELS ──────────────────────────────────────────────
 
 model User {
@@ -89,6 +112,7 @@ model User {
   rentalApplications RentalApplication[]
   contactInquiries   ContactInquiry[]
   leaseResidents     LeaseResident[]
+  maintenanceRequests MaintenanceRequest[]
 
   @@map("users")
 }
@@ -150,6 +174,7 @@ model Property {
   amenities    PropertyAmenity[]
   applications RentalApplication[]
   leases       Lease[]
+  maintenanceRequests MaintenanceRequest[]
 
   @@index([city, state])
   @@index([status])
@@ -331,6 +356,7 @@ model Lease {
 
   property  Property        @relation(fields: [propertyId], references: [id])
   residents LeaseResident[]
+  maintenanceRequests MaintenanceRequest[]
 
   @@index([propertyId])
   @@index([status])
@@ -355,6 +381,40 @@ model LeaseResident {
   @@index([leaseId])
   @@index([userId])
   @@map("lease_residents")
+}
+
+model MaintenanceRequest {
+  id            String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  leaseId       String                     @map("lease_id") @db.Uuid
+  propertyId    String                     @map("property_id") @db.Uuid
+  submittedById String                     @map("submitted_by_id") @db.Uuid
+  status        MaintenanceRequestStatus   @default(OPEN)
+  priority      MaintenanceRequestPriority @default(NORMAL)
+  category      MaintenanceRequestCategory @default(GENERAL)
+  title         String
+  description   String                     @db.Text
+  location      String?
+  adminNotes    String?                    @map("admin_notes") @db.Text
+  submittedAt   DateTime                   @default(now()) @map("submitted_at")
+  resolvedAt    DateTime?                  @map("resolved_at")
+  cancelledAt   DateTime?                  @map("cancelled_at")
+  createdAt     DateTime                   @default(now()) @map("created_at")
+  updatedAt     DateTime                   @updatedAt @map("updated_at")
+
+  lease       Lease    @relation(fields: [leaseId], references: [id])
+  property    Property @relation(fields: [propertyId], references: [id])
+  submittedBy User     @relation(fields: [submittedById], references: [id])
+
+  @@index([leaseId])
+  @@index([propertyId])
+  @@index([submittedById])
+  @@index([status])
+  @@index([priority])
+  @@index([category])
+  @@index([createdAt])
+  @@index([propertyId, status])
+  @@index([status, priority])
+  @@map("maintenance_requests")
 }
 
 model ContactInquiry {

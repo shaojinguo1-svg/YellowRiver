@@ -9,6 +9,7 @@ import {
   MessageSquare,
   Settings,
   Users,
+  Wrench,
   LogOut,
   type LucideIcon,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const iconMap: Record<string, LucideIcon> = {
   MessageSquare,
   Settings,
   Users,
+  Wrench,
 };
 
 interface AdminSidebarProps {
