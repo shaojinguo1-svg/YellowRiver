@@ -8,6 +8,7 @@ import {
   FileText,
   MessageSquare,
   Settings,
+  Users,
   LogOut,
   type LucideIcon,
 } from "lucide-react";
@@ -24,6 +25,7 @@ const iconMap: Record<string, LucideIcon> = {
   FileText,
   MessageSquare,
   Settings,
+  Users,
 };
 
 interface AdminSidebarProps {

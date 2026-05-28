@@ -1,12 +1,25 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
-import { FileText, Home, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import {
+  AlertCircle,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  DollarSign,
+  FileText,
+  Home,
+  Users,
+  XCircle,
+} from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getCurrentLeaseForUser } from "@/lib/resident-leases";
 import {
   Card,
   CardContent,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,9 +40,147 @@ const STATUS_CONFIG: Record<
   WITHDRAWN: { label: "Withdrawn", variant: "outline", icon: XCircle },
 };
 
+function formatMoney(value: unknown) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return "$0";
+  return `$${amount.toLocaleString()}`;
+}
+
 export default async function TenantDashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+
+  const currentLeaseResident = await getCurrentLeaseForUser(user.id);
+
+  if (currentLeaseResident) {
+    const { lease } = currentLeaseResident;
+    const primaryResident = lease.residents.find((resident) => resident.isPrimary);
+    const residentNames = lease.residents
+      .map((resident) =>
+        [resident.user.firstName, resident.user.lastName]
+          .filter(Boolean)
+          .join(" ") || "Resident"
+      )
+      .join(", ");
+
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-warm-900">
+            Welcome, {user.firstName || "Resident"}
+          </h1>
+          <p className="mt-1 text-sm text-warm-500">
+            View your active lease and property details.
+          </p>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Home className="size-4 text-gold" />
+                Current Residence
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div>
+                <h2 className="font-display text-xl font-semibold text-warm-900">
+                  {lease.property.title}
+                </h2>
+                <p className="mt-1 text-sm text-warm-500">
+                  {lease.property.addressLine1}
+                  {lease.property.addressLine2
+                    ? `, ${lease.property.addressLine2}`
+                    : ""}
+                </p>
+                <p className="text-sm text-warm-500">
+                  {lease.property.city}, {lease.property.state}{" "}
+                  {lease.property.zipCode}
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-md border p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-warm-900">
+                    <CalendarDays className="size-4 text-gold" />
+                    Lease dates
+                  </div>
+                  <p className="mt-2 text-sm text-warm-500">
+                    {format(new Date(lease.startDate), "MMM d, yyyy")} -{" "}
+                    {lease.endDate
+                      ? format(new Date(lease.endDate), "MMM d, yyyy")
+                      : "No end date"}
+                  </p>
+                </div>
+
+                <div className="rounded-md border p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-warm-900">
+                    <DollarSign className="size-4 text-gold" />
+                    Monthly rent
+                  </div>
+                  <p className="mt-2 text-sm text-warm-500">
+                    {formatMoney(lease.rentAmount)}
+                  </p>
+                </div>
+
+                <div className="rounded-md border p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-warm-900">
+                    <Users className="size-4 text-gold" />
+                    Residents
+                  </div>
+                  <p className="mt-2 text-sm text-warm-500">
+                    {residentNames || "Not recorded"}
+                  </p>
+                </div>
+
+                <div className="rounded-md border p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-warm-900">
+                    <FileText className="size-4 text-gold" />
+                    Occupants
+                  </div>
+                  <p className="mt-2 text-sm text-warm-500">
+                    {lease.occupantCount}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Lease Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-warm-500">Status</span>
+                <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                  Active
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-warm-500">Primary resident</span>
+                <span className="text-right font-medium text-warm-900">
+                  {primaryResident
+                    ? [primaryResident.user.firstName, primaryResident.user.lastName]
+                        .filter(Boolean)
+                        .join(" ") || "Resident"
+                    : "Not recorded"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-warm-500">Security deposit</span>
+                <span className="font-medium text-warm-900">
+                  {lease.securityDeposit
+                    ? formatMoney(lease.securityDeposit)
+                    : "Not recorded"}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   // Find applications by email (covers both linked and unlinked applications)
   const applications = await prisma.rentalApplication.findMany({

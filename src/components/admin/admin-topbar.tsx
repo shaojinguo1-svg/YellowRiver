@@ -11,6 +11,7 @@ import {
   FileText,
   MessageSquare,
   Settings,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -49,6 +50,7 @@ const iconMap: Record<string, LucideIcon> = {
   FileText,
   MessageSquare,
   Settings,
+  Users,
 };
 
 interface AdminTopbarProps {
@@ -69,6 +71,7 @@ function getPageTitle(pathname: string): string {
     dashboard: "Dashboard",
     listings: "Listings",
     applications: "Applications",
+    residents: "Residents",
     inquiries: "Inquiries",
     settings: "Settings",
     new: "New",

@@ -78,6 +78,7 @@ export const ADMIN_NAV_LINKS = [
   { href: "/admin/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
   { href: "/admin/listings", label: "Listings", icon: "Building2" },
   { href: "/admin/applications", label: "Applications", icon: "FileText" },
+  { href: "/admin/residents", label: "Residents", icon: "Users" },
   { href: "/admin/inquiries", label: "Inquiries", icon: "MessageSquare" },
   { href: "/admin/settings", label: "Settings", icon: "Settings" },
 ] as const;

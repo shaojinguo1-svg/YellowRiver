@@ -63,6 +63,13 @@ enum ApplicationDocumentCategory {
   ADDITIONAL
 }
 
+enum LeaseStatus {
+  DRAFT
+  ACTIVE
+  ENDED
+  CANCELLED
+}
+
 // ─── MODELS ──────────────────────────────────────────────
 
 model User {
@@ -81,6 +88,7 @@ model User {
   properties         Property[]
   rentalApplications RentalApplication[]
   contactInquiries   ContactInquiry[]
+  leaseResidents     LeaseResident[]
 
   @@map("users")
 }
@@ -141,6 +149,7 @@ model Property {
   images       PropertyImage[]
   amenities    PropertyAmenity[]
   applications RentalApplication[]
+  leases       Lease[]
 
   @@index([city, state])
   @@index([status])
@@ -305,6 +314,47 @@ model ApplicationUploadToken {
   @@index([uploadSessionId])
   @@index([expiresAt])
   @@map("application_upload_tokens")
+}
+
+model Lease {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId      String      @map("property_id") @db.Uuid
+  status          LeaseStatus @default(DRAFT)
+  startDate       DateTime    @map("start_date")
+  endDate         DateTime?   @map("end_date")
+  rentAmount      Decimal     @map("rent_amount") @db.Decimal(10, 2)
+  securityDeposit Decimal?    @map("security_deposit") @db.Decimal(10, 2)
+  occupantCount   Int         @default(1) @map("occupant_count")
+  notes           String?     @db.Text
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  property  Property        @relation(fields: [propertyId], references: [id])
+  residents LeaseResident[]
+
+  @@index([propertyId])
+  @@index([status])
+  @@index([propertyId, status])
+  @@map("leases")
+}
+
+model LeaseResident {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  leaseId     String    @map("lease_id") @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  isPrimary   Boolean   @default(false) @map("is_primary")
+  moveInDate  DateTime? @map("move_in_date")
+  moveOutDate DateTime? @map("move_out_date")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  lease Lease @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([leaseId, userId])
+  @@index([leaseId])
+  @@index([userId])
+  @@map("lease_residents")
 }
 
 model ContactInquiry {
