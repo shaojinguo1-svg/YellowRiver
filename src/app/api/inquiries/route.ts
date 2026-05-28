@@ -4,6 +4,10 @@ import { requireAdmin, getCurrentUser } from "@/lib/auth";
 import { inquirySchema } from "@/validations/inquiry";
 import { apiHandler } from "@/lib/api-handler";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import {
+  logEmailDeliveryResult,
+  sendAdminContactInquiryNotification,
+} from "@/lib/email";
 
 export async function GET(request: NextRequest) {
   return apiHandler("GET /api/inquiries", async () => {
@@ -84,6 +88,16 @@ export async function POST(request: NextRequest) {
         userId: user?.id ?? null,
       },
     });
+
+    void sendAdminContactInquiryNotification({
+      inquiryId: inquiry.id,
+      name: inquiry.name,
+      email: inquiry.email,
+      phone: inquiry.phone,
+      subject: inquiry.subject,
+      message: inquiry.message,
+      propertyId: inquiry.propertyId,
+    }).then(logEmailDeliveryResult);
 
     return NextResponse.json(
       { message: "Inquiry submitted successfully", inquiry },

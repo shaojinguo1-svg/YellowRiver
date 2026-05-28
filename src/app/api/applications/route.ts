@@ -4,6 +4,7 @@ import { requireAdmin, getCurrentUser } from "@/lib/auth";
 import { applicationSubmissionSchema } from "@/validations/application";
 import type { ApplicationStatus } from "@/generated/prisma/client";
 import {
+  logEmailDeliveryResult,
   sendApplicationConfirmation,
   sendAdminNewApplicationNotification,
 } from "@/lib/email";
@@ -232,7 +233,7 @@ export async function POST(request: NextRequest) {
     const propertyTitle = property.title;
     const applicantName = `${data.firstName} ${data.lastName}`;
 
-    Promise.allSettled([
+    void Promise.all([
       sendApplicationConfirmation({
         to: data.email,
         applicantName,
@@ -244,13 +245,7 @@ export async function POST(request: NextRequest) {
         applicantName,
         propertyTitle,
       }),
-    ]).then((results) => {
-      results.forEach((result, i) => {
-        if (result.status === "rejected") {
-          console.error(`Email notification ${i} failed:`, result.reason);
-        }
-      });
-    });
+    ]).then((results) => results.forEach(logEmailDeliveryResult));
 
     return NextResponse.json(
       {
