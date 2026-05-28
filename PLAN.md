@@ -1,73 +1,106 @@
-# Plan: Phase 4 Email Delivery and Build/CI Readiness
+# Plan: Phase 5 Resident Portal Foundation
 
 ## Goal
-Make launch verification less fragile by removing the email layer's import-time dependency on `RESEND_API_KEY`, clarifying what email delivery is and is not supported, and giving GitHub a minimal CI path that can validate future branches without relying only on local builds.
+Create the resident/tenant portal foundation without implementing maintenance requests, billing, or rent payments yet.
 
-No business code should be changed until this Phase 4 plan is approved.
+Phase 5 should make it possible for:
+- admins to associate a user/tenant with a property through a lease or resident relationship;
+- the tenant dashboard to become a resident portal when the signed-in user has an active lease/resident relationship;
+- the data model to support future maintenance requests, bills, rent ledger, and payments without designing those payment tables in this phase.
 
-## Changes
-- [ ] `src/lib/email.ts` — lazy-create the Resend client inside email delivery functions instead of constructing `new Resend(process.env.RESEND_API_KEY)` at module import time. Importing this module must be build-safe when `RESEND_API_KEY` is missing.
-- [ ] `src/lib/email.ts` — add a small shared delivery helper or guard that classifies email configuration failures clearly. Missing `RESEND_API_KEY` or `ADMIN_EMAIL` should never crash build/import. For Phase 4 fire-and-forget notifications, missing configuration should be treated as skipped optional delivery, logged concisely, and not thrown. Explicit user-requested email sends in future work should fail closed and surface an error.
-- [ ] `src/lib/email.ts` — make application email behavior explicit:
-  - application confirmation to applicant remains fire-and-forget after successful application creation;
-  - admin new-application notification remains fire-and-forget and is skipped if `ADMIN_EMAIL` or `RESEND_API_KEY` is missing;
-  - application status update email remains fire-and-forget after a valid status change;
-  - provider/send failures should be logged with helper name and non-secret context, without blocking the database mutation.
-- [ ] `src/app/api/applications/route.ts` and `src/app/api/applications/[id]/route.ts` — keep application email side effects non-blocking. Route logging should distinguish skipped configuration from provider/send failures so launch debugging is less ambiguous. Application status email failures remain server-log only; do not add admin UI delivery warnings in Phase 4.
-- [ ] `src/app/api/inquiries/route.ts` and `src/lib/email.ts` — implement contact inquiry admin notification only. After a contact inquiry is saved, send a fire-and-forget admin notification when `ADMIN_EMAIL` and `RESEND_API_KEY` are configured; skip and log concisely when email configuration is absent. Keep the public API response tied to database persistence, not email delivery.
-- [ ] `src/lib/email.ts` — do not send user contact inquiry confirmation in Phase 4. Keep or remove the existing inquiry confirmation helper based on implementation cleanliness, but do not call it from the contact form flow.
-- [ ] `src/app/admin/inquiries/inquiries-client.tsx` and `src/app/api/inquiries/[id]/route.ts` — preserve Phase 3 semantics: admin inquiry reply remains a saved internal reply note only. Do not reintroduce "Send Reply" UI copy or outbound reply behavior in this phase.
-- [ ] `.github/workflows/ci.yml` — update CI triggers to run on `push` to `codex/**`, `push` to `main`/`develop`, `pull_request` to `main`/`develop`, and `workflow_dispatch`.
-- [ ] `.github/workflows/ci.yml` — keep CI on Node 22.
-- [ ] `.github/workflows/ci.yml` — run the launch-readiness checks in CI: `npm ci`, `npx prisma validate`, `npx prisma generate`, `npx tsc --noEmit`, `npm run lint`, and `npm run build`.
-- [ ] `.github/workflows/ci.yml` — use dummy non-secret env values for build-only checks, including placeholder Supabase URLs/keys, placeholder `DATABASE_URL`, placeholder `RESEND_API_KEY`, placeholder `ADMIN_EMAIL`, and `NEXT_PUBLIC_APP_URL`. CI must not require real production secrets.
-- [ ] `.env.example` — only update if needed to document optional email behavior or add a missing non-secret variable description. Do not commit real secrets.
+No business code should be changed until this Phase 5 plan is approved.
 
-## Expected Behavior
-- `npm run build` can collect route data without a real `RESEND_API_KEY`; importing `src/lib/email.ts` no longer throws.
-- Missing email configuration does not block application submission, application status updates, or contact inquiry persistence. Those flows should still return based on database success.
-- Optional notification delivery is transparent in logs: skipped configuration and provider failures are distinguishable, concise, and non-secret.
-- Application emails remain a best-effort notification layer, not the source of truth for application state.
-- Contact inquiry submission remains database-first. Phase 4 sends only a best-effort admin notification after save; it does not send user confirmation and does not change the public success response.
-- Admin inquiry reply stays honest: it saves an internal note and does not imply an email was sent.
-- GitHub can run the same minimum validation expected locally, including Prisma validation, TypeScript, ESLint, and production build.
-- CI succeeds without real Resend, Supabase, or database secrets.
+## Proposed Data Model
+- [ ] `Lease` — new Prisma model representing a lease for one property and one or more residents.
+  - Fields: `id`, `propertyId`, `status`, `startDate`, `endDate`, `rentAmount`, `securityDeposit`, `occupants`, `notes`, `createdAt`, `updatedAt`.
+  - Status enum: `DRAFT`, `ACTIVE`, `ENDED`, `CANCELLED`.
+  - Relations: belongs to `Property`; has many `LeaseResident` rows.
+  - Indexes: `propertyId`, `status`, and a practical lookup for active leases by property/status.
+- [ ] `LeaseResident` — join model between `Lease` and `User` so multiple residents can share one lease and one user can have historical leases.
+  - Fields: `id`, `leaseId`, `userId`, `isPrimary`, `moveInDate`, `moveOutDate`, `createdAt`, `updatedAt`.
+  - Relations: belongs to `Lease`; belongs to `User`.
+  - Constraints: unique pair of `leaseId` + `userId`; index `userId` and `leaseId`.
+  - Active resident relationship is derived from an `ACTIVE` lease plus a resident row whose `moveOutDate` is null or in the future.
+- [ ] `User` relation updates — expose lease/resident relationships from the user side for admin and tenant lookups.
+- [ ] `Property` relation updates — expose leases from the property side.
+- [ ] Future placeholders only — document that maintenance requests, bills, rent ledger entries, and payment records should later reference `Lease` and likely `Property`/`User`, but do not create those models in Phase 5.
+
+## Admin Workflows
+- [ ] Add a minimal admin tenants/residents view or extend the existing admin area with a focused page for user/tenant lookup.
+  - Admin can view users with role `TENANT`.
+  - Admin can see whether each tenant has an active lease/resident relationship.
+  - Avoid fake controls; every shown action must persist or be read-only.
+- [ ] Add a minimal admin lease/resident assignment flow.
+  - Admin can select an existing tenant user.
+  - Admin can select an existing property.
+  - Admin can create a lease with required lease basics: status, dates, rent amount, security deposit, occupants, notes.
+  - Admin can attach at least one resident user to the lease.
+  - Admin can mark one resident as primary if multiple residents are supported in the implementation.
+- [ ] Add read/update basics for existing leases only as needed for launch readiness.
+  - Admin can see active/inactive lease status.
+  - Admin can correct lease basics and resident membership.
+  - Keep the UI operational and compact; no large redesign or marketing-style page.
+- [ ] Keep approved applications separate in Phase 5 unless reviewer approves conversion.
+  - Manual lease creation is the default plan.
+  - Approved-application-to-lease conversion is a reviewer question, not assumed implementation.
+
+## Tenant / Resident Workflows
+- [ ] Tenant dashboard remains unchanged for tenants without an active lease/resident relationship.
+  - They should still see the current application-focused dashboard behavior.
+- [ ] Tenant dashboard becomes a resident portal summary when the signed-in user has an active lease/resident relationship.
+  - Show property basics: title/address or city/state, property link if available.
+  - Show lease basics: lease status, start/end dates, rent amount, security deposit, occupants, and primary resident/resident names if appropriate.
+  - Keep the portal summary read-only in Phase 5.
+- [ ] Do not add maintenance request UI yet.
+- [ ] Do not add billing, rent ledger, rent payment, balance due, Stripe, ACH, or card UI yet.
+- [ ] Do not imply actions that are not implemented. Use simple read-only sections or disabled-free layouts rather than fake buttons.
+
+## API / Security
+- [ ] Admin routes must enforce admin authorization server-side before creating or updating leases and resident associations.
+- [ ] Tenant/resident routes must enforce ownership server-side.
+  - A tenant can only read leases where they have a `LeaseResident` row.
+  - A tenant cannot fetch another tenant's lease by guessing IDs.
+  - API protections must not rely on UI hiding.
+- [ ] Add route/API shape only as needed for Phase 5.
+  - Admin create/update/list lease associations.
+  - Tenant read current active lease/resident summary.
+- [ ] Keep Supabase service role keys server-only.
+- [ ] Keep Prisma queries scoped by authenticated user/admin role.
+- [ ] Do not expose private application documents or unrelated tenant data through resident portal routes.
 
 ## Out of Scope
-- Do not implement real admin inquiry reply email in Phase 4. This remains a later separate phase. If it is added later, it must include a Resend helper, explicit send action, delivery failure handling, accurate UI copy/status, and tests/manual verification for failed delivery.
-- Do not change the inquiry DB enum or application status model.
-- Do not make email delivery transactional with database writes.
-- Do not add persisted Settings management, analytics, marketing copy, large UI redesign, or new admin dashboards.
-- Do not reopen Phase 1/Phase 2 security, upload, auth, signed URL, recovery, rate-limit, or storage work unless it directly blocks CI/build.
-- Do not add real secrets to `.env.example`, CI YAML, code, logs, or commits.
-- Do not require a live database or real Resend account for CI.
+- Maintenance request implementation.
+- Maintenance request admin queues or tenant forms.
+- Bill issuing.
+- Rent ledger.
+- Stripe/payment processing.
+- ACH/card storage.
+- Payment methods, invoices, receipts, balances, late fees, or rent autopay.
+- Settings persistence.
+- Large UI redesign.
+- Email changes.
+- CI changes unless schema/build verification requires a small adjustment.
+- Resident portal features beyond read-only lease/property summary and admin lease/resident assignment foundation.
+- Reopening Phase 1-4 security, upload, auth, email, Settings, or inquiry reply work.
 
 ## Testing
 - Run `npx prisma validate`.
 - Run `npx prisma generate`.
 - Run `npx tsc --noEmit`.
 - Run `npm run lint`.
-- Run `npm run build` with no real `RESEND_API_KEY` and confirm build no longer fails at route data collection.
-- Run `npm run build` with dummy CI-style env values and confirm it passes.
-- Manually exercise application submission with email env present and absent:
-  - database record is created in both cases;
-  - missing email config logs a skipped notification;
-  - provider failure logs an email failure without changing the successful API response.
-- Manually exercise application status update with email env present and absent:
-  - valid status change persists in both cases;
-  - email send remains best-effort and does not mask the database update response.
-- Manually submit contact form with email env present and absent:
-  - inquiry is saved in both cases;
-  - admin notification sends when configured;
-  - missing config logs a skip and does not change the public success response;
-  - no user contact inquiry confirmation email is attempted.
-- Confirm admin inquiry "Save Reply Note" still only saves `adminReply`, keeps Phase 3 copy, and does not send email.
-- After pushing Phase 4 implementation, confirm GitHub Actions runs on the branch and reports all required checks.
+- Run `npm run build`.
+- Admin manual test: create or assign a lease/resident relationship linking an existing tenant user to an existing property.
+- Admin manual test: verify resident status is visible and persisted.
+- Tenant manual test: tenant with an active lease sees the resident portal summary with only property/lease basics.
+- Tenant manual test: tenant without an active lease still sees the current application dashboard behavior.
+- Security/manual negative test: tenant cannot access another tenant's lease/resident data by URL or API request.
+- Regression spot-check: existing application dashboard data still renders for non-resident tenants.
+- Regression spot-check: admin application/inquiry/listing flows still compile and are not redesigned.
 
-## Risks / Implementation Notes
-- Phase 4 intentionally keeps all current email side effects best-effort. A saved application, saved status change, or saved inquiry remains successful even when optional email delivery is skipped or fails.
-- Missing `RESEND_API_KEY` and missing `ADMIN_EMAIL` should be handled as skipped optional delivery for fire-and-forget notifications. Skips should be logged concisely and should not throw through the route response path.
-- Provider/send failures should be logged with the helper name and non-secret context such as application number, inquiry id, or recipient role. Do not log API keys, full provider payloads, or sensitive applicant details.
-- Application status email failures remain server-log only in Phase 4. The admin UI should not show delivery warning states until a later phase explicitly designs email delivery tracking.
-- CI must use Node 22 and must trigger for `codex/**` branch pushes so reviewer branches receive checks.
-- Real admin inquiry reply email is a separate future phase, not an implicit Phase 4 behavior change.
+## Risks / Reviewer Questions
+- Should Phase 5 support multiple residents per lease immediately? Recommended default is yes at the data model level via `LeaseResident`, while keeping UI minimal enough to add one or more residents without building a full household manager.
+- Should lease creation be manual-only, or should admins convert approved applications into leases? Recommended default is manual-only in Phase 5; conversion can be a later workflow once the resident model is stable.
+- What is the minimum admin UI for assigning a resident without overbuilding? Recommended default is a compact admin page or section that lists tenants and provides a persisted create/edit lease form for required lease basics.
+- Do we need a `Unit` model, or is `Property` enough for now? Recommended default is `Property` only for Phase 5, unless current property data clearly represents multi-unit buildings that need per-unit leases before launch.
+- Should `LeaseResident` include a resident role such as primary, co-resident, guarantor, or occupant? Recommended default is `isPrimary` only in Phase 5; richer resident roles can wait.
+- Should a user be allowed more than one active lease at a time? Recommended default is allow historical leases but avoid multiple active leases per user through validation unless reviewer identifies a real multi-property scenario.
