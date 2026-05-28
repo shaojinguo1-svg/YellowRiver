@@ -5,7 +5,7 @@ import type { InquiryStatus } from "@/generated/prisma/client";
 
 const VALID_STATUSES: InquiryStatus[] = ["NEW", "READ", "REPLIED", "ARCHIVED"];
 
-// PATCH /api/inquiries/[id] - Update inquiry status and admin reply
+// PATCH /api/inquiries/[id] - Update inquiry status and internal reply note
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -52,7 +52,7 @@ export async function PATCH(
       updateData.adminReply = adminReply;
       updateData.repliedAt = new Date();
 
-      // If providing a reply, also set status to REPLIED if not already set
+      // If saving a reply note, also set status to REPLIED if not already set
       if (!status) {
         updateData.status = "REPLIED";
       }
@@ -82,7 +82,7 @@ export async function PATCH(
     }
 
     return NextResponse.json(
-      { message: "Failed to update inquiry" },
+      { message: "Failed to save inquiry changes" },
       { status: 500 }
     );
   }

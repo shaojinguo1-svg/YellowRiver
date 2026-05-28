@@ -6,9 +6,9 @@ import {
   MessageSquare,
   ChevronDown,
   ChevronUp,
-  Send,
+  Save,
   Loader2,
-  Mail,
+  NotebookText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +46,7 @@ const INQUIRY_STATUS_CONFIG: Record<
 > = {
   NEW: { label: "New", color: "bg-blue-100 text-blue-800" },
   READ: { label: "Read", color: "bg-yellow-100 text-yellow-800" },
-  REPLIED: { label: "Replied", color: "bg-green-100 text-green-800" },
+  REPLIED: { label: "Note Saved", color: "bg-green-100 text-green-800" },
   ARCHIVED: { label: "Archived", color: "bg-gray-100 text-gray-800" },
 };
 
@@ -131,12 +131,12 @@ export function InquiriesClient({
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.message || "Failed to send reply");
+        throw new Error(data.message || "Failed to save reply note");
       }
 
       const updatedInquiry = await response.json();
 
-      // Only update local state and clear reply text AFTER API confirms success
+      // Only update local state and clear reply note draft AFTER API confirms success
       setInquiries((prev) =>
         prev.map((inq) =>
           inq.id === inquiryId
@@ -153,9 +153,9 @@ export function InquiriesClient({
       setReplyText((prev) => ({ ...prev, [inquiryId]: "" }));
       setSuccessId(inquiryId);
     } catch (err) {
-      // Reply text is preserved in state — user can retry without retyping
+      // Reply note text is preserved in state so the admin can retry without retyping.
       setError(
-        err instanceof Error ? err.message : "Failed to send reply"
+        err instanceof Error ? err.message : "Failed to save reply note"
       );
     } finally {
       setSubmittingId(null);
@@ -168,7 +168,7 @@ export function InquiriesClient({
       <div>
         <h2 className="text-lg font-semibold">Contact Inquiries</h2>
         <p className="text-sm text-muted-foreground">
-          View and respond to contact form submissions
+          Review contact form submissions and saved internal notes
         </p>
       </div>
 
@@ -281,9 +281,9 @@ export function InquiriesClient({
                             {inquiry.adminReply && (
                               <div className="rounded-md border bg-white p-4">
                                 <div className="flex items-center gap-2">
-                                  <Mail className="size-4 text-green-600" />
+                                  <NotebookText className="size-4 text-green-600" />
                                   <h4 className="text-sm font-medium">
-                                    Admin Reply
+                                    Internal Reply Note
                                   </h4>
                                   {inquiry.repliedAt && (
                                     <span className="text-xs text-muted-foreground">
@@ -305,12 +305,12 @@ export function InquiriesClient({
                             <div className="space-y-3">
                               <Label htmlFor={`reply-${inquiry.id}`}>
                                 {inquiry.adminReply
-                                  ? "Update Reply"
-                                  : "Send Reply"}
+                                  ? "Update Reply Note"
+                                  : "Save Reply Note"}
                               </Label>
                               <Textarea
                                 id={`reply-${inquiry.id}`}
-                                placeholder="Type your reply..."
+                                placeholder="Type an internal reply note..."
                                 value={replyText[inquiry.id] || ""}
                                 onChange={(e) => {
                                   e.stopPropagation();
@@ -330,7 +330,7 @@ export function InquiriesClient({
                               )}
                               {successId === inquiry.id && (
                                 <div className="rounded-md bg-green-50 p-3 text-sm text-green-800">
-                                  Reply saved successfully.
+                                  Reply note saved.
                                 </div>
                               )}
 
@@ -348,11 +348,11 @@ export function InquiriesClient({
                                 {submittingId === inquiry.id ? (
                                   <Loader2 className="size-4 animate-spin" />
                                 ) : (
-                                  <Send className="size-4" />
+                                  <Save className="size-4" />
                                 )}
                                 {inquiry.adminReply
-                                  ? "Update Reply"
-                                  : "Send Reply"}
+                                  ? "Update Reply Note"
+                                  : "Save Reply Note"}
                               </Button>
                             </div>
                           </div>
