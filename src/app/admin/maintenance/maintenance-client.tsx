@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   ClipboardList,
   RefreshCw,
@@ -69,6 +71,17 @@ type AdminMaintenanceRequest = {
 type MaintenanceClientProps = {
   requests: AdminMaintenanceRequest[];
   fetchError: boolean;
+  filters: {
+    status: MaintenanceRequestStatus | "all";
+    priority: MaintenanceRequestPriority | "all";
+    category: MaintenanceRequestCategory | "all";
+  };
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
 };
 
 type FormState = {
@@ -147,12 +160,39 @@ function formFromRequest(request: AdminMaintenanceRequest): FormState {
   };
 }
 
+function requestMatchesFilters(
+  request: AdminMaintenanceRequest,
+  filters: MaintenanceClientProps["filters"]
+) {
+  return (
+    (filters.status === "all" || request.status === filters.status) &&
+    (filters.priority === "all" || request.priority === filters.priority) &&
+    (filters.category === "all" || request.category === filters.category)
+  );
+}
+
+function maintenanceHref(
+  filters: MaintenanceClientProps["filters"],
+  page = 1
+) {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (filters.status !== "all") params.set("status", filters.status);
+  if (filters.priority !== "all") params.set("priority", filters.priority);
+  if (filters.category !== "all") params.set("category", filters.category);
+
+  const query = params.toString();
+  return query ? `/admin/maintenance?${query}` : "/admin/maintenance";
+}
+
 export function MaintenanceClient({
   requests: initialRequests,
   fetchError,
+  filters,
+  pagination,
 }: MaintenanceClientProps) {
+  const router = useRouter();
   const [requests, setRequests] = useState(initialRequests);
-  const [statusFilter, setStatusFilter] = useState("all");
   const [selectedId, setSelectedId] = useState(initialRequests[0]?.id ?? "");
   const selectedRequest =
     requests.find((request) => request.id === selectedId) ?? requests[0] ?? null;
@@ -163,11 +203,6 @@ export function MaintenanceClient({
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const filteredRequests = useMemo(() => {
-    if (statusFilter === "all") return requests;
-    return requests.filter((request) => request.status === statusFilter);
-  }, [requests, statusFilter]);
-
   function selectRequest(request: AdminMaintenanceRequest) {
     setSelectedId(request.id);
     setForm(formFromRequest(request));
@@ -177,6 +212,13 @@ export function MaintenanceClient({
 
   function updateForm<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => (current ? { ...current, [key]: value } : current));
+  }
+
+  function updateFilter<K extends keyof MaintenanceClientProps["filters"]>(
+    key: K,
+    value: MaintenanceClientProps["filters"][K]
+  ) {
+    router.push(maintenanceHref({ ...filters, [key]: value }, 1));
   }
 
   async function saveRequest() {
@@ -206,13 +248,24 @@ export function MaintenanceClient({
         throw new Error(data.message || "Failed to update maintenance request");
       }
 
-      setRequests((current) =>
-        current.map((request) =>
-          request.id === selectedRequest.id ? data.request : request
-        )
-      );
-      setForm(formFromRequest(data.request));
+      const updatedRequest = data.request as AdminMaintenanceRequest;
+      const nextRequests = requestMatchesFilters(updatedRequest, filters)
+        ? requests.map((request) =>
+            request.id === selectedRequest.id ? updatedRequest : request
+          )
+        : requests.filter((request) => request.id !== selectedRequest.id);
+
+      setRequests(nextRequests);
+      if (requestMatchesFilters(updatedRequest, filters)) {
+        setSelectedId(updatedRequest.id);
+        setForm(formFromRequest(updatedRequest));
+      } else {
+        const nextSelected = nextRequests[0] ?? null;
+        setSelectedId(nextSelected?.id ?? "");
+        setForm(nextSelected ? formFromRequest(nextSelected) : null);
+      }
       setMessage("Maintenance request updated.");
+      router.refresh();
     } catch (saveError) {
       setError(
         saveError instanceof Error
@@ -233,19 +286,64 @@ export function MaintenanceClient({
             Review resident requests and update their internal status.
           </p>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {STATUSES.map((status) => (
-              <SelectItem key={status.value} value={status.value}>
-                {status.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="grid gap-2 sm:grid-cols-3">
+          <Select
+            value={filters.status}
+            onValueChange={(value) =>
+              updateFilter("status", value as MaintenanceRequestStatus | "all")
+            }
+          >
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {STATUSES.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  {status.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.priority}
+            onValueChange={(value) =>
+              updateFilter("priority", value as MaintenanceRequestPriority | "all")
+            }
+          >
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priorities</SelectItem>
+              {PRIORITIES.map((priority) => (
+                <SelectItem key={priority.value} value={priority.value}>
+                  {priority.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.category}
+            onValueChange={(value) =>
+              updateFilter("category", value as MaintenanceRequestCategory | "all")
+            }
+          >
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {CATEGORIES.map((category) => (
+                <SelectItem key={category.value} value={category.value}>
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {fetchError && (
@@ -289,7 +387,7 @@ export function MaintenanceClient({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRequests.length === 0 ? (
+                {requests.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5}>
                       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -301,7 +399,7 @@ export function MaintenanceClient({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredRequests.map((request) => (
+                  requests.map((request) => (
                     <TableRow
                       key={request.id}
                       className={cn(
@@ -339,6 +437,43 @@ export function MaintenanceClient({
                 )}
               </TableBody>
             </Table>
+            <div className="flex flex-col gap-3 border-t px-4 py-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                {pagination.total === 0
+                  ? "No requests"
+                  : `Showing ${(pagination.page - 1) * pagination.pageSize + 1}-${Math.min(
+                      pagination.page * pagination.pageSize,
+                      pagination.total
+                    )} of ${pagination.total}`}
+              </span>
+              <div className="flex items-center gap-2">
+                {pagination.page <= 1 ? (
+                  <Button type="button" variant="outline" size="sm" disabled>
+                    Previous
+                  </Button>
+                ) : (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={maintenanceHref(filters, pagination.page - 1)}>
+                      Previous
+                    </Link>
+                  </Button>
+                )}
+                <span className="min-w-20 text-center text-xs">
+                  Page {pagination.page} of {pagination.totalPages}
+                </span>
+                {pagination.page >= pagination.totalPages ? (
+                  <Button type="button" variant="outline" size="sm" disabled>
+                    Next
+                  </Button>
+                ) : (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={maintenanceHref(filters, pagination.page + 1)}>
+                      Next
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
 

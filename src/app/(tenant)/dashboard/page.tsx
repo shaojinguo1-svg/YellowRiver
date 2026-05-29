@@ -16,7 +16,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getCurrentLeaseForUser } from "@/lib/resident-leases";
 import {
-  listTenantMaintenanceRequests,
+  listTenantMaintenanceRequestsForLease,
   serializeTenantMaintenanceRequest,
 } from "@/lib/maintenance-requests";
 import { MaintenanceRequestsClient } from "./maintenance-requests-client";
@@ -60,7 +60,7 @@ export default async function TenantDashboardPage() {
   if (currentLeaseResident) {
     const { lease } = currentLeaseResident;
     const maintenanceRequests = (
-      await listTenantMaintenanceRequests(user.id)
+      await listTenantMaintenanceRequestsForLease(user.id, lease.id)
     ).map(serializeTenantMaintenanceRequest);
     const primaryResident = lease.residents.find((resident) => resident.isPrimary);
     const residentNames = lease.residents

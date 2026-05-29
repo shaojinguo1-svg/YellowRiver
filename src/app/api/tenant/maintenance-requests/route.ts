@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import {
   createTenantMaintenanceRequest,
   listTenantMaintenanceRequests,
@@ -36,6 +37,16 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
+    }
+
+    const limited = checkRateLimit(request, {
+      keyPrefix: "maintenance-request-submit",
+      limit: 10,
+      windowMs: 10 * 60 * 1000,
+      secondaryKey: user.id,
+    });
+    if (limited.limited) {
+      return rateLimitResponse(limited.retryAfter);
     }
 
     const payload = parseTenantMaintenancePayload(await request.json());

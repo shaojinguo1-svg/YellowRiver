@@ -269,9 +269,16 @@ export async function listTenantMaintenanceRequests(userId: string) {
   const leaseResident = await getCurrentLeaseForUser(userId);
   if (!leaseResident) return [];
 
+  return listTenantMaintenanceRequestsForLease(userId, leaseResident.lease.id);
+}
+
+export async function listTenantMaintenanceRequestsForLease(
+  userId: string,
+  leaseId: string
+) {
   return prisma.maintenanceRequest.findMany({
     where: {
-      leaseId: leaseResident.lease.id,
+      leaseId,
       submittedById: userId,
     },
     select: tenantMaintenanceRequestSelect,

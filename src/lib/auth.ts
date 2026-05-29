@@ -8,24 +8,20 @@ export async function getCurrentUser() {
   } = await supabase.auth.getUser();
   if (!authUser) return null;
 
-  // Try to find existing Prisma user
-  let dbUser = await prisma.user.findUnique({
-    where: { supabaseId: authUser.id },
-  });
+  const metadata = authUser.user_metadata || {};
 
-  // Auto-sync: if Supabase Auth user exists but no Prisma record, create one
-  if (!dbUser) {
-    const metadata = authUser.user_metadata || {};
-    dbUser = await prisma.user.create({
-      data: {
-        supabaseId: authUser.id,
-        email: authUser.email!,
-        firstName: metadata.first_name || null,
-        lastName: metadata.last_name || null,
-        role: "TENANT", // Default role; admins are set explicitly
-      },
-    });
-  }
+  // Auto-sync without a find-then-create race on first login.
+  const dbUser = await prisma.user.upsert({
+    where: { supabaseId: authUser.id },
+    update: {},
+    create: {
+      supabaseId: authUser.id,
+      email: authUser.email!,
+      firstName: metadata.first_name || null,
+      lastName: metadata.last_name || null,
+      role: "TENANT", // Default role; admins are set explicitly
+    },
+  });
 
   return dbUser;
 }
