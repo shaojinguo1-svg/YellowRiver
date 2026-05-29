@@ -11,6 +11,14 @@ interface RouteContext {
   params: Promise<{ id: string; documentId: string }>;
 }
 
+function safeDownloadFileName(fileName: string) {
+  return fileName
+    .replace(/[^\w.\- ()]/g, "_")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 255) || "application-document";
+}
+
 export async function GET(_request: Request, context: RouteContext) {
   try {
     await requireAdmin();
@@ -22,6 +30,7 @@ export async function GET(_request: Request, context: RouteContext) {
         applicationId: id,
       },
       select: {
+        fileName: true,
         storagePath: true,
       },
     });
@@ -33,7 +42,9 @@ export async function GET(_request: Request, context: RouteContext) {
     const supabase = createServiceRoleClient();
     const { data, error } = await supabase.storage
       .from(APPLICATION_DOCUMENTS_BUCKET)
-      .createSignedUrl(document.storagePath, APPLICATION_DOCUMENT_READ_TTL_SECONDS);
+      .createSignedUrl(document.storagePath, APPLICATION_DOCUMENT_READ_TTL_SECONDS, {
+        download: safeDownloadFileName(document.fileName),
+      });
 
     if (error || !data?.signedUrl) {
       return NextResponse.json(

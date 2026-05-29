@@ -12,6 +12,7 @@ export const APPLICATION_DOCUMENTS_BUCKET = "application-documents";
 export const MAX_APPLICATION_DOCUMENT_SIZE = 10 * 1024 * 1024;
 export const APPLICATION_DOCUMENT_UPLOAD_TTL_MS = 30 * 60 * 1000;
 export const APPLICATION_DOCUMENT_READ_TTL_SECONDS = 120;
+export const MAX_PENDING_APPLICATION_UPLOAD_TOKENS = 10;
 
 export const APPLICATION_DOCUMENT_MIME_TYPES = [
   "application/pdf",
@@ -25,12 +26,27 @@ const MIME_TO_EXTENSION: Record<string, string> = {
   "image/png": "png",
 };
 
+const DOCUMENT_SIGNATURES: Record<string, number[]> = {
+  "application/pdf": [0x25, 0x50, 0x44, 0x46, 0x2d],
+  "image/jpeg": [0xff, 0xd8, 0xff],
+  "image/png": [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+};
+
+const CLEANUP_BATCH_SIZE = 25;
+
 type DescriptorPayload = Omit<ApplicationDocumentDescriptor, "signature">;
 type StorageObjectRecord = Record<string, unknown>;
 
 export class UploadDescriptorError extends Error {
   status = 400;
 }
+
+type CleanupStats = {
+  attempted: number;
+  removedObjects: number;
+  removedTokens: number;
+  failed: number;
+};
 
 export type ValidatedApplicationDocument = {
   nonce: string;
@@ -107,6 +123,31 @@ export function fileTypeFromName(fileName: string) {
   return fileName.split(".").pop()?.toLowerCase() || "unknown";
 }
 
+function logDocumentUploadWarning(
+  helper: string,
+  message: string,
+  context: Record<string, unknown> = {}
+) {
+  console.warn(`[${helper}] ${message}`, context);
+}
+
+function tokenLogContext(token: { id: string; nonce: string; category: string; storagePath: string }) {
+  return {
+    tokenId: token.id,
+    noncePrefix: token.nonce.slice(0, 8),
+    category: token.category,
+    storagePrefix: token.storagePath.split("/").slice(0, 2).join("/"),
+  };
+}
+
+function isAllowedDocumentMimeType(
+  mimeType: string
+): mimeType is (typeof APPLICATION_DOCUMENT_MIME_TYPES)[number] {
+  return APPLICATION_DOCUMENT_MIME_TYPES.includes(
+    mimeType as (typeof APPLICATION_DOCUMENT_MIME_TYPES)[number]
+  );
+}
+
 export async function createApplicationDocumentUploadToken(params: {
   uploadSessionId: string;
   category: ApplicationDocumentCategory;
@@ -164,6 +205,100 @@ export async function createApplicationDocumentUploadToken(params: {
     path: data.path,
     descriptor,
   };
+}
+
+export async function cleanupExpiredApplicationDocumentUploads(
+  limit = CLEANUP_BATCH_SIZE
+): Promise<CleanupStats> {
+  const cleanupLimit = Math.min(Math.max(limit, 1), CLEANUP_BATCH_SIZE);
+  const now = new Date();
+  const expiredTokens = await prisma.applicationUploadToken.findMany({
+    where: {
+      consumedAt: null,
+      expiresAt: { lt: now },
+    },
+    select: {
+      id: true,
+      nonce: true,
+      category: true,
+      storagePath: true,
+    },
+    orderBy: { expiresAt: "asc" },
+    take: cleanupLimit,
+  });
+
+  const stats: CleanupStats = {
+    attempted: expiredTokens.length,
+    removedObjects: 0,
+    removedTokens: 0,
+    failed: 0,
+  };
+
+  if (expiredTokens.length === 0) {
+    return stats;
+  }
+
+  const supabase = createServiceRoleClient();
+
+  for (const token of expiredTokens) {
+    const submittedDocument = await prisma.applicationDocument.findFirst({
+      where: { storagePath: token.storagePath },
+      select: { id: true },
+    });
+
+    if (submittedDocument) {
+      stats.failed += 1;
+      logDocumentUploadWarning(
+        "cleanupExpiredApplicationDocumentUploads",
+        "Skipping expired token with submitted document",
+        tokenLogContext(token)
+      );
+      continue;
+    }
+
+    const { error } = await supabase.storage
+      .from(APPLICATION_DOCUMENTS_BUCKET)
+      .remove([token.storagePath]);
+
+    if (error) {
+      stats.failed += 1;
+      logDocumentUploadWarning(
+        "cleanupExpiredApplicationDocumentUploads",
+        "Failed to remove expired upload object",
+        { ...tokenLogContext(token), error: error.message }
+      );
+      continue;
+    }
+
+    stats.removedObjects += 1;
+
+    const deleted = await prisma.applicationUploadToken.deleteMany({
+      where: {
+        id: token.id,
+        consumedAt: null,
+      },
+    });
+
+    if (deleted.count === 1) {
+      stats.removedTokens += 1;
+    }
+  }
+
+  return stats;
+}
+
+export async function assertApplicationUploadSessionQuota(uploadSessionId: string) {
+  const pendingCount = await prisma.applicationUploadToken.count({
+    where: {
+      uploadSessionId,
+      consumedAt: null,
+      expiresAt: { gt: new Date() },
+    },
+  });
+
+  if (pendingCount >= MAX_PENDING_APPLICATION_UPLOAD_TOKENS) {
+    throw new UploadDescriptorError("Too many pending document uploads for this application");
+  }
 }
 
 function assertDescriptorShape(
@@ -239,6 +374,43 @@ function confirmedStorageObjectMimeType(object: StorageObjectRecord) {
   return null;
 }
 
+function bytesMatchSignature(bytes: Uint8Array, signature: number[]) {
+  if (bytes.length < signature.length) return false;
+  return signature.every((byte, index) => bytes[index] === byte);
+}
+
+async function assertStorageObjectContentMatches(
+  descriptor: ApplicationDocumentDescriptor
+) {
+  const expectedSignature = DOCUMENT_SIGNATURES[descriptor.mimeType];
+  if (!expectedSignature) {
+    throw new UploadDescriptorError("Unsupported document type");
+  }
+
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase.storage
+    .from(APPLICATION_DOCUMENTS_BUCKET)
+    .download(descriptor.storagePath);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  if (!data) {
+    throw new UploadDescriptorError("Uploaded document was not found");
+  }
+
+  const bytes = new Uint8Array(await data.arrayBuffer());
+  if (bytes.length > MAX_APPLICATION_DOCUMENT_SIZE) {
+    throw new UploadDescriptorError("Uploaded document exceeds the size limit");
+  }
+  if (bytes.length !== descriptor.fileSize) {
+    throw new UploadDescriptorError("Uploaded document size does not match");
+  }
+  if (!bytesMatchSignature(bytes, expectedSignature)) {
+    throw new UploadDescriptorError("Uploaded document content does not match the declared type");
+  }
+}
+
 async function assertStorageObjectMatches(descriptor: ApplicationDocumentDescriptor) {
   const supabase = createServiceRoleClient();
   const { data: object, error } = await supabase.storage
@@ -260,14 +432,22 @@ async function assertStorageObjectMatches(descriptor: ApplicationDocumentDescrip
   if (objectSize !== descriptor.fileSize) {
     throw new UploadDescriptorError("Uploaded document size does not match");
   }
+  if (objectSize > MAX_APPLICATION_DOCUMENT_SIZE) {
+    throw new UploadDescriptorError("Uploaded document exceeds the size limit");
+  }
 
   const objectMimeType = confirmedStorageObjectMimeType(objectRecord);
   if (!objectMimeType) {
     throw new UploadDescriptorError("Uploaded document type could not be verified");
   }
+  if (!isAllowedDocumentMimeType(objectMimeType)) {
+    throw new UploadDescriptorError("Uploaded document type is not allowed");
+  }
   if (objectMimeType !== descriptor.mimeType) {
     throw new UploadDescriptorError("Uploaded document type does not match");
   }
+
+  await assertStorageObjectContentMatches(descriptor);
 }
 
 export async function validateApplicationDocumentDescriptors(
@@ -307,6 +487,12 @@ export async function validateApplicationDocumentDescriptors(
       token.signature !== descriptor.signature
     ) {
       throw new UploadDescriptorError("Upload descriptor does not match server state");
+    }
+    if (token.fileSize > MAX_APPLICATION_DOCUMENT_SIZE) {
+      throw new UploadDescriptorError("Uploaded document exceeds the size limit");
+    }
+    if (!isAllowedDocumentMimeType(token.mimeType)) {
+      throw new UploadDescriptorError("Uploaded document type is not allowed");
     }
 
     await assertStorageObjectMatches(descriptor);

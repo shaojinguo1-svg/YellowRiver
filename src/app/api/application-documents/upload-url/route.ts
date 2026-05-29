@@ -1,9 +1,11 @@
-import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
   APPLICATION_DOCUMENT_MIME_TYPES,
   MAX_APPLICATION_DOCUMENT_SIZE,
+  UploadDescriptorError,
+  assertApplicationUploadSessionQuota,
+  cleanupExpiredApplicationDocumentUploads,
   createApplicationDocumentUploadToken,
   extensionForMimeType,
 } from "@/lib/application-document-upload";
@@ -11,7 +13,7 @@ import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { applicationDocumentCategorySchema } from "@/validations/application";
 
 const uploadRequestSchema = z.object({
-  uploadSessionId: z.string().uuid().optional(),
+  uploadSessionId: z.string().uuid("Upload session is required"),
   category: applicationDocumentCategorySchema,
   fileName: z.string().min(1).max(255),
   fileSize: z.number().int().positive().max(MAX_APPLICATION_DOCUMENT_SIZE),
@@ -38,6 +40,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    await cleanupExpiredApplicationDocumentUploads().catch((error) => {
+      console.warn("[application-document-upload-url] cleanup skipped", {
+        error: error instanceof Error ? error.message : "unknown",
+      });
+    });
+
     const body = await request.json();
     const parsed = uploadRequestSchema.safeParse(body);
 
@@ -55,6 +63,8 @@ export async function POST(request: NextRequest) {
     }
 
     const data = parsed.data;
+    await assertApplicationUploadSessionQuota(data.uploadSessionId);
+
     if (!fileNameMatchesMime(data.fileName, data.mimeType)) {
       return NextResponse.json(
         { message: "File extension does not match the document type" },
@@ -64,7 +74,6 @@ export async function POST(request: NextRequest) {
 
     const result = await createApplicationDocumentUploadToken({
       ...data,
-      uploadSessionId: data.uploadSessionId || randomUUID(),
     });
 
     return NextResponse.json(result, {
@@ -74,6 +83,14 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("POST /api/application-documents/upload-url error:", error);
+
+    if (error instanceof UploadDescriptorError) {
+      return NextResponse.json(
+        { message: error.message },
+        { status: error.status }
+      );
+    }
+
     return NextResponse.json(
       { message: "Failed to create document upload URL" },
       { status: 500 }
