@@ -35,8 +35,8 @@ type Params = Promise<{ slug: string }>;
  * share a single DB query per request — no double-fetch.
  */
 const getProperty = cache(async (slug: string) => {
-  return prisma.property.findUnique({
-    where: { slug },
+  return prisma.property.findFirst({
+    where: { slug, status: "ACTIVE" },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
       amenities: { include: { amenity: true } },
@@ -53,7 +53,10 @@ export async function generateMetadata({
   const property = await getProperty(slug);
 
   if (!property) {
-    return { title: "Property Not Found | YellowRiver" };
+    return {
+      title: "Property Not Found | YellowRiver",
+      robots: { index: false, follow: false },
+    };
   }
 
   return {

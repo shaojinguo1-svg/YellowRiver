@@ -175,6 +175,7 @@ model Property {
   applications RentalApplication[]
   leases       Lease[]
   maintenanceRequests MaintenanceRequest[]
+  contactInquiries ContactInquiry[]
 
   @@index([city, state])
   @@index([status])
@@ -432,9 +433,11 @@ model ContactInquiry {
   createdAt  DateTime      @default(now()) @map("created_at")
   updatedAt  DateTime      @updatedAt @map("updated_at")
 
-  user User? @relation(fields: [userId], references: [id])
+  user     User?     @relation(fields: [userId], references: [id])
+  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@index([status])
+  @@index([propertyId])
   @@map("contact_inquiries")
 }
 

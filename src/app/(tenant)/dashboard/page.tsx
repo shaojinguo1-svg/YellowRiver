@@ -192,13 +192,10 @@ export default async function TenantDashboardPage() {
     );
   }
 
-  // Find applications by email (covers both linked and unlinked applications)
+  // Only show applications explicitly linked to this tenant account.
   const applications = await prisma.rentalApplication.findMany({
     where: {
-      OR: [
-        { applicantId: user.id },
-        { email: user.email },
-      ],
+      applicantId: user.id,
     },
     include: {
       property: {

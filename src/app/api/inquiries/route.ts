@@ -74,7 +74,14 @@ export async function POST(request: NextRequest) {
       if (!uuidRegex.test(body.propertyId)) {
         return NextResponse.json({ message: "Invalid property ID format" }, { status: 400 });
       }
-      propertyId = body.propertyId;
+      const property = await prisma.property.findFirst({
+        where: { id: body.propertyId, status: "ACTIVE" },
+        select: { id: true },
+      });
+      if (!property) {
+        return NextResponse.json({ message: "Invalid property" }, { status: 400 });
+      }
+      propertyId = property.id;
     }
 
     const inquiry = await prisma.contactInquiry.create({

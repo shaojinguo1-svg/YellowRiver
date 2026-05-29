@@ -11,6 +11,7 @@ interface RouteContext {
 
 export async function GET(request: NextRequest, context: RouteContext) {
   return apiHandler("GET /api/properties/[id]", async () => {
+    await requireAdmin();
     const { id } = await context.params;
 
     const property = await prisma.property.findUnique({

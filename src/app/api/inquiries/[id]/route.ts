@@ -52,8 +52,9 @@ export async function PATCH(
       updateData.adminReply = adminReply;
       updateData.repliedAt = new Date();
 
-      // If saving a reply note, also set status to REPLIED if not already set
-      if (!status) {
+      // If saving a reply note, mark new/read inquiries as note-saved.
+      // Archived inquiries stay archived unless status is explicitly changed.
+      if (!status && (existing.status === "NEW" || existing.status === "READ")) {
         updateData.status = "REPLIED";
       }
     }
