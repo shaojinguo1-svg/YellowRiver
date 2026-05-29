@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { adminLeaseInclude, serializeLease } from "@/lib/resident-leases";
+import { getAdminLeaseInclude, serializeLease } from "@/lib/resident-leases";
 import { ResidentsClient } from "./residents-client";
 
 export default async function AdminResidentsPage() {
@@ -47,7 +47,7 @@ export default async function AdminResidentsPage() {
         orderBy: [{ title: "asc" }],
       }),
       prisma.lease.findMany({
-        include: adminLeaseInclude,
+        include: getAdminLeaseInclude(),
         orderBy: [{ status: "asc" }, { createdAt: "desc" }],
       }),
     ]);

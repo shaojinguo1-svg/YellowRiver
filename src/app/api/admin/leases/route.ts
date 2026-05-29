@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
-  adminLeaseInclude,
+  getAdminLeaseInclude,
   createLease,
   LeaseValidationError,
   parseLeasePayload,
@@ -14,7 +14,7 @@ export async function GET() {
     await requireAdmin();
 
     const leases = await prisma.lease.findMany({
-      include: adminLeaseInclude,
+      include: getAdminLeaseInclude(),
       orderBy: [{ status: "asc" }, { createdAt: "desc" }],
     });
 

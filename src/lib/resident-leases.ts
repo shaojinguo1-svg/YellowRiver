@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import type { LeaseStatus, Prisma } from "@/generated/prisma/client";
+import { Prisma, type LeaseStatus } from "@/generated/prisma/client";
 
 const LEASE_STATUSES: LeaseStatus[] = ["DRAFT", "ACTIVE", "ENDED", "CANCELLED"];
+const ACTIVE_LEASE_PROPERTY_INDEX = "leases_one_active_per_property_key";
+const LEASE_TRANSACTION_MAX_ATTEMPTS = 3;
 
 export class LeaseValidationError extends Error {
   status: number;
@@ -11,6 +13,67 @@ export class LeaseValidationError extends Error {
     this.name = "LeaseValidationError";
     this.status = status;
   }
+}
+
+function isPrismaKnownRequestError(
+  error: unknown
+): error is Prisma.PrismaClientKnownRequestError {
+  return error instanceof Prisma.PrismaClientKnownRequestError;
+}
+
+function uniqueTargetIncludes(error: Prisma.PrismaClientKnownRequestError, value: string) {
+  const target = error.meta?.target;
+  if (Array.isArray(target)) {
+    return target.some((item) => String(item) === value);
+  }
+  return typeof target === "string" && target.includes(value);
+}
+
+function isActiveLeasePropertyUniqueConflict(error: unknown) {
+  return (
+    isPrismaKnownRequestError(error) &&
+    error.code === "P2002" &&
+    (uniqueTargetIncludes(error, ACTIVE_LEASE_PROPERTY_INDEX) ||
+      uniqueTargetIncludes(error, "property_id") ||
+      uniqueTargetIncludes(error, "propertyId"))
+  );
+}
+
+function isRetryableTransactionConflict(error: unknown) {
+  return isPrismaKnownRequestError(error) && error.code === "P2034";
+}
+
+async function runSerializableLeaseTransaction<T>(
+  operation: (tx: Prisma.TransactionClient) => Promise<T>
+) {
+  for (let attempt = 1; attempt <= LEASE_TRANSACTION_MAX_ATTEMPTS; attempt++) {
+    try {
+      return await prisma.$transaction(operation, {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      });
+    } catch (error) {
+      if (isActiveLeasePropertyUniqueConflict(error)) {
+        if (attempt < LEASE_TRANSACTION_MAX_ATTEMPTS) {
+          continue;
+        }
+        throw new LeaseValidationError("This property already has an active lease");
+      }
+
+      if (isRetryableTransactionConflict(error)) {
+        if (attempt < LEASE_TRANSACTION_MAX_ATTEMPTS) {
+          continue;
+        }
+        throw new LeaseValidationError(
+          "Lease save conflicted with another update. Please try again.",
+          409
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  throw new LeaseValidationError("Lease save conflicted with another update. Please try again.", 409);
 }
 
 type LeasePayload = {
@@ -213,7 +276,7 @@ export async function validateActiveLeaseConflicts(
 }
 
 export async function createLease(payload: LeasePayload) {
-  return prisma.$transaction(async (tx) => {
+  return runSerializableLeaseTransaction(async (tx) => {
     await ensurePropertyExists(tx, payload.propertyId);
     await ensureResidentsAreTenants(tx, payload.residentIds);
     await validateActiveLeaseConflicts(tx, payload);
@@ -236,13 +299,13 @@ export async function createLease(payload: LeasePayload) {
           })),
         },
       },
-      include: adminLeaseInclude,
+      include: getAdminLeaseInclude(),
     });
   });
 }
 
 export async function updateLease(leaseId: string, payload: LeasePayload) {
-  return prisma.$transaction(async (tx) => {
+  return runSerializableLeaseTransaction(async (tx) => {
     const existing = await tx.lease.findUnique({
       where: { id: leaseId },
       select: { id: true },
@@ -270,94 +333,175 @@ export async function updateLease(leaseId: string, payload: LeasePayload) {
       },
     });
 
-    await tx.leaseResident.deleteMany({ where: { leaseId } });
+    await syncLeaseResidents(tx, leaseId, payload);
+
+    return tx.lease.findUniqueOrThrow({
+      where: { id: leaseId },
+      include: getAdminLeaseInclude(),
+    });
+  });
+}
+
+function activeLeaseResidentWhere(now = new Date()): Prisma.LeaseResidentWhereInput {
+  return {
+    OR: [{ moveOutDate: null }, { moveOutDate: { gt: now } }],
+  };
+}
+
+function isPastMoveOut(moveOutDate: Date | null, now: Date) {
+  return !!moveOutDate && moveOutDate <= now;
+}
+
+async function syncLeaseResidents(
+  tx: Prisma.TransactionClient,
+  leaseId: string,
+  payload: LeasePayload
+) {
+  const now = new Date();
+  const nextResidentIds = new Set(payload.residentIds);
+  const existingResidents = await tx.leaseResident.findMany({
+    where: { leaseId },
+    select: {
+      id: true,
+      userId: true,
+      isPrimary: true,
+      moveOutDate: true,
+    },
+  });
+
+  const existingResidentIds = new Set(existingResidents.map((resident) => resident.userId));
+
+  for (const resident of existingResidents) {
+    const shouldRemain = nextResidentIds.has(resident.userId);
+
+    if (shouldRemain) {
+      const shouldBePrimary = resident.userId === payload.primaryResidentId;
+      const data: Prisma.LeaseResidentUpdateInput = {};
+
+      if (resident.isPrimary !== shouldBePrimary) {
+        data.isPrimary = shouldBePrimary;
+      }
+      if (isPastMoveOut(resident.moveOutDate, now)) {
+        data.moveOutDate = null;
+      }
+      if (Object.keys(data).length > 0) {
+        await tx.leaseResident.update({
+          where: { id: resident.id },
+          data,
+        });
+      }
+      continue;
+    }
+
+    const data: Prisma.LeaseResidentUpdateInput = {};
+    if (resident.isPrimary) {
+      data.isPrimary = false;
+    }
+    if (!resident.moveOutDate || resident.moveOutDate > now) {
+      data.moveOutDate = now;
+    }
+    if (Object.keys(data).length > 0) {
+      await tx.leaseResident.update({
+        where: { id: resident.id },
+        data,
+      });
+    }
+  }
+
+  const addedResidentIds = payload.residentIds.filter(
+    (residentId) => !existingResidentIds.has(residentId)
+  );
+
+  if (addedResidentIds.length > 0) {
     await tx.leaseResident.createMany({
-      data: payload.residentIds.map((userId) => ({
+      data: addedResidentIds.map((userId) => ({
         leaseId,
         userId,
         isPrimary: userId === payload.primaryResidentId,
         moveInDate: payload.startDate,
       })),
     });
-
-    return tx.lease.findUniqueOrThrow({
-      where: { id: leaseId },
-      include: adminLeaseInclude,
-    });
-  });
+  }
 }
 
-export const adminLeaseInclude = {
-  property: {
-    select: {
-      id: true,
-      title: true,
-      slug: true,
-      addressLine1: true,
-      addressLine2: true,
-      city: true,
-      state: true,
-      zipCode: true,
-      price: true,
-      securityDeposit: true,
-    },
-  },
-  residents: {
-    include: {
-      user: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
+export function getAdminLeaseInclude(now = new Date()) {
+  return {
+    property: {
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        addressLine1: true,
+        addressLine2: true,
+        city: true,
+        state: true,
+        zipCode: true,
+        price: true,
+        securityDeposit: true,
       },
     },
-    orderBy: [{ isPrimary: "desc" as const }, { createdAt: "asc" as const }],
-  },
-};
-
-export const currentLeaseInclude = {
-  lease: {
-    include: {
-      property: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-          addressLine1: true,
-          addressLine2: true,
-          city: true,
-          state: true,
-          zipCode: true,
-          price: true,
-          securityDeposit: true,
-        },
-      },
-      residents: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
+    residents: {
+      where: activeLeaseResidentWhere(now),
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
           },
         },
-        orderBy: [{ isPrimary: "desc" as const }, { createdAt: "asc" as const }],
+      },
+      orderBy: [{ isPrimary: "desc" as const }, { createdAt: "asc" as const }],
+    },
+  } satisfies Prisma.LeaseInclude;
+}
+
+export function getCurrentLeaseInclude(now = new Date()) {
+  return {
+    lease: {
+      include: {
+        property: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            addressLine1: true,
+            addressLine2: true,
+            city: true,
+            state: true,
+            zipCode: true,
+            price: true,
+            securityDeposit: true,
+          },
+        },
+        residents: {
+          where: activeLeaseResidentWhere(now),
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+          orderBy: [{ isPrimary: "desc" as const }, { createdAt: "asc" as const }],
+        },
       },
     },
-  },
-};
+  } satisfies Prisma.LeaseResidentInclude;
+}
 
 export async function getCurrentLeaseForUser(userId: string) {
+  const now = new Date();
   return prisma.leaseResident.findFirst({
     where: {
       userId,
       lease: { status: "ACTIVE" },
-      OR: [{ moveOutDate: null }, { moveOutDate: { gt: new Date() } }],
+      ...activeLeaseResidentWhere(now),
     },
-    include: currentLeaseInclude,
+    include: getCurrentLeaseInclude(now),
     orderBy: { createdAt: "desc" },
   });
 }

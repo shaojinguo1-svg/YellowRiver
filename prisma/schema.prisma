@@ -362,6 +362,7 @@ model Lease {
   @@index([propertyId])
   @@index([status])
   @@index([propertyId, status])
+  // Raw migration enforces one ACTIVE lease per property with a partial unique index.
   @@map("leases")
 }
 
