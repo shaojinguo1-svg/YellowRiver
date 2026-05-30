@@ -1,45 +1,44 @@
 import "server-only";
 
-import { createHmac, randomUUID, timingSafeEqual } from "crypto";
+import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
+import {
+  APPLICATION_DOCUMENT_MIME_TYPES,
+  APPLICATION_DOCUMENT_UPLOAD_TTL_MS,
+  APPLICATION_DOCUMENTS_BUCKET,
+  MAX_APPLICATION_DOCUMENT_SIZE,
+  MAX_PENDING_APPLICATION_UPLOAD_TOKENS,
+  UploadDescriptorError,
+  assertApplicationDocumentDescriptorShape,
+  documentBytesMatchMimeType,
+  extensionForMimeType,
+  fileTypeFromName,
+  isAllowedDocumentMimeType,
+  signApplicationDocumentDescriptor,
+} from "@/lib/application-document-validation";
 import type {
   ApplicationDocumentCategory,
   ApplicationDocumentDescriptor,
 } from "@/validations/application";
 
-export const APPLICATION_DOCUMENTS_BUCKET = "application-documents";
-export const MAX_APPLICATION_DOCUMENT_SIZE = 10 * 1024 * 1024;
-export const APPLICATION_DOCUMENT_UPLOAD_TTL_MS = 30 * 60 * 1000;
-export const APPLICATION_DOCUMENT_READ_TTL_SECONDS = 120;
-export const MAX_PENDING_APPLICATION_UPLOAD_TOKENS = 10;
-
-export const APPLICATION_DOCUMENT_MIME_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-] as const;
-
-const MIME_TO_EXTENSION: Record<string, string> = {
-  "application/pdf": "pdf",
-  "image/jpeg": "jpg",
-  "image/png": "png",
-};
-
-const DOCUMENT_SIGNATURES: Record<string, number[]> = {
-  "application/pdf": [0x25, 0x50, 0x44, 0x46, 0x2d],
-  "image/jpeg": [0xff, 0xd8, 0xff],
-  "image/png": [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
-};
+export {
+  APPLICATION_DOCUMENT_MIME_TYPES,
+  APPLICATION_DOCUMENT_READ_TTL_SECONDS,
+  APPLICATION_DOCUMENT_UPLOAD_TTL_MS,
+  APPLICATION_DOCUMENTS_BUCKET,
+  MAX_APPLICATION_DOCUMENT_SIZE,
+  MAX_PENDING_APPLICATION_UPLOAD_TOKENS,
+  UploadDescriptorError,
+  extensionForMimeType,
+  fileTypeFromName,
+  verifyDescriptorSignature,
+} from "@/lib/application-document-validation";
 
 const CLEANUP_BATCH_SIZE = 25;
 
 type DescriptorPayload = Omit<ApplicationDocumentDescriptor, "signature">;
 type StorageObjectRecord = Record<string, unknown>;
-
-export class UploadDescriptorError extends Error {
-  status = 400;
-}
 
 type CleanupStats = {
   attempted: number;
@@ -58,69 +57,12 @@ export type ValidatedApplicationDocument = {
   storagePath: string;
 };
 
-function getSigningSecret() {
-  const secret = process.env.APPLICATION_UPLOAD_SIGNING_SECRET;
-  if (!secret || secret.length < 32) {
-    throw new Error("APPLICATION_UPLOAD_SIGNING_SECRET is not configured");
-  }
-  return secret;
-}
-
-function canonicalPayload(payload: DescriptorPayload) {
-  return JSON.stringify({
-    version: payload.version,
-    uploadSessionId: payload.uploadSessionId,
-    nonce: payload.nonce,
-    storagePath: payload.storagePath,
-    category: payload.category,
-    fileName: payload.fileName,
-    fileSize: payload.fileSize,
-    mimeType: payload.mimeType,
-    expiresAt: payload.expiresAt,
-  });
-}
-
-function signPayload(payload: DescriptorPayload) {
-  return createHmac("sha256", getSigningSecret())
-    .update(canonicalPayload(payload))
-    .digest("base64url");
-}
-
-function signaturesMatch(expected: string, actual: string) {
-  const expectedBuffer = Buffer.from(expected);
-  const actualBuffer = Buffer.from(actual);
-  return (
-    expectedBuffer.length === actualBuffer.length &&
-    timingSafeEqual(expectedBuffer, actualBuffer)
-  );
-}
-
-export function verifyDescriptorSignature(descriptor: ApplicationDocumentDescriptor) {
-  const { signature, ...payload } = descriptor;
-  const expected = signPayload(payload);
-  if (!signaturesMatch(expected, signature)) {
-    throw new UploadDescriptorError("Invalid upload descriptor");
-  }
-}
-
 function safeFileName(fileName: string) {
   return fileName
     .replace(/[^\w.\- ()]/g, "_")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 255);
-}
-
-export function extensionForMimeType(mimeType: string) {
-  const extension = MIME_TO_EXTENSION[mimeType];
-  if (!extension) {
-    throw new UploadDescriptorError("Unsupported document type");
-  }
-  return extension;
-}
-
-export function fileTypeFromName(fileName: string) {
-  return fileName.split(".").pop()?.toLowerCase() || "unknown";
 }
 
 function logDocumentUploadWarning(
@@ -138,14 +80,6 @@ function tokenLogContext(token: { id: string; nonce: string; category: string; s
     category: token.category,
     storagePrefix: token.storagePath.split("/").slice(0, 2).join("/"),
   };
-}
-
-function isAllowedDocumentMimeType(
-  mimeType: string
-): mimeType is (typeof APPLICATION_DOCUMENT_MIME_TYPES)[number] {
-  return APPLICATION_DOCUMENT_MIME_TYPES.includes(
-    mimeType as (typeof APPLICATION_DOCUMENT_MIME_TYPES)[number]
-  );
 }
 
 export async function createApplicationDocumentUploadToken(params: {
@@ -172,7 +106,7 @@ export async function createApplicationDocumentUploadToken(params: {
     mimeType: params.mimeType,
     expiresAt: expiresAt.toISOString(),
   };
-  const signature = signPayload(payload);
+  const signature = signApplicationDocumentDescriptor(payload);
   const descriptor: ApplicationDocumentDescriptor = { ...payload, signature };
 
   const supabase = createServiceRoleClient();
@@ -301,22 +235,6 @@ export async function assertApplicationUploadSessionQuota(uploadSessionId: strin
   }
 }
 
-function assertDescriptorShape(
-  uploadSessionId: string,
-  descriptor: ApplicationDocumentDescriptor
-) {
-  if (descriptor.uploadSessionId !== uploadSessionId) {
-    throw new UploadDescriptorError("Document upload session does not match this application");
-  }
-  if (!descriptor.storagePath.startsWith(`${uploadSessionId}/`)) {
-    throw new UploadDescriptorError("Document path does not match this application");
-  }
-  if (Date.parse(descriptor.expiresAt) <= Date.now()) {
-    throw new UploadDescriptorError("Document upload descriptor has expired");
-  }
-  verifyDescriptorSignature(descriptor);
-}
-
 function asStorageObjectRecord(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return null;
@@ -374,16 +292,10 @@ function confirmedStorageObjectMimeType(object: StorageObjectRecord) {
   return null;
 }
 
-function bytesMatchSignature(bytes: Uint8Array, signature: number[]) {
-  if (bytes.length < signature.length) return false;
-  return signature.every((byte, index) => bytes[index] === byte);
-}
-
 async function assertStorageObjectContentMatches(
   descriptor: ApplicationDocumentDescriptor
 ) {
-  const expectedSignature = DOCUMENT_SIGNATURES[descriptor.mimeType];
-  if (!expectedSignature) {
+  if (!isAllowedDocumentMimeType(descriptor.mimeType)) {
     throw new UploadDescriptorError("Unsupported document type");
   }
 
@@ -406,7 +318,7 @@ async function assertStorageObjectContentMatches(
   if (bytes.length !== descriptor.fileSize) {
     throw new UploadDescriptorError("Uploaded document size does not match");
   }
-  if (!bytesMatchSignature(bytes, expectedSignature)) {
+  if (!documentBytesMatchMimeType(descriptor.mimeType, bytes)) {
     throw new UploadDescriptorError("Uploaded document content does not match the declared type");
   }
 }
@@ -463,7 +375,7 @@ export async function validateApplicationDocumentDescriptors(
     }
     seenNonces.add(descriptor.nonce);
 
-    assertDescriptorShape(uploadSessionId, descriptor);
+    assertApplicationDocumentDescriptorShape(uploadSessionId, descriptor);
 
     const token = await prisma.applicationUploadToken.findUnique({
       where: { nonce: descriptor.nonce },

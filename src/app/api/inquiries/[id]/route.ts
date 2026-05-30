@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import type { InquiryStatus } from "@/generated/prisma/client";
-
-const VALID_STATUSES: InquiryStatus[] = ["NEW", "READ", "REPLIED", "ARCHIVED"];
+import { buildInquiryUpdateData } from "@/lib/inquiry-status";
 
 // PATCH /api/inquiries/[id] - Update inquiry status and internal reply note
 export async function PATCH(
@@ -35,40 +33,20 @@ export async function PATCH(
       );
     }
 
-    // Build update data
-    const updateData: Record<string, unknown> = {};
-
-    if (status) {
-      if (!VALID_STATUSES.includes(status as InquiryStatus)) {
-        return NextResponse.json(
-          { message: `Invalid status: ${status}. Valid statuses: ${VALID_STATUSES.join(", ")}` },
-          { status: 400 }
-        );
-      }
-      updateData.status = status;
-    }
-
-    if (adminReply !== undefined) {
-      updateData.adminReply = adminReply;
-      updateData.repliedAt = new Date();
-
-      // If saving a reply note, mark new/read inquiries as note-saved.
-      // Archived inquiries stay archived unless status is explicitly changed.
-      if (!status && (existing.status === "NEW" || existing.status === "READ")) {
-        updateData.status = "REPLIED";
-      }
-    }
-
-    if (Object.keys(updateData).length === 0) {
+    const update = buildInquiryUpdateData(existing.status, {
+      status,
+      adminReply,
+    });
+    if (!update.ok) {
       return NextResponse.json(
-        { message: "No changes to apply" },
-        { status: 400 }
+        { message: update.message },
+        { status: update.status }
       );
     }
 
     const updated = await prisma.contactInquiry.update({
       where: { id },
-      data: updateData,
+      data: update.data,
     });
 
     return NextResponse.json(updated);

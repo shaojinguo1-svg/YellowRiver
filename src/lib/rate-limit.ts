@@ -14,6 +14,10 @@ type RateLimitEntry = {
 
 const buckets = new Map<string, RateLimitEntry>();
 
+export function resetRateLimitBucketsForTest() {
+  buckets.clear();
+}
+
 function getClientIp(request: NextRequest): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) {
