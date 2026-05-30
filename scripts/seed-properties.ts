@@ -25,6 +25,29 @@ function mapLeaseTermType(term: string) {
   }
 }
 
+const DEMO_IMAGE_URLS = {
+  livingRoom:
+    "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80",
+  kitchen:
+    "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=1200&q=80",
+  bedroom:
+    "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=1200&q=80",
+  exterior:
+    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
+  openLiving:
+    "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=80",
+  bath:
+    "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=80",
+  apartment:
+    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80",
+  balcony:
+    "https://images.unsplash.com/photo-1560184897-ae75f418493e?auto=format&fit=crop&w=1200&q=80",
+  pool:
+    "https://images.unsplash.com/photo-1560185007-c5ca9d2c014d?auto=format&fit=crop&w=1200&q=80",
+  cottage:
+    "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?auto=format&fit=crop&w=1200&q=80",
+} as const;
+
 // ─── Demo property data ────────────────────────────────────
 const PROPERTIES = [
   {
@@ -61,10 +84,10 @@ const PROPERTIES = [
       "Concierge",
     ],
     images: [
-      { url: "https://placehold.co/1200x800/f59e0b/ffffff?text=Living+Room", alt: "Living Room", isPrimary: true },
-      { url: "https://placehold.co/1200x800/d97706/ffffff?text=Kitchen", alt: "Kitchen", isPrimary: false },
-      { url: "https://placehold.co/1200x800/b45309/ffffff?text=Bedroom", alt: "Bedroom", isPrimary: false },
-      { url: "https://placehold.co/1200x800/92400e/ffffff?text=Bathroom", alt: "Bathroom", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.livingRoom, alt: "Living Room", isPrimary: true },
+      { url: DEMO_IMAGE_URLS.kitchen, alt: "Kitchen", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.bedroom, alt: "Bedroom", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.bath, alt: "Bathroom", isPrimary: false },
     ],
   },
   {
@@ -99,10 +122,10 @@ const PROPERTIES = [
       "Bike Storage",
     ],
     images: [
-      { url: "https://placehold.co/1200x800/d97706/ffffff?text=Living+Area", alt: "Living Area", isPrimary: true },
-      { url: "https://placehold.co/1200x800/b45309/ffffff?text=Kitchen", alt: "Kitchen", isPrimary: false },
-      { url: "https://placehold.co/1200x800/92400e/ffffff?text=Bedroom", alt: "Bedroom", isPrimary: false },
-      { url: "https://placehold.co/1200x800/78350f/ffffff?text=Balcony+View", alt: "Balcony View", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.apartment, alt: "Living Area", isPrimary: true },
+      { url: DEMO_IMAGE_URLS.kitchen, alt: "Kitchen", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.bedroom, alt: "Bedroom", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.balcony, alt: "Balcony View", isPrimary: false },
     ],
   },
   {
@@ -141,11 +164,11 @@ const PROPERTIES = [
       "Package Lockers",
     ],
     images: [
-      { url: "https://placehold.co/1200x800/b45309/ffffff?text=Open+Living+Room", alt: "Open Living Room", isPrimary: true },
-      { url: "https://placehold.co/1200x800/92400e/ffffff?text=Gourmet+Kitchen", alt: "Gourmet Kitchen", isPrimary: false },
-      { url: "https://placehold.co/1200x800/78350f/ffffff?text=Primary+Bedroom", alt: "Primary Bedroom", isPrimary: false },
-      { url: "https://placehold.co/1200x800/f59e0b/ffffff?text=City+View", alt: "City View", isPrimary: false },
-      { url: "https://placehold.co/1200x800/d97706/ffffff?text=Ensuite+Bath", alt: "Ensuite Bathroom", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.openLiving, alt: "Open Living Room", isPrimary: true },
+      { url: DEMO_IMAGE_URLS.kitchen, alt: "Gourmet Kitchen", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.bedroom, alt: "Primary Bedroom", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.apartment, alt: "City View", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.bath, alt: "Ensuite Bathroom", isPrimary: false },
     ],
   },
   {
@@ -182,10 +205,10 @@ const PROPERTIES = [
       "Garage",
     ],
     images: [
-      { url: "https://placehold.co/1200x800/92400e/ffffff?text=Cottage+Exterior", alt: "Cottage Exterior", isPrimary: true },
-      { url: "https://placehold.co/1200x800/78350f/ffffff?text=Living+Room", alt: "Living Room", isPrimary: false },
-      { url: "https://placehold.co/1200x800/f59e0b/ffffff?text=Kitchen", alt: "Kitchen", isPrimary: false },
-      { url: "https://placehold.co/1200x800/d97706/ffffff?text=Backyard", alt: "Backyard", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.cottage, alt: "Cottage Exterior", isPrimary: true },
+      { url: DEMO_IMAGE_URLS.livingRoom, alt: "Living Room", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.kitchen, alt: "Kitchen", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.exterior, alt: "Backyard", isPrimary: false },
     ],
   },
   {
@@ -226,11 +249,11 @@ const PROPERTIES = [
       "Valet Parking",
     ],
     images: [
-      { url: "https://placehold.co/1200x800/78350f/ffffff?text=Skyline+View", alt: "Skyline View", isPrimary: true },
-      { url: "https://placehold.co/1200x800/f59e0b/ffffff?text=Designer+Kitchen", alt: "Designer Kitchen", isPrimary: false },
-      { url: "https://placehold.co/1200x800/d97706/ffffff?text=Primary+Suite", alt: "Primary Suite", isPrimary: false },
-      { url: "https://placehold.co/1200x800/b45309/ffffff?text=Pool+Deck", alt: "Pool Deck", isPrimary: false },
-      { url: "https://placehold.co/1200x800/92400e/ffffff?text=Sky+Lounge", alt: "Sky Lounge", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.apartment, alt: "Skyline View", isPrimary: true },
+      { url: DEMO_IMAGE_URLS.kitchen, alt: "Designer Kitchen", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.bedroom, alt: "Primary Suite", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.pool, alt: "Pool Deck", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.openLiving, alt: "Sky Lounge", isPrimary: false },
     ],
   },
   {
@@ -266,10 +289,10 @@ const PROPERTIES = [
       "Package Lockers",
     ],
     images: [
-      { url: "https://placehold.co/1200x800/fbbf24/ffffff?text=Sunny+Living+Room", alt: "Sunny Living Room", isPrimary: true },
-      { url: "https://placehold.co/1200x800/f59e0b/ffffff?text=Updated+Kitchen", alt: "Updated Kitchen", isPrimary: false },
-      { url: "https://placehold.co/1200x800/d97706/ffffff?text=Bedroom", alt: "Bedroom", isPrimary: false },
-      { url: "https://placehold.co/1200x800/b45309/ffffff?text=Pool+Area", alt: "Pool Area", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.livingRoom, alt: "Sunny Living Room", isPrimary: true },
+      { url: DEMO_IMAGE_URLS.kitchen, alt: "Updated Kitchen", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.bedroom, alt: "Bedroom", isPrimary: false },
+      { url: DEMO_IMAGE_URLS.pool, alt: "Pool Area", isPrimary: false },
     ],
   },
 ];
