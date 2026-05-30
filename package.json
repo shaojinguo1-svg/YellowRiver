@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify:docker": "docker compose -f docker-compose.verify.yml run --rm verify"
+    "verify:docker": "docker compose -f docker-compose.verify.yml run --rm --build verify"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

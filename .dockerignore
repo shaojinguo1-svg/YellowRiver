@@ -1,9 +1,17 @@
 .git
+.claude
+.codex
+.idea
 .next
+.playwright-mcp
+.vercel
+.vscode
 node_modules
 coverage
 out
 dist
+src/generated
+next-env.d.ts
 
 .env
 .env.*
