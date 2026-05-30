@@ -1,103 +1,95 @@
-# Plan: Explicit Baseline Migration
+# Plan: Supabase Data API Lockdown Remediation
 
 ## Goal
-Create a reviewed explicit Prisma baseline migration for the current target Supabase database state, then use it to unblock normal Prisma migration deployment.
+Close direct Supabase Data API access for public app tables that should only be reached through server-side Prisma/API routes.
 
-Reviewer decision: use remediation path 1.
+Reviewer acceptance found that anon REST probes currently return `200` for sensitive public tables:
 
-Target:
-- Supabase project host: `lvhmgdoxbkyitqsobukn.supabase.co`
-- DB host: `db.lvhmgdoxbkyitqsobukn.supabase.co:5432`
-- Database/schema: `postgres` / `public`
+- `users`
+- `rental_applications`
+- `application_documents`
+- `application_upload_tokens`
+- `contact_inquiries`
+- `properties`
+- `_prisma_migrations`
 
-This plan is for reviewer approval only. Do not create/apply the baseline, run `prisma migrate resolve`, run `prisma migrate deploy`, change Storage settings, or mutate the DB until reviewer approves this plan.
+Newer resident and maintenance tables already have the intended posture:
 
-## Baseline Migration
-Planned migration name:
+- `leases`
+- `lease_residents`
+- `maintenance_requests`
 
-```text
-20260521000000_current_supabase_baseline
+This remediation should make the older public tables match the newer defense-in-depth model: no direct `anon` / `authenticated` table grants, RLS enabled, and app access continuing through server-side Prisma and Next API/server routes.
+
+No DB mutation, migration deploy, business code change, Stage 4 rate limiting work, reset, drop, truncate, or Supabase-managed schema change should happen until reviewer approves this plan.
+
+## Findings To Confirm Before Implementation
+- [ ] Re-run code search for Supabase database client access:
+  - `rg -n "\\.from\\(" src prisma scripts --glob '!node_modules'`
+  - Expected: no `.from("users")`, `.from("properties")`, `.from("rental_applications")`, `.from("application_documents")`, `.from("application_upload_tokens")`, `.from("contact_inquiries")`, `.from("site_settings")`, or Prisma migration table Data API reads/writes.
+  - Existing `.from(...)` calls are expected for Supabase Storage buckets such as `property-images` and `application-documents`; those are not table Data API access and should remain unchanged.
+- [ ] Confirm public listing, contact inquiry, application, admin, tenant, resident, and maintenance workflows use Next server routes / Prisma for table data.
+- [ ] Confirm `_prisma_migrations` exists in the target DB before applying lockdown SQL.
+- [ ] Confirm target remains:
+  - Supabase project host: `lvhmgdoxbkyitqsobukn.supabase.co`
+  - DB host: `db.lvhmgdoxbkyitqsobukn.supabase.co:5432`
+  - Database/schema: `postgres` / `public`
+
+## Changes
+- [ ] `PLAN.md` - record this reviewer-approved lockdown plan.
+- [ ] `prisma/migrations/<timestamp>_supabase_data_api_lockdown/migration.sql` - add a Prisma migration that explicitly locks down direct Data API table access for current public app tables.
+
+Planned protected public tables:
+
+- `users`
+- `properties`
+- `property_images`
+- `property_amenities`
+- `amenities`
+- `categories`
+- `rental_applications`
+- `application_documents`
+- `application_upload_tokens`
+- `contact_inquiries`
+- `site_settings`
+- `leases`
+- `lease_residents`
+- `maintenance_requests`
+- `_prisma_migrations`
+
+Migration behavior:
+
+- Enable RLS on each listed public table as defense in depth.
+- Revoke direct table privileges from `anon` and `authenticated` on each listed table.
+- Include `_prisma_migrations` so migration metadata is not readable through Supabase REST.
+- Do not create permissive RLS policies.
+- Do not change Supabase-managed schemas such as `auth`, `storage`, `realtime`, `vault`, or `extensions`.
+- Do not change Supabase Storage bucket settings in this remediation.
+- Do not change app data, truncate tables, delete rows, or reset the DB.
+- Preserve server-side Prisma access by limiting the revokes to Supabase API roles (`anon`, `authenticated`) rather than the database owner / Prisma connection role.
+
+Planned SQL shape:
+
+```sql
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.users FROM anon, authenticated;
+
+-- Repeat for each protected table, including public._prisma_migrations.
 ```
 
-Planned file:
+The implementation should prefer an explicit table list over broad schema-wide revokes so the diff is reviewable and does not accidentally affect future objects outside this plan.
 
-```text
-prisma/migrations/20260521000000_current_supabase_baseline/migration.sql
-```
+## Expected Behavior
+- Supabase Data API direct table probes using the public anon key no longer return `200` for protected app tables.
+- Public website flows still work because they are served through Next server components/API routes and Prisma.
+- Admin and tenant authenticated app flows still work because app authorization remains enforced in Next server/API logic, not client-side Supabase table access.
+- Supabase Auth and Storage keep working:
+  - Auth remains in Supabase-managed `auth` schema and is not changed.
+  - Storage bucket operations continue through existing Storage APIs and server-side helpers.
+- Server-side Prisma migrations and runtime queries continue to work through `DATABASE_URL` / `DIRECT_URL`.
 
-Purpose:
-- Represent the current target DB schema as it exists before the 5 committed migrations.
-- Provide a Prisma migration-history baseline so the existing non-empty DB can safely continue with normal `prisma migrate deploy`.
-- Be earlier than `20260521120000_private_application_documents`.
-- Contain current DB state only. It must not include Stage 1/2/3 security changes, resident/lease tables, maintenance tables, upload-token tables, or Storage bucket changes.
-
-Current inventory the baseline must represent:
-- Existing public tables: `amenities`, `application_documents`, `categories`, `contact_inquiries`, `properties`, `property_amenities`, `property_images`, `rental_applications`, `site_settings`, `users`.
-- `_prisma_migrations` does not exist.
-- Missing newer tables: `leases`, `lease_residents`, `maintenance_requests`, `application_upload_tokens`.
-- `application_documents.url` is currently `NOT NULL`.
-- `application_documents.category` is currently missing.
-- `contact_inquiries.property_id` exists but currently has no FK to `properties`.
-- Existing enums are old app enums only: `ApplicationStatus`, `InquiryStatus`, `LeaseTermType`, `ListingType`, `PropertyStatus`, `PropertyType`, `UserRole`.
-
-## Baseline SQL Generation And Review
-Generate the baseline SQL from the current read-only inventory, then review it before committing.
-
-Preferred generation approach:
-- Use `prisma migrate diff` from empty to the current target DB URL to generate schema SQL.
-- Keep the generated SQL limited to the current app schema state.
-- Review the SQL against the Stage 1 inventory before committing it.
-
-Planned generation command:
-
-```bash
-BASELINE_NAME=20260521000000_current_supabase_baseline
-mkdir -p prisma/migrations/$BASELINE_NAME
-set -a; source .env.local; set +a
-npx prisma migrate diff --from-empty --to-url "$DIRECT_URL" --script > prisma/migrations/$BASELINE_NAME/migration.sql
-```
-
-Fallback generation approach if Prisma diff output is incomplete or noisy:
-
-```bash
-BASELINE_NAME=20260521000000_current_supabase_baseline
-mkdir -p prisma/migrations/$BASELINE_NAME
-set -a; source .env.local; set +a
-pg_dump "$DIRECT_URL" \
-  --schema-only \
-  --schema=public \
-  --no-owner \
-  --no-privileges \
-  --exclude-table=public._prisma_migrations \
-  > prisma/migrations/$BASELINE_NAME/migration.sql
-```
-
-Review requirements:
-- Confirm the baseline creates only the current public app schema objects represented by inventory.
-- Confirm it does not create `application_upload_tokens`.
-- Confirm it does not create `leases`, `lease_residents`, or `maintenance_requests`.
-- Confirm it does not add `application_documents.category`.
-- Confirm it does not make `application_documents.url` nullable.
-- Confirm it does not add the `contact_inquiries.property_id -> properties.id` FK.
-- Confirm it does not add `ApplicationDocumentCategory`, `LeaseStatus`, or maintenance enums.
-- Confirm it does not include auth schema objects, storage schema objects, secrets, data rows, or `_prisma_migrations` rows.
-- If generated SQL includes unrelated Supabase-managed schemas or partial future changes, stop and revise the baseline SQL before review.
-
-## Exact Command Sequence
-After reviewer approves this plan:
-
-1. Add the baseline migration file.
-
-```bash
-BASELINE_NAME=20260521000000_current_supabase_baseline
-mkdir -p prisma/migrations/$BASELINE_NAME
-set -a; source .env.local; set +a
-npx prisma migrate diff --from-empty --to-url "$DIRECT_URL" --script > prisma/migrations/$BASELINE_NAME/migration.sql
-```
-
-2. Review baseline SQL against the inventory and adjust only if needed to match current DB state.
-
-3. Run local static verification.
+## Verification
+Run static verification after adding the migration:
 
 ```bash
 npx prisma validate
@@ -107,254 +99,114 @@ npm run lint
 npm run build
 ```
 
-4. Commit and push the baseline migration for reviewer approval.
+Before DB deploy:
 
 ```bash
-git add prisma/migrations/20260521000000_current_supabase_baseline/migration.sql PLAN.md
-git commit -m "Add current Supabase baseline migration"
-git push origin codex/phase-1-launch-security
+npx prisma migrate status
 ```
 
-5. After reviewer approves the baseline migration commit, mark only the new baseline migration as applied.
+After reviewer approval and migration deploy:
 
 ```bash
-set -a; source .env.local; set +a
-npx prisma migrate resolve --applied 20260521000000_current_supabase_baseline
-```
-
-6. Run required pre-deploy checks.
-
-7. Deploy the existing 5 committed migrations.
-
-```bash
-set -a; source .env.local; set +a
 npx prisma migrate deploy
-```
-
-8. Record final migration status.
-
-```bash
-set -a; source .env.local; set +a
 npx prisma migrate status
 ```
 
-Do not mark any of the existing 5 migrations as applied manually.
-
-## Pre-Deploy Checks
-Run these checks after resolving the baseline as applied and before `prisma migrate deploy`.
-
-Confirm pending migration status:
-
-```bash
-set -a; source .env.local; set +a
-npx prisma migrate status
-```
-
-Expected:
-- `20260521000000_current_supabase_baseline` is applied.
-- These 5 migrations are still pending:
-  - `20260521120000_private_application_documents`
-  - `20260528110000_resident_portal_foundation`
-  - `20260528160000_maintenance_request_foundation`
-  - `20260529100000_security_remediation_stage_1`
-  - `20260529170000_lease_active_invariant_and_resident_history`
-
-Confirm `application_documents.category` is still missing:
+SQL verification:
 
 ```sql
-SELECT column_name
-FROM information_schema.columns
-WHERE table_schema = 'public'
-  AND table_name = 'application_documents'
-  AND column_name = 'category';
-```
-
-Confirm `application_upload_tokens` is still missing:
-
-```sql
-SELECT to_regclass('public.application_upload_tokens') AS application_upload_tokens;
-```
-
-Confirm resident/maintenance tables are still missing:
-
-```sql
-SELECT
-  to_regclass('public.leases') AS leases,
-  to_regclass('public.lease_residents') AS lease_residents,
-  to_regclass('public.maintenance_requests') AS maintenance_requests;
-```
-
-If `leases` already exists unexpectedly before deploy, run the Stage 2 duplicate ACTIVE lease preflight before applying the active-lease partial unique index migration:
-
-```sql
-SELECT property_id, COUNT(*), array_agg(id)
-FROM leases
-WHERE status = 'ACTIVE'
-GROUP BY property_id
-HAVING COUNT(*) > 1;
-```
-
-If any pre-deploy check does not match expectations, stop and ask reviewer before deploying migrations.
-
-## Post-Deploy Checks
-After `prisma migrate deploy`, verify:
-
-- All 5 existing committed migrations are applied.
-- `npx prisma migrate status` reports database schema is up to date.
-- `application_upload_tokens` exists.
-- `application_documents.category` exists.
-- `application_documents.url` is nullable.
-- `leases` exists.
-- `lease_residents` exists.
-- `maintenance_requests` exists.
-- RLS is enabled and direct `anon`/`authenticated` grants are revoked for:
-  - `leases`
-  - `lease_residents`
-  - `maintenance_requests`
-- `contact_inquiries.property_id -> properties.id` FK exists with `ON DELETE SET NULL` and `ON UPDATE CASCADE`.
-- Active lease partial unique index exists:
-  - `leases_one_active_per_property_key`
-
-Suggested SQL:
-
-```sql
-SELECT migration_name, finished_at
-FROM public._prisma_migrations
-ORDER BY started_at;
-```
-
-```sql
-SELECT table_name
-FROM information_schema.tables
+SELECT table_name, grantee, privilege_type
+FROM information_schema.role_table_grants
 WHERE table_schema = 'public'
   AND table_name IN (
+    'users',
+    'properties',
+    'property_images',
+    'property_amenities',
+    'amenities',
+    'categories',
+    'rental_applications',
+    'application_documents',
     'application_upload_tokens',
+    'contact_inquiries',
+    'site_settings',
     'leases',
     'lease_residents',
-    'maintenance_requests'
+    'maintenance_requests',
+    '_prisma_migrations'
   )
-ORDER BY table_name;
+  AND grantee IN ('anon', 'authenticated')
+ORDER BY table_name, grantee, privilege_type;
 ```
 
-```sql
-SELECT column_name, is_nullable, udt_name
-FROM information_schema.columns
-WHERE table_schema = 'public'
-  AND table_name = 'application_documents'
-  AND column_name IN ('url', 'category')
-ORDER BY column_name;
-```
+Expected: no rows.
 
 ```sql
 SELECT c.relname, c.relrowsecurity
 FROM pg_class c
 JOIN pg_namespace n ON n.oid = c.relnamespace
 WHERE n.nspname = 'public'
-  AND c.relname IN ('leases', 'lease_residents', 'maintenance_requests')
+  AND c.relname IN (
+    'users',
+    'properties',
+    'property_images',
+    'property_amenities',
+    'amenities',
+    'categories',
+    'rental_applications',
+    'application_documents',
+    'application_upload_tokens',
+    'contact_inquiries',
+    'site_settings',
+    'leases',
+    'lease_residents',
+    'maintenance_requests',
+    '_prisma_migrations'
+  )
 ORDER BY c.relname;
 ```
 
-```sql
-SELECT table_name, grantee, privilege_type
-FROM information_schema.role_table_grants
-WHERE table_schema = 'public'
-  AND grantee IN ('anon', 'authenticated')
-  AND table_name IN ('leases', 'lease_residents', 'maintenance_requests')
-ORDER BY table_name, grantee, privilege_type;
-```
+Expected: every listed table has `relrowsecurity = true`.
 
-```sql
-SELECT conname, conrelid::regclass::text AS table_name, pg_get_constraintdef(oid) AS definition
-FROM pg_constraint
-WHERE connamespace = 'public'::regnamespace
-  AND conrelid = 'public.contact_inquiries'::regclass
-ORDER BY conname;
-```
+REST probe verification with anon key:
 
-```sql
-SELECT indexname, indexdef
-FROM pg_indexes
-WHERE schemaname = 'public'
-  AND tablename = 'leases'
-  AND indexname = 'leases_one_active_per_property_key';
-```
+- `users` no longer returns `200`.
+- `properties` no longer returns `200`.
+- `rental_applications` no longer returns `200`.
+- `application_documents` no longer returns `200`.
+- `application_upload_tokens` no longer returns `200`.
+- `contact_inquiries` no longer returns `200`.
+- `_prisma_migrations` no longer returns `200`.
+- Existing locked tables stay blocked:
+  - `leases`
+  - `lease_residents`
+  - `maintenance_requests`
 
-## Storage Step After Migration
-After migrations are applied and post-deploy DB checks pass, make `application-documents` private.
+Product flow verification after deploy:
 
-Preferred path:
-- Supabase Dashboard → Storage → Buckets → `application-documents` → Settings.
-- Turn off public bucket access.
-- Keep existing size limit and allowed MIME types unless reviewer approves a change.
-- Record before/after bucket settings and time of change.
-
-Controlled SQL fallback if reviewer approves direct SQL:
-
-```sql
-UPDATE storage.buckets
-SET public = false
-WHERE id = 'application-documents'
-RETURNING id, name, public, file_size_limit, allowed_mime_types;
-```
-
-Verify:
-
-```sql
-SELECT id, name, public, file_size_limit, allowed_mime_types
-FROM storage.buckets
-WHERE id = 'application-documents';
-```
-
-Then verify server-side paths still work:
-- Application document signed upload URL can be issued.
-- Application submit validates Storage object size/MIME/magic bytes.
-- Admin signed document download URL works.
-- Admin signed URL forces attachment/download behavior.
-- No public bucket access or public Supabase client document read path is required.
-
-## Resume Pre-Acceptance Verification
-After the baseline is resolved, migrations are deployed, and the Storage bucket is private, resume the approved pre-acceptance checklist:
-
-```bash
-npx prisma validate
-npx prisma generate
-npx tsc --noEmit
-npm run lint
-npm run build
-```
-
-Then continue manual/security checks for:
-- Public listings and property API.
-- Inquiries.
-- Leases/residents.
-- Maintenance requests.
-- Application document upload/download hardening.
-- Auth/browser fixtures.
-- Email best-effort behavior.
+- ACTIVE public listing slug still renders through Next server route.
+- Non-ACTIVE public listing slug still returns not found / noindex behavior.
+- Public contact inquiry for an ACTIVE property still submits through Next API.
+- Public rental application submit flow still works through Next API.
+- Application document signed upload/download flow still works through server-side Storage helpers.
+- Admin login/session still works.
+- Tenant login/session still works.
+- Admin lease/resident workflows still work.
+- Tenant resident portal still works.
+- Authenticated maintenance workflows still work.
 
 ## Out Of Scope
-- No Stage 4 durable rate limiting.
+- No Stage 4 durable Redis/Upstash rate limiting.
+- No new public Supabase policies unless implementation finds a real client-side Data API use and reviewer approves the exact policy.
 - No business feature changes.
-- No UI redesign.
-- No reset/drop/truncate/destructive DB action.
-- No marking the existing 5 migrations as applied manually.
-- No Supabase Storage change before baseline/migration reviewer approval.
-- No schema change other than adding the reviewed baseline migration file and then applying existing committed migrations.
+- No public Supabase client table reads/writes.
+- No Supabase Auth schema changes.
+- No Supabase Storage schema or bucket changes.
+- No reset, drop, truncate, or destructive data cleanup.
+- No Settings persistence, billing, payments, maintenance feature expansion, or UI redesign.
 
-## Testing
-This planning step changes only `PLAN.md`; no code tests are required now.
-
-When the baseline migration file is created in the next approved step, run:
-- `npx prisma validate`
-- `npx prisma generate`
-- `npx tsc --noEmit`
-- `npm run lint`
-- `npm run build`
-
-After migration deployment, run:
-- `npx prisma migrate status`
-- post-deploy SQL checks listed above
-- full resumed pre-acceptance verification checklist
-
-## Reviewer Decision Requested
-Reviewer should approve this explicit baseline migration plan before creating the baseline migration file, marking the baseline as applied, deploying existing migrations, changing `application-documents` bucket privacy, or resuming final acceptance verification.
+## Risks / Reviewer Decisions Needed
+- Enabling RLS and revoking `anon` / `authenticated` direct grants is intentionally strict. If any hidden client-side Data API table use exists, the affected UI will fail until it is moved behind a server route or reviewer approves a minimal policy.
+- `_prisma_migrations` lockdown should not affect Prisma when using the server-side DB connection role, but it must be verified with `prisma migrate status` after deploy.
+- Public `properties`, `categories`, `amenities`, and property image data will no longer be accessible through Supabase REST. This is expected because the app already serves public listing data through Next/Prisma.
+- Reviewer should approve this plan before creating/applying the lockdown migration or mutating the target DB.
