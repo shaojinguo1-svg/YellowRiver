@@ -20,6 +20,29 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Verification
+
+Before pushing, run the normal local checks:
+
+```bash
+npx prisma validate
+npx prisma generate
+npx tsc --noEmit
+npm run test
+npm run lint
+npm run build
+```
+
+When Docker is available, also run the containerized verification step:
+
+```bash
+npm run verify:docker
+```
+
+The Docker verification image uses Node 22 and deterministic dummy environment values that mirror CI. It runs the same static quality gates as GitHub Actions without requiring real Supabase, database, Resend, service-role, or production secrets.
+
+Docker verification is recommended as a final local confidence check, but GitHub CI remains the source of truth for branch acceptance. This verification image is not a production deployment image and does not include Supabase local stack, browser/E2E tests, or live auth/storage checks.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

@@ -1,0 +1,18 @@
+services:
+  verify:
+    build:
+      context: .
+      dockerfile: Dockerfile.verify
+    environment:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder"
+      SUPABASE_SERVICE_ROLE_KEY: "placeholder"
+      DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+      DIRECT_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+      RESEND_API_KEY: "re_ci_placeholder"
+      ADMIN_EMAIL: "admin@example.com"
+      APPLICATION_UPLOAD_SIGNING_SECRET: "ci_test_signing_secret_32_chars_min"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      NEXT_PUBLIC_APP_NAME: "YellowRiver"

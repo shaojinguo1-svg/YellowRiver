@@ -1,0 +1,11 @@
+# Verification-only image. This is not a production deployment Dockerfile.
+FROM node:22-bookworm
+
+WORKDIR /app
+
+ENV CI=true
+ENV NEXT_TELEMETRY_DISABLED=1
+
+COPY . .
+
+CMD ["bash", "-lc", "npm ci && npx prisma validate && npx prisma generate && npx tsc --noEmit && npm run test && npm run lint && npm run build"]
