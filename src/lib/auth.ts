@@ -2,6 +2,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 
 /**
  * cache() dedupes the auth lookup across layout + page within a single
@@ -21,19 +22,31 @@ export const getCurrentUser = cache(async () => {
 
   const metadata = authUser.user_metadata || {};
 
-  // First login only: upsert (not create) so concurrent first requests
-  // cannot race a duplicate-key failure.
-  return prisma.user.upsert({
-    where: { supabaseId: authUser.id },
-    update: {},
-    create: {
-      supabaseId: authUser.id,
-      email: authUser.email!,
-      firstName: metadata.first_name || null,
-      lastName: metadata.last_name || null,
-      role: "TENANT", // Default role; admins are set explicitly
-    },
-  });
+  // First login: create the row. Prisma's upsert is not atomic (select then
+  // insert), so concurrent first requests would race a unique-key failure;
+  // catch P2002 and re-read the row a parallel request just created.
+  try {
+    return await prisma.user.create({
+      data: {
+        supabaseId: authUser.id,
+        email: authUser.email!,
+        firstName: metadata.first_name || null,
+        lastName: metadata.last_name || null,
+        role: "TENANT", // Default role; admins are set explicitly
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const racedUser = await prisma.user.findUnique({
+        where: { supabaseId: authUser.id },
+      });
+      if (racedUser) return racedUser;
+    }
+    throw error;
+  }
 });
 
 /** For API routes: api-handler.ts maps the thrown "Unauthorized" to a 401. */
