@@ -2,7 +2,13 @@
 
 > Separate from PLAN.md (Final Acceptance Blocker Remediation), which is an
 > in-flight team plan. No file overlap between the two plans except
-> `.env.local` ownership notes. Reviewer should approve before implementation.
+> `.env.local` ownership notes.
+>
+> **Status: APPROVED with amendments (review incorporated below).**
+> Sequencing: PLAN.md's dependency bumps (next 16.2.7, prisma 7.8.0) have NOT
+> landed at implementation time; before/after timings are both captured on
+> next 16.1.6 / prisma 7.4.2 so the comparison does not straddle the version
+> change. Re-baseline if the bumps land mid-implementation.
 
 ## Goal
 Protected pages (admin/tenant) take 1–2s per navigation in dev, with occasional
@@ -28,73 +34,112 @@ This plan removes redundant round-trips without weakening route protection.
 
 ### 1. Request-scoped dedupe of `getCurrentUser` — `src/lib/auth.ts`
 - [ ] Wrap `getCurrentUser` in React `cache()` so layout + page within one
-      request share a single lookup.
+      request share a single lookup. (`cache()` is a no-op in route handlers,
+      which is fine — handlers call it once anyway.)
 - [ ] Replace the unconditional `prisma.user.upsert()` with read-first:
       `findUnique` (fast read) → return if found; only on miss fall back to
       the existing `upsert` (preserves first-login race safety).
-- [ ] `requireAdmin` logic unchanged.
+- [ ] Keep `requireAdmin()` throwing `"Unauthorized"` for API routes
+      (`api-handler.ts` maps it to 401).
+- [ ] **Amendment:** add a page-safe variant `requireAdminPage()` that calls
+      `redirect("/login")` on failure instead of throwing — there is no
+      `error.tsx` under `src/app/admin/`, so a bare throw in a page renders
+      a 500.
 
 Expected: −2 auth round-trips and −2 DB writes per protected page
 (~300–500ms saved).
 
 ### 2. Make the `/admin` middleware role check cheap — `src/middleware.ts`
-- [ ] Keep the middleware auth check (`getUser`) and login redirects unchanged.
-- [ ] Add a module-scope in-memory cache for the role lookup, keyed by the
-      *verified* `user.id` returned by `getUser()`, with a 60s TTL. Warm
-      requests skip the REST role call entirely.
-- [ ] Add `requireAdmin()` to admin pages that currently rely on
-      layout/middleware only: `admin/page.tsx`, `admin/dashboard/page.tsx`,
-      `admin/listings/page.tsx`, `admin/listings/new/page.tsx`,
-      `admin/listings/[id]/edit/page.tsx`, `admin/settings/page.tsx`.
+
+**Amendment: the middleware cache and the per-page checks MUST land in one
+atomic commit** — the cache without the page checks opens a ≤60s data window
+on client-side navigation.
+
+- [ ] Keep the middleware auth check (`getUser`) and all redirect logic
+      unchanged.
+- [ ] Add a module-scope `Map` cache for the admin role REST lookup, keyed by
+      the *verified* `user.id` from `getUser()`, TTL 60s.
+      - Cap the Map at ~1000 entries; evict the oldest entry on insert.
+      - Cache negative results too (fail-closed): role *promotion* can take
+        up to 60s to reach middleware.
+      - REST lookup failures are NOT cached — fail closed for this request,
+        retry live on the next.
+- [ ] Add `requireAdminPage()` to the six pages currently lacking a check:
+      `admin/page.tsx`, `admin/dashboard/page.tsx`, `admin/listings/page.tsx`,
+      `admin/listings/new/page.tsx`, `admin/listings/[id]/edit/page.tsx`,
+      `admin/settings/page.tsx`.
       (Defense-in-depth: layouts do not re-run on client-side navigation
-      within the same layout tree.)
+      within the same layout tree; middleware may serve a ≤60s-stale role.)
+- [ ] Switch the five pages already calling `requireAdmin()` to
+      `requireAdminPage()` for consistent UX (redirect instead of 500).
+      API routes keep `requireAdmin()`.
+- [ ] Edge-runtime note: `middleware.ts` builds for the Edge runtime in
+      Next 16; the Map is per-instance and may be evicted — that only causes
+      a fallthrough to the live REST check, which is the safe direction.
+      Do NOT rename `middleware.ts` to `proxy.ts` in this change.
 
 Expected: middleware cost 200–600ms → ~100ms (just `getUser`) on warm
 requests.
 
-Trade-off (reviewer decision): a revoked admin role can keep fetching page
-shells for up to 60s; every data/mutation path (admin APIs + per-page
-`requireAdmin`) still enforces immediately, so no data or mutation is
-reachable in that window.
+Trade-off (accepted by review): a revoked admin can keep fetching page
+SHELLS for up to 60s; every data/mutation path (admin APIs + per-page
+`requireAdminPage`) enforces immediately against the live DB, so no data or
+mutation is reachable in that window.
 
-### 3. Connection pooling — `.env.local` + `src/lib/prisma.ts`
-- [ ] Switch app `DATABASE_URL` from direct `:5432` to the Supabase pooler
-      (Supavisor) transaction mode `:6543` (connection string from Supabase
-      Dashboard → Connect). Owner provides the pooler URL; not committed.
-- [ ] Keep `DIRECT_URL` (5432 direct) for `prisma migrate` (per
-      `prisma.config.ts`).
+### 3. Connection pooling — `.env.local` + `src/lib/prisma.ts` + `prisma.config.ts`
+- [ ] **Amendment:** add a guard in `prisma.config.ts` — if `DATABASE_URL`
+      contains `":6543"` or `"pooler.supabase.com"` and `DIRECT_URL` is
+      unset, throw with a clear message. `prisma migrate` uses
+      `pg_advisory_lock`, which breaks through the transaction-mode pooler;
+      the current silent fallback to `DATABASE_URL` is the footgun.
 - [ ] Configure the `pg` Pool in `src/lib/prisma.ts`: `max: 10`,
       `keepAlive: true`, `idleTimeoutMillis: 30_000`,
       `connectionTimeoutMillis: 10_000`.
+- [ ] `.env.local` (owner provides, never commit): `DATABASE_URL` = Supavisor
+      transaction-mode URL (host `*.pooler.supabase.com:6543`, username
+      `postgres.<project-ref>`); `DIRECT_URL` stays on
+      `db.<ref>.supabase.co:5432` for `prisma migrate`.
+- [ ] The `Serializable` lease transactions in `src/lib/resident-leases.ts`
+      are compatible with transaction mode (interactive transactions pin one
+      backend; no advisory locks/LISTEN in app code) — no changes needed.
 
 Expected: eliminates 10–20s cold-connection spikes; faster query setup.
 Compatibility note: node-postgres issues unnamed prepared statements, which
 are compatible with Supavisor transaction mode; rollback is an env revert.
 
-### 4. Minor image polish (optional, last)
+### 4. Minor polish (optional, last)
 - [ ] `PropertyCard` `<Image>`: add a `sizes` attribute.
 - [ ] First/hero images: `priority`.
+- [ ] Optionally add `loading.tsx` under admin sections (none exist today).
 
 ## Files
-- `src/lib/auth.ts` — `cache()` + read-first lookup
-- `src/middleware.ts` — TTL role cache
-- `src/app/admin/{page,dashboard/page,listings/page,listings/new/page,listings/[id]/edit/page,settings/page}.tsx` — add `requireAdmin()`
+- `src/lib/auth.ts` — `cache()` + read-first lookup + `requireAdminPage()`
+- `src/middleware.ts` — TTL role cache (atomic with page checks)
+- `src/app/admin/**/page.tsx` — add/switch to `requireAdminPage()` (11 pages)
 - `src/lib/prisma.ts` — Pool options
+- `prisma.config.ts` — pooled-URL-without-DIRECT_URL guard
 - `.env.local` — pooled `DATABASE_URL` (owner provides; not committed)
-- (optional) `src/components/property/property-card.tsx`, `src/app/page.tsx`
+- (optional) `src/components/property/property-card.tsx`, `src/app/page.tsx`,
+  `src/app/admin/loading.tsx`
 
 ## Testing
-- `npx tsc --noEmit` && `npm run lint` && `npm run build`
-- Before/after dev-log timings for `/admin/dashboard`, `/admin/maintenance`,
-  `/dashboard` (compare `proxy.ts` + `render` ms)
+- `npx tsc --noEmit` && `npm run lint` && `npm run test` && `npm run build`
+- Before/after timings (authenticated probe, same dependency versions) for
+  `/admin/dashboard`, `/admin/maintenance`, `/dashboard`
 - Production check: `npm run build && npm start`; `curl -w` timings for `/`,
   `/listings` (expect ISR cache hits on repeat requests)
 - Security regression:
   - logged-out → `/admin/*` and `/dashboard` redirect to login
-  - TENANT → `/admin/*` blocked (direct URL and client-side navigation)
-  - admin APIs still reject tenants immediately
+  - TENANT → `/admin/*` blocked (direct URL AND client-side navigation /
+    RSC fetch — this specifically exercises the per-page checks)
+  - admin APIs still reject tenants immediately (401)
   - first-login concurrency still creates exactly one `users` row
-- `npx prisma migrate status` still works via `DIRECT_URL`
+    (read-first falls back to atomic upsert)
+  - revoked admin: gets redirected on next full load and blocked on
+    client-side nav (per-page check beats the ≤60s middleware cache)
+- `npx prisma migrate status` still works via `DIRECT_URL`; confirm the new
+  `prisma.config.ts` guard fires when `DIRECT_URL` is unset and
+  `DATABASE_URL` looks pooled
 
 ## Notes / Risks
 - 60s role-cache staleness affects page shells only; all data/mutation paths
@@ -109,5 +154,7 @@ are compatible with Supavisor transaction mode; rollback is an env revert.
   versions and touches `package.json`; this plan does not touch
   `package.json`, so the two can land in either order.
 - Out of scope: vulnerability remediation list (separate ticket),
-  Redis-backed rate limiting, admin user provisioning feature, JWT role
-  claims.
+  Redis-backed rate limiting, admin user provisioning feature.
+- Documented follow-up (NOT in this change): switch middleware/server auth to
+  `supabase.auth.getClaims()` with asymmetric JWT signing keys to eliminate
+  the remaining ~100ms remote `getUser()` round-trips.
