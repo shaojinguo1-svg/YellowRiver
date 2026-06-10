@@ -1,10 +1,10 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireAdminPage } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getAdminLeaseInclude, serializeLease } from "@/lib/resident-leases";
 import { ResidentsClient } from "./residents-client";
 
 export default async function AdminResidentsPage() {
-  await requireAdmin();
+  await requireAdminPage();
 
   let tenants: {
     id: string;

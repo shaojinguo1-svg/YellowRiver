@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireAdminPage } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   adminMaintenanceRequestInclude,
@@ -43,7 +43,7 @@ export default async function AdminMaintenancePage({
     category?: string;
   }>;
 }) {
-  await requireAdmin();
+  await requireAdminPage();
 
   const params = await searchParams;
   const requestedPage = parsePage(params.page);

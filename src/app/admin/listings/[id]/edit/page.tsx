@@ -1,5 +1,6 @@
 import { ListingForm } from "@/components/admin/listing-form";
 import { prisma } from "@/lib/prisma";
+import { requireAdminPage } from "@/lib/auth";
 import { notFound } from "next/navigation";
 
 interface EditListingPageProps {
@@ -7,6 +8,8 @@ interface EditListingPageProps {
 }
 
 export default async function EditListingPage({ params }: EditListingPageProps) {
+  await requireAdminPage();
+
   const { id } = await params;
 
   const property = await prisma.property.findUnique({

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { FileText, Search, Eye } from "lucide-react";
 import { format } from "date-fns";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdminPage } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { APPLICATION_STATUSES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
@@ -50,7 +50,7 @@ export default async function AdminApplicationsPage({
 }: {
   searchParams: Promise<{ search?: string; status?: string }>;
 }) {
-  await requireAdmin();
+  await requireAdminPage();
 
   const params = await searchParams;
   const searchQuery = params.search || "";

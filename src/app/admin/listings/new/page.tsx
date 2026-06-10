@@ -1,7 +1,10 @@
 import { ListingForm } from "@/components/admin/listing-form";
 import { prisma } from "@/lib/prisma";
+import { requireAdminPage } from "@/lib/auth";
 
 export default async function NewListingPage() {
+  await requireAdminPage();
+
   const amenities = await prisma.amenity.findMany({
     orderBy: { name: "asc" },
     select: { id: true, name: true, category: true },

@@ -1,4 +1,5 @@
 import { Info, Settings } from "lucide-react";
+import { requireAdminPage } from "@/lib/auth";
 import {
   Card,
   CardContent,
@@ -16,7 +17,9 @@ const configurationRows = [
   { label: "Admin editing", value: "Not enabled" },
 ];
 
-export default function AdminSettingsPage() {
+export default async function AdminSettingsPage() {
+  await requireAdminPage();
+
   return (
     <div className="space-y-6">
       {/* Header */}

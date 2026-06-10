@@ -1,10 +1,10 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireAdminPage } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { ContactInquiry } from "@/generated/prisma/client";
 import { InquiriesClient } from "./inquiries-client";
 
 export default async function AdminInquiriesPage() {
-  await requireAdmin();
+  await requireAdminPage();
 
   let inquiries: ContactInquiry[] = [];
   let fetchError = false;

@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
+import { requireAdminPage } from "@/lib/auth";
 import { PROPERTY_STATUSES, PROPERTY_TYPES } from "@/lib/constants";
 import type { Property, PropertyImage } from "@/generated/prisma/client";
 
@@ -21,6 +22,8 @@ type PropertyWithImages = Property & {
 };
 
 export default async function AdminListingsPage() {
+  await requireAdminPage();
+
   let properties: PropertyWithImages[] = [];
   let fetchError = false;
 
