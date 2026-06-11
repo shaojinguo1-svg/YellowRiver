@@ -104,7 +104,9 @@ export async function POST(request: NextRequest) {
       subject: inquiry.subject,
       message: inquiry.message,
       propertyId: inquiry.propertyId,
-    }).then(logEmailDeliveryResult);
+    })
+      .then(logEmailDeliveryResult)
+      .catch((err) => console.error("[email] unexpected", err));
 
     return NextResponse.json(
       { message: "Inquiry submitted successfully", inquiry },

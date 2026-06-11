@@ -245,7 +245,9 @@ export async function POST(request: NextRequest) {
         applicantName,
         propertyTitle,
       }),
-    ]).then((results) => results.forEach(logEmailDeliveryResult));
+    ])
+      .then((results) => results.forEach(logEmailDeliveryResult))
+      .catch((err) => console.error("[email] unexpected", err));
 
     return NextResponse.json(
       {

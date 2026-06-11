@@ -200,7 +200,9 @@ export async function PATCH(
         newStatus: status,
         propertyTitle: updated.property?.title || "Your property",
         adminNotes: adminNotes,
-      }).then(logEmailDeliveryResult);
+      })
+        .then(logEmailDeliveryResult)
+        .catch((err) => console.error("[email] unexpected", err));
     }
 
     return NextResponse.json(updated);

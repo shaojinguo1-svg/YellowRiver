@@ -12,8 +12,6 @@ export type EmailDeliveryResult = {
   error?: string;
 };
 
-const fromEmail = "YellowRiver <noreply@yellowriver.com>";
-
 let resendClient: Resend | null = null;
 let resendClientKey: string | null = null;
 
@@ -113,13 +111,32 @@ async function sendOptionalEmail(params: {
     return result(params.helper, "skipped", params.context, "missing_RESEND_API_KEY");
   }
 
+  // Operator-controlled sender identity; no fallback to the unverified
+  // default domain — skip instead of making a doomed provider call.
+  const fromAddress = process.env.EMAIL_FROM?.trim();
+  if (!fromAddress) {
+    return result(params.helper, "skipped", params.context, "missing_EMAIL_FROM");
+  }
+
   try {
-    await getResendClient(apiKey).emails.send({
-      from: fromEmail,
+    // The Resend SDK does not throw on API errors; failures come back in
+    // the resolved { data, error } union.
+    const { error } = await getResendClient(apiKey).emails.send({
+      from: fromAddress,
       to: params.to,
       subject: subjectLine(params.subject),
       html: params.html,
     });
+
+    if (error) {
+      return result(
+        params.helper,
+        "failed",
+        params.context,
+        error.name ?? "provider_send_failed",
+        error.message
+      );
+    }
 
     return result(params.helper, "sent", params.context);
   } catch (error) {
